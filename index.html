@@ -35,6 +35,12 @@
                                     <input type="text" name="name" id="surname" placeholder="Your Surname"/>
                                 </div>
                                 <div class="form-group">
+                                    <label for="name">
+                                        <i class="zmdi zmdi-calendar"></i>
+                                    </label>
+                                    <input type="text" id="birthday" required="required" min="1900-01-01" max="2099-09-13" placeholder="Your date of birth" onfocus="(this.type='date')" onblur="(this.type='text')">
+                                </div>
+                                <div class="form-group">
                                     <label for="email">
                                         <i class="zmdi zmdi-email"></i>
                                     </label>
