@@ -26,7 +26,19 @@
                                     <label for="email">
                                         <i class="zmdi zmdi-email"></i>
                                     </label>
-                                    <input type="email" name="email" id="email" placeholder="Your Email"/>
+                                    <input type="email" name="email" id="email" placeholder="Your email"/>
+                                </div>
+                                <div class="form-group">
+                                    <label for="pass">
+                                        <i class="zmdi zmdi-lock"></i>
+                                    </label>
+                                    <input type="password" name="pass" id="pass" placeholder="Password"/>
+                                </div>
+                                <div class="form-group">
+                                    <label for="re_pass">
+                                        <i class="zmdi zmdi-lock-outline"></i>
+                                    </label>
+                                    <input type="password" name="re_pass" id="re_pass" placeholder="Repeat your password"/>
                                 </div>
                                 <div class="form-group">
                                     <label for="name">
@@ -35,16 +47,16 @@
                                     <input type="text" name="name" id="name" placeholder="Your Name"/>
                                 </div>
                                 <div class="form-group">
-                                    <label for="name">
+                                    <label for="surname">
                                         <i class="zmdi zmdi-account material-icons-name"></i>
                                     </label>
-                                    <input type="text" name="name" id="surname" placeholder="Your Surname"/>
+                                    <input type="text" name="surname" id="surname" placeholder="Your Surname"/>
                                 </div>
                                 <div class="form-group">
-                                    <label for="name">
+                                    <label for="birthday">
                                         <i class="zmdi zmdi-calendar"></i>
                                     </label>
-                                    <input type="text" id="birthday" required="required" min="1900-01-01" max="2099-09-13" placeholder="Your date of birth" onfocus="(this.type='date')" onblur="(this.type='text')">
+                                    <input type="text" name="birthday" id="birthday" required="required" min="1900-01-01" max="2099-09-13" placeholder="Your date of birth" onfocus="(this.type='date')" onblur="(this.type='text')">
                                 </div>
                                 <div class="form-group">
                                     <table width="100%">
@@ -63,22 +75,10 @@
                                     </table>
                                 </div>
                                 <div class="form-group">
-                                    <label for="pass">
+                                    <label for="city">
                                         <i class="zmdi zmdi-city"></i>
                                     </label>
                                     <input type="text" name="city" id="city" placeholder="Your city"/>
-                                </div>
-                                <div class="form-group">
-                                    <label for="pass">
-                                        <i class="zmdi zmdi-lock"></i>
-                                    </label>
-                                    <input type="password" name="pass" id="pass" placeholder="Password"/>
-                                </div>
-                                <div class="form-group">
-                                    <label for="re_pass">
-                                        <i class="zmdi zmdi-lock-outline"></i>
-                                    </label>
-                                    <input type="password" name="re_pass" id="re_pass" placeholder="Repeat your password"/>
                                 </div>
                                 <div class="form-group">
                                     <label for="interests">
@@ -86,18 +86,16 @@
                                     </label>
                                     <input type="text" name="interests" id="interests" placeholder="Your interests"/>
                                 </div>
-                                <div class="form-group">
-                                    <input type="checkbox" name="agree-term" id="agree-term" class="agree-term" />
-                                    <label for="agree-term" class="label-agree-term">
-                                        <span>
-                                            <span></span>
-                                        </span>
-                                        I agree all statements in
-                                        <a href="#" class="term-service">Terms of service</a>
-                                    </label>
-                                </div>
                                 <div class="form-group form-button">
-                                    <input type="submit" name="signup" id="signup" class="form-submit" value="Register"/>
+                                    <table width="100%">
+                                        <tr>
+                                            <td width="20%"></td>
+                                            <td width="60%" align="center">
+                                                <input type="submit" name="signup" id="signup" class="form-submit" value="Register"/>
+                                            </td>
+                                            <td width="20%"></td>
+                                        </tr>
+                                    </table>
                                 </div>
                             </form>
                         </div>
