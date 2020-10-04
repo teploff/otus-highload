@@ -19,7 +19,7 @@
             <section class="signup">
                 <div class="container">
                     <div class="signup-content">
-                        <div class="signup-form">
+                        <div class="signup-form" id="signup_form">
                             <h2 class="form-title">Sign up</h2>
                             <form method="POST" class="register-form" id="register-form">
                                 <div class="form-group">
@@ -100,10 +100,26 @@
                             </form>
                         </div>
                         <div class="signup-image">
-                            <figure>
-                                <img src="static/images/sign_up_image.jpg" alt="sing up image">
-                            </figure>
-                            <a href="http://localhost:63342/otus_highload_front/templates/sign_in.html" class="signup-image-link">I am already member</a>
+                            <table width="100%">
+                                <tr>
+                                    <td id="signup_image_row_1"></td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <figure>
+                                            <img src="static/images/sign_up_image.jpg" alt="sing up image">
+                                        </figure>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <a href="http://localhost:63342/otus_highload_front/templates/sign_in.html" class="signup-image-link">I am already member</a>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td id='signup_image_row_4'></td>
+                                </tr>
+                            </table>
                         </div>
                     </div>
                 </div>
@@ -113,5 +129,9 @@
         <!-- JS -->
         <script src="vendor/jquery/jquery.min.js"></script>
         <script src="js/main.js"></script>
+        <script>
+            document.getElementById('signup_image_row_1').style.height = (document.getElementById('register-form').clientHeight * 0.15).toString() + "px"
+            document.getElementById('signup_image_row_4').style.height = (document.getElementById('register-form').clientHeight * 0.35).toString() + "px"
+        </script>
     </body>
 </html>
