@@ -1,0 +1,40 @@
+version: '3.7'
+
+services:
+  db:
+    image: mysql
+    command: --default-authentication-plugin=mysql_native_password
+    environment:
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+      MYSQL_DATABASE: social-network
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8080:8080
+    depends_on:
+      - db
+
+  social-network:
+    build:
+      context: ..
+      dockerfile: deployments/server/Dockerfile
+    image: social-network:stage
+    container_name: social-network-stage
+    ports:
+      - '9999:9999'
+    environment:
+      - ADDR=0.0.0.0:9999
+    networks:
+      - stage_network
+    depends_on:
+      - db
+      - adminer
+
+networks:
+  stage_network:
+    name: stage_network
+    external: true
+    driver: bridge
