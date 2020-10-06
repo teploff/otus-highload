@@ -22,6 +22,8 @@ services:
       - '8080:8080'
     depends_on:
       - storage
+    networks:
+      - stage_network
 
   social_network:
     build:

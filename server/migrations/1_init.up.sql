@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS user (
-    id            VARCHAR(32)  NOT NULL DEFAULT (uuid()) PRIMARY KEY,
+    id            VARCHAR(100)  NOT NULL DEFAULT (uuid()) PRIMARY KEY,
     login         VARCHAR(100) NOT NULL UNIQUE CONSTRAINT login_empty_field CHECK (login != ''),
     password      TEXT         NOT NULL CONSTRAINT password_empty_field CHECK (password != ''),
     name          VARCHAR(100) NOT NULL CONSTRAINT name_empty_field CHECK (name != ''),

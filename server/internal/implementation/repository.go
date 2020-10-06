@@ -17,9 +17,9 @@ func NewProfileRepository(conn *sql.DB) *profileRepository {
 func (p *profileRepository) Persist(ctx context.Context, profile *domain.Profile) error {
 	stmt, err := p.conn.Prepare(`
 		INSERT 
-			INTO profile(login, password, name, surname, birthday, sex, city, interests) 
+			INTO user (login, password, name, surname, birthday, sex, city, interests) 
 		VALUES
-		    ( ?, ?, ?, ?, ?, ?, ?, ?)`) // ? = placeholder
+		    ( ?, ?, ?, ?, ?, ?, ?, ?)`)
 	if err != nil {
 		return err
 	}

@@ -16,7 +16,7 @@ func NewAuthService(rep domain.ProfileRepository) *authService {
 }
 
 func (a *authService) SignUp(ctx context.Context, profile *domain.Profile) error {
-	panic("implement me")
+	return a.repository.Persist(ctx, profile)
 }
 
 func (a *authService) SignIn(ctx context.Context, credentials *domain.Credentials) (*domain.TokenPair, error) {
