@@ -2,12 +2,15 @@ package main
 
 import (
 	"database/sql"
+	"database/sql/driver"
 	"flag"
-	"github.com/golang-migrate/migrate"
-	"github.com/golang-migrate/migrate/database/mysql"
+	"fmt"
 	"log"
+	"time"
 
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/golang-migrate/migrate"
+	"github.com/golang-migrate/migrate/database/mysql"
 	_ "github.com/golang-migrate/migrate/source/file"
 )
 
@@ -33,19 +36,23 @@ func main() {
 		log.Fatalf("fail to connect with DB, %v\n", err)
 	}
 
+	if err = retryConn(db, 5); err != nil {
+		log.Fatalf("fail to connect with DB, %v\n", err)
+	}
+
 	defer func() {
 		if err = db.Close(); err != nil {
 			log.Fatalf("fail to close connection with DB, %v\n", err)
 		}
 	}()
 
-	driver, err := mysql.WithInstance(db, &mysql.Config{})
+	d, err := mysql.WithInstance(db, &mysql.Config{})
 	if err != nil {
 		log.Fatalf("fail to create mysql driver, %v\n", err)
 	}
 
 	defer func() {
-		if err = driver.Close(); err != nil {
+		if err = d.Close(); err != nil {
 			log.Fatalf("fail to close mysql driver, %v\n", err)
 		}
 	}()
@@ -53,7 +60,7 @@ func main() {
 	m, err := migrate.NewWithDatabaseInstance(
 		"file://"+*dir,
 		"mysql",
-		driver,
+		d,
 	)
 	if err != nil {
 		log.Fatalf("fail to create migrations, %v\n", err)
@@ -70,5 +77,35 @@ func main() {
 		}
 	default:
 		log.Fatal("unknown operation of migration")
+	}
+}
+
+func retryConn(db *sql.DB, maxAttempts int) error {
+	ticker := time.NewTicker(time.Second * 5)
+	defer ticker.Stop()
+
+	i := 0
+	for {
+		select {
+		case <-ticker.C:
+			if i > maxAttempts {
+				return fmt.Errorf("attempts to connect with db are over")
+			}
+			i += 1
+
+			log.Println("try to connect...")
+
+			err := db.Ping()
+			switch err {
+			case nil:
+				log.Println("successful connection")
+
+				return nil
+			case driver.ErrBadConn:
+				continue
+			default:
+				return err
+			}
+		}
 	}
 }

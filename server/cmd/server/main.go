@@ -30,12 +30,12 @@ func main() {
 
 	cfg, err := config.Load(*configFile)
 	if err != nil {
-		logger.Fatal("error reading config file, ", zap.Error(err))
+		logger.Fatal("error reading config file", zap.Error(err))
 	}
 
 	mysqlConn, err := sql.Open("mysql", cfg.Storage.DSN)
 	if err != nil {
-		logger.Fatal("mysql connection fail, ", zap.Error(err))
+		logger.Fatal("mysql connection fail", zap.Error(err))
 	}
 	defer mysqlConn.Close()
 
