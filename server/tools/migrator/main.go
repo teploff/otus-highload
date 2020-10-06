@@ -11,8 +11,6 @@ import (
 	_ "github.com/golang-migrate/migrate/source/file"
 )
 
-const mainCountArgs = 3
-
 var (
 	dir = flag.String("dir", "./migrations", "directory with migration files")
 	dsn = flag.String("dsn", "user:password@tcp(localhost:3306)/db?multiStatements=true", "DSN for MySQL")
@@ -20,71 +18,57 @@ var (
 
 func main() {
 	flag.Parse()
-	//args := flag.Args()
+	args := flag.Args()
 
-	db, _ := sql.Open("mysql", "user:password@tcp(localhost:3306)/social-network?multiStatements=true")
-	driver, _ := mysql.WithInstance(db, &mysql.Config{})
-	m, _ := migrate.NewWithDatabaseInstance(
-		"file://./migrations",
+	if len(args) < 1 {
+		flag.Usage()
+
+		return
+	}
+
+	command := args[0]
+
+	db, err := sql.Open("mysql", *dsn)
+	if err != nil {
+		log.Fatalf("fail to connect with DB, %v\n", err)
+	}
+
+	defer func() {
+		if err = db.Close(); err != nil {
+			log.Fatalf("fail to close connection with DB, %v\n", err)
+		}
+	}()
+
+	driver, err := mysql.WithInstance(db, &mysql.Config{})
+	if err != nil {
+		log.Fatalf("fail to create mysql driver, %v\n", err)
+	}
+
+	defer func() {
+		if err = driver.Close(); err != nil {
+			log.Fatalf("fail to close mysql driver, %v\n", err)
+		}
+	}()
+
+	m, err := migrate.NewWithDatabaseInstance(
+		"file://"+*dir,
 		"mysql",
 		driver,
 	)
-
-	if err := m.Down(); err != nil {
-		log.Fatal(err)
+	if err != nil {
+		log.Fatalf("fail to create migrations, %v\n", err)
 	}
-	//if err:=m.Steps(2); err != nil {
-	//	log.Fatal(err)
-	//}
 
-	//if len(args) < 1 {
-	//	flag.Usage()
-	//	return
-	//}
-	//
-	//command := args[0]
-	////db, err := sql.Open("mysql", *dsn)
-	////if err != nil {
-	////	log.Fatalf("goose: failed to open DB: %v\n", err)
-	////}
-	////defer db.Close()
-	//
-	//p := &mysql.Mysql{}
-	//db, err := p.Open(*dsn)
-	//if err != nil {
-	//	log.Fatalf("migration: failed to open DB: %v\n", err)
-	//}
-	//
-	//defer func() {
-	//	if err = db.Close(); err != nil {
-	//		log.Fatalf("migration: failed to close DB: %v\n", err)
-	//	}
-	//}()
-	//
-	////
-	////
-	////
-	////if err = db.Ping(); err != nil {
-	////	log.Fatalf("mysql ping fail, %v\n", err)
-	////}
-	//
-	//var arguments []string
-	//if len(args) > mainCountArgs {
-	//	arguments = append(arguments, args[mainCountArgs:]...)
-	//}
-	//
-	//m, err := migrate.NewWithDatabaseInstance("file://"+*dir, "social-network", db)
-	//if err != nil {
-	//	log.Fatal(err)
-	//}
-	//
-	//switch command {
-	//case "up":
-	//	m.Up()
-	//case "down":
-	//	m.Down()
-	//}
-	//if err = goose.Run(command, db, *dir, arguments...); err != nil {
-	//	log.Fatalf("goose %v: %v", command, err)
-	//}
+	switch command {
+	case "up":
+		if err = m.Up(); err != nil {
+			log.Fatalf("fail to up migrations, %v\n", err)
+		}
+	case "down":
+		if err = m.Down(); err != nil {
+			log.Fatalf("fail to down migrations, %v\n", err)
+		}
+	default:
+		log.Fatal("unknown operation of migration")
+	}
 }
