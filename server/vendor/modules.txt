@@ -19,6 +19,13 @@ github.com/go-playground/validator/v10
 # github.com/go-sql-driver/mysql v1.5.0
 ## explicit
 github.com/go-sql-driver/mysql
+# github.com/golang-migrate/migrate v3.5.4+incompatible
+## explicit
+github.com/golang-migrate/migrate
+github.com/golang-migrate/migrate/database
+github.com/golang-migrate/migrate/database/mysql
+github.com/golang-migrate/migrate/source
+github.com/golang-migrate/migrate/source/file
 # github.com/golang/protobuf v1.3.3
 github.com/golang/protobuf/proto
 # github.com/hashicorp/hcl v1.0.0
@@ -48,11 +55,8 @@ github.com/modern-go/concurrent
 github.com/modern-go/reflect2
 # github.com/pelletier/go-toml v1.2.0
 github.com/pelletier/go-toml
-# github.com/pkg/errors v0.8.1
-github.com/pkg/errors
 # github.com/pressly/goose v2.6.0+incompatible
 ## explicit
-github.com/pressly/goose
 # github.com/spf13/afero v1.1.2
 github.com/spf13/afero
 github.com/spf13/afero/mem
