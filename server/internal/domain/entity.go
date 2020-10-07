@@ -22,14 +22,16 @@ func (c *Credentials) DoesPasswordMatch(password string) bool {
 	return bcrypt.CompareHashAndPassword([]byte(c.Password), []byte(password)) == nil
 }
 
-type Profile struct {
+type User struct {
 	Credentials
-	Name      string    `json:"name"`
-	Surname   string    `json:"surname"`
-	Birthday  time.Time `json:"birthday"`
-	Sex       string    `json:"sex"`
-	City      string    `json:"city"`
-	Interests string    `json:"interests"`
+	Name         string    `json:"name"`
+	Surname      string    `json:"surname"`
+	Birthday     time.Time `json:"birthday"`
+	Sex          string    `json:"sex"`
+	City         string    `json:"city"`
+	Interests    string    `json:"interests"`
+	AccessToken  string    `json:"access_token"`
+	RefreshToken string    `json:"refresh_token"`
 }
 
 type TokenPair struct {

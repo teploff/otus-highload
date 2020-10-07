@@ -13,11 +13,11 @@ func NewHTTPServer(addr string, endpoints *AuthEndpoints) *http.Server {
 	//	router.GET("/questionnaire", endpoints)
 	//}
 
-	router.Group("/auth")
+	group := router.Group("/auth")
 	{
-		router.POST("/sign_up", endpoints.SignUp)
-		router.POST("/sign_in", endpoints.SignIn)
-		router.PUT("/token", endpoints.RefreshToken)
+		group.POST("/sign_up", endpoints.SignUp)
+		group.POST("/sign_in", endpoints.SignIn)
+		group.PUT("/token", endpoints.RefreshToken)
 	}
 
 	return &http.Server{

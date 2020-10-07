@@ -33,7 +33,7 @@ func makeSignUpEndpoint(svc domain.AuthService) gin.HandlerFunc {
 			return
 		}
 
-		if err = svc.SignUp(c, &domain.Profile{
+		if err = svc.SignUp(c, &domain.User{
 			Credentials: *credentials,
 			Name:        request.Name,
 			Surname:     request.Surname,
