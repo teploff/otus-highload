@@ -20,7 +20,7 @@ func MakeEndpoints(auth domain.AuthService, social domain.SocialService) *Endpoi
 			RefreshToken: makeRefreshTokenEndpoint(auth),
 		},
 		Social: &SocialEndpoints{
-			Questionnaires: makeQuestionnairesEndpoint(social)},
+			Questionnaires: makeQuestionnairesEndpoint(auth, social)},
 	}
 }
 
@@ -135,7 +135,7 @@ type SocialEndpoints struct {
 	Questionnaires gin.HandlerFunc
 }
 
-func makeQuestionnairesEndpoint(svc domain.SocialService) gin.HandlerFunc {
+func makeQuestionnairesEndpoint(authSvc domain.AuthService, socialSvc domain.SocialService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var header AuthorizationHeader
 		if err := c.ShouldBindHeader(&header); err != nil {
@@ -155,9 +155,16 @@ func makeQuestionnairesEndpoint(svc domain.SocialService) gin.HandlerFunc {
 			return
 		}
 
-		// todo: make authorize action
+		userID, err := authSvc.Authenticate(c, header.AccessToken)
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, ErrorResponse{
+				Message: err.Error(),
+			})
 
-		quest, count, err := svc.GetQuestionnaires(c, "080b2d4b-096e-11eb-b4fd-0242c0a80002", *request.Limit, request.Offset)
+			return
+		}
+
+		quest, count, err := socialSvc.GetQuestionnaires(c, userID, *request.Limit, request.Offset)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, ErrorResponse{
 				Message: err.Error(),

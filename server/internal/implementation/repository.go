@@ -76,6 +76,27 @@ func (p *userRepository) GetByIDAndRefreshToken(tx *sql.Tx, id, token string) (*
 	return &user, nil
 }
 
+func (p *userRepository) GetByIDAndAccessToken(tx *sql.Tx, id, token string) (*domain.User, error) {
+	var user domain.User
+
+	err := tx.QueryRow(`
+		SELECT
+			id, login, password, name, surname, sex, birthday, city, interests, access_token, refresh_token
+		FROM
+			user
+		WHERE
+			id = ? AND access_token = ?`, id, token).Scan(&user.ID, &user.Login, &user.Password, &user.Name,
+		&user.Surname, &user.Sex, &user.Birthday, &user.City, &user.Interests, &user.AccessToken,
+		&user.RefreshToken)
+	if err != nil {
+		tx.Rollback()
+
+		return nil, err
+	}
+
+	return &user, nil
+}
+
 func (p *userRepository) UpdateByID(tx *sql.Tx, user *domain.User) error {
 	_, err := tx.Exec(`
 		UPDATE 

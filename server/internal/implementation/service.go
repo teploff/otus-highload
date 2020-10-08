@@ -159,6 +159,26 @@ func (a *authService) RefreshToken(ctx context.Context, token string) (*domain.T
 	return &newTokenPair, tx.Commit()
 }
 
+func (a *authService) Authenticate(ctx context.Context, token string) (string, error) {
+	tx, err := a.repository.GetTx(ctx)
+	if err != nil {
+		return "", err
+	}
+
+	claims, err := a.parseToken(token)
+	if err != nil {
+		return "", fmt.Errorf("invalid token")
+	}
+
+	userID := claims["aud"].(string)
+	_, err = a.repository.GetByIDAndAccessToken(tx, userID, token)
+	if err != nil {
+		return "", fmt.Errorf("invalid token")
+	}
+
+	return userID, tx.Commit()
+}
+
 type socialService struct {
 	repository domain.UserRepository
 }
