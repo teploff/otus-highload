@@ -35,7 +35,7 @@ services:
       - '9999:9999'
     environment:
       - ADDR=0.0.0.0:9999
-      - STORAGE_DSN=user:password@tcp(storage_stage:3306)/social-network
+      - STORAGE_DSN=user:password@tcp(storage_stage:3306)/social-network?parseTime=true
     networks:
       - stage_network
     depends_on:

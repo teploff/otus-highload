@@ -23,6 +23,7 @@ func (c *Credentials) DoesPasswordMatch(password string) bool {
 }
 
 type User struct {
+	ID string `json:"id"`
 	Credentials
 	Name         string    `json:"name"`
 	Surname      string    `json:"surname"`
@@ -30,8 +31,8 @@ type User struct {
 	Sex          string    `json:"sex"`
 	City         string    `json:"city"`
 	Interests    string    `json:"interests"`
-	AccessToken  string    `json:"access_token"`
-	RefreshToken string    `json:"refresh_token"`
+	AccessToken  *string   `json:"access_token"`
+	RefreshToken *string   `json:"refresh_token"`
 }
 
 type TokenPair struct {

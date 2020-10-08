@@ -44,8 +44,8 @@ func (a *authService) SignIn(ctx context.Context, credentials *domain.Credential
 		return nil, fmt.Errorf("creating jwt token's pair error, %w", err)
 	}
 
-	user.AccessToken = tokenPair.AccessToken
-	user.RefreshToken = tokenPair.RefreshToken
+	user.AccessToken = &tokenPair.AccessToken
+	user.RefreshToken = &tokenPair.RefreshToken
 
 	return &tokenPair, a.repository.UpdateByID(ctx, user)
 }

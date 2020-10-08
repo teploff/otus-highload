@@ -4,7 +4,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"social-network/internal/domain"
-	"time"
 )
 
 type AuthEndpoints struct {
@@ -37,7 +36,7 @@ func makeSignUpEndpoint(svc domain.AuthService) gin.HandlerFunc {
 			Credentials: *credentials,
 			Name:        request.Name,
 			Surname:     request.Surname,
-			Birthday:    time.Unix(request.Birthday, 0),
+			Birthday:    request.Birthday,
 			Sex:         request.Sex,
 			City:        request.City,
 			Interests:   request.Interests,

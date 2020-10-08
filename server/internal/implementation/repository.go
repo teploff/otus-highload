@@ -37,13 +37,20 @@ func (p *userRepository) Persist(ctx context.Context, user *domain.User) error {
 func (p *userRepository) GetByLogin(ctx context.Context, login string) (*domain.User, error) {
 	var user domain.User
 
-	stmt, err := p.conn.Prepare(`SELECT * FROM user WHERE login = ?`)
+	stmt, err := p.conn.Prepare(`
+	SELECT
+		id, login, password, name, surname, sex, birthday, city, interests, access_token, refresh_token
+	FROM
+	     user 
+	WHERE 
+	      login = ?`)
 	if err != nil {
 		return nil, err
 	}
 	defer stmt.Close()
 
-	if err = stmt.QueryRowContext(ctx, login).Scan(&user); err != nil {
+	if err = stmt.QueryRowContext(ctx, login).Scan(&user.ID, &user.Login, &user.Password, &user.Name, &user.Surname,
+		&user.Sex, &user.Birthday, &user.City, &user.Interests, &user.AccessToken, &user.RefreshToken); err != nil {
 		return nil, err
 	}
 
@@ -81,7 +88,7 @@ func (p *userRepository) UpdateByID(ctx context.Context, user *domain.User) erro
 	defer stmt.Close()
 
 	if _, err = stmt.Exec(user.Login, user.Password, user.Name, user.Surname, user.Birthday, user.Sex, user.City,
-		user.Interests, user.AccessToken, user.RefreshToken, time.Now().Unix()); err != nil {
+		user.Interests, user.AccessToken, user.RefreshToken, time.Now().UTC(), user.ID); err != nil {
 		return err
 	}
 
