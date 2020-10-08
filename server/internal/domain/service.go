@@ -7,3 +7,7 @@ type AuthService interface {
 	SignIn(ctx context.Context, credentials *Credentials) (*TokenPair, error)
 	RefreshToken(ctx context.Context, token string) (*TokenPair, error)
 }
+
+type SocialService interface {
+	GetQuestionnaires(ctx context.Context, userID string, limit int) ([]*Questionnaire, int, error)
+}

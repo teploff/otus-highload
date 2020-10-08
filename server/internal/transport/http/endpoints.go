@@ -7,6 +7,23 @@ import (
 	"social-network/internal/domain"
 )
 
+type Endpoints struct {
+	Auth   *AuthEndpoints
+	Social *SocialEndpoints
+}
+
+func MakeEndpoints(auth domain.AuthService, social domain.SocialService) *Endpoints {
+	return &Endpoints{
+		Auth: &AuthEndpoints{
+			SignUp:       makeSignUpEndpoint(auth),
+			SignIn:       makeSignInEndpoint(auth),
+			RefreshToken: makeRefreshTokenEndpoint(auth),
+		},
+		Social: &SocialEndpoints{
+			Questionnaires: makeQuestionnairesEndpoint(social)},
+	}
+}
+
 type AuthEndpoints struct {
 	SignUp       gin.HandlerFunc
 	SignIn       gin.HandlerFunc
@@ -104,7 +121,7 @@ func makeRefreshTokenEndpoint(svc domain.AuthService) gin.HandlerFunc {
 			})
 		case sql.ErrNoRows:
 			c.JSON(http.StatusUnauthorized, ErrorResponse{
-				Message: "incorrect token",
+				Message: "token is expired",
 			})
 		default:
 			c.JSON(http.StatusInternalServerError, ErrorResponse{
@@ -114,10 +131,42 @@ func makeRefreshTokenEndpoint(svc domain.AuthService) gin.HandlerFunc {
 	}
 }
 
-func MakeAuthEndpoints(svc domain.AuthService) *AuthEndpoints {
-	return &AuthEndpoints{
-		SignUp:       makeSignUpEndpoint(svc),
-		SignIn:       makeSignInEndpoint(svc),
-		RefreshToken: makeRefreshTokenEndpoint(svc),
+type SocialEndpoints struct {
+	Questionnaires gin.HandlerFunc
+}
+
+func makeQuestionnairesEndpoint(svc domain.SocialService) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var header AuthorizationHeader
+		if err := c.ShouldBindHeader(&header); err != nil {
+			c.JSON(http.StatusUnauthorized, ErrorResponse{
+				Message: err.Error(),
+			})
+
+			return
+		}
+
+		var request QuestionnairesRequest
+		if err := c.Bind(&request); err != nil {
+			c.JSON(http.StatusBadRequest, ErrorResponse{
+				Message: err.Error(),
+			})
+
+			return
+		}
+
+		quest, count, err := svc.GetQuestionnaires(c, "080b2d4b-096e-11eb-b4fd-0242c0a80002", request.Limit)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, ErrorResponse{
+				Message: err.Error(),
+			})
+
+			return
+		}
+
+		c.JSON(http.StatusOK, QuestionnairesResponse{
+			Questionnaires: quest,
+			Count:          count,
+		})
 	}
 }

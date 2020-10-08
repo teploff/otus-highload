@@ -5,15 +5,17 @@ import (
 	"net/http"
 )
 
-func NewHTTPServer(addr string, endpoints *AuthEndpoints) *http.Server {
+func NewHTTPServer(addr string, endpoints *Endpoints) *http.Server {
 	router := gin.Default()
 
-	group := router.Group("/auth")
+	authGroup := router.Group("/auth")
 	{
-		group.POST("/sign_up", endpoints.SignUp)
-		group.POST("/sign_in", endpoints.SignIn)
-		group.PUT("/token", endpoints.RefreshToken)
+		authGroup.POST("/sign-up", endpoints.Auth.SignUp)
+		authGroup.POST("/sign-in", endpoints.Auth.SignIn)
+		authGroup.PUT("/token", endpoints.Auth.RefreshToken)
 	}
+
+	router.POST("/questionnaires", endpoints.Social.Questionnaires)
 
 	return &http.Server{
 		Addr:    addr,

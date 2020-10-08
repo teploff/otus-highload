@@ -124,3 +124,46 @@ func (a *authService) RefreshToken(ctx context.Context, token string) (*domain.T
 
 	return &newTokenPair, a.repository.UpdateByID(ctx, user)
 }
+
+type socialService struct {
+	repository domain.UserRepository
+}
+
+func NewSocialService(rep domain.UserRepository) *socialService {
+	return &socialService{
+		repository: rep,
+	}
+}
+
+func (s *socialService) GetQuestionnaires(ctx context.Context, userID string, limit int) ([]*domain.Questionnaire, int, error) {
+	tx, err := s.repository.GetTx(ctx)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	count, err := s.repository.GetCount(tx)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	users, err := s.repository.GetByLimitAndOffsetExceptUserID(tx, userID, limit, 0)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	questionnaires := make([]*domain.Questionnaire, 0, len(users))
+	for _, user := range users {
+		questionnaires = append(questionnaires, &domain.Questionnaire{
+			Email:     user.Login,
+			Name:      user.Name,
+			Surname:   user.Surname,
+			Birthday:  user.Birthday,
+			Sex:       user.Sex,
+			City:      user.City,
+			Interests: user.Interests,
+		})
+	}
+
+	// count - 1: without myself
+	return questionnaires, count - 1, tx.Commit()
+}

@@ -21,3 +21,12 @@ type SignInRequest struct {
 type RefreshTokenRequest struct {
 	RefreshToken string `json:"refresh_token" binding:"required"`
 }
+
+type QuestionnairesRequest struct {
+	Limit int `json:"limit" binding:"required"`
+	//Offset int `json:"offset" binding:"required"`
+}
+
+type AuthorizationHeader struct {
+	AccessToken string `json:"access_token" binding:"required" header:"Authorization"`
+}

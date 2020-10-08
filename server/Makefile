@@ -1,4 +1,4 @@
-.PHONY: lint up down
+.PHONY: lint up down reload
 
 lint:
 	golangci-lint run --enable-all ;\
@@ -14,6 +14,11 @@ up:
 	rm goose ;\
 	docker-compose -f deployments/docker-compose.yml up -d --build social_network ;\
 	docker image prune -f ;\
+
+reload:
+	docker rm -f social_network_stage ;\
+	docker-compose -f deployments/docker-compose.yml up -d --build social_network ;\
+    docker image prune -f ;\
 
 down:
 	docker-compose -f deployments/docker-compose.yml down ;\

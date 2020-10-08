@@ -48,8 +48,9 @@ func main() {
 		logger.Fatal("mysql ping fail, ", zap.Error(err))
 	}
 
-	svc := implementation.NewAuthService(implementation.NewUserRepository(mysqlConn), "todo")
-	srv := http.NewHTTPServer(cfg.Addr, http.MakeAuthEndpoints(svc))
+	authSvc := implementation.NewAuthService(implementation.NewUserRepository(mysqlConn), "todo")
+	socialSvc := implementation.NewSocialService(implementation.NewUserRepository(mysqlConn))
+	srv := http.NewHTTPServer(cfg.Addr, http.MakeEndpoints(authSvc, socialSvc))
 
 	go func() {
 		if err = srv.ListenAndServe(); err != nil {
