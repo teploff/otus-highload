@@ -8,11 +8,6 @@ import (
 func NewHTTPServer(addr string, endpoints *AuthEndpoints) *http.Server {
 	router := gin.Default()
 
-	//router.Group("/")
-	//{
-	//	router.GET("/questionnaire", endpoints)
-	//}
-
 	group := router.Group("/auth")
 	{
 		group.POST("/sign_up", endpoints.SignUp)

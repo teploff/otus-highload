@@ -58,14 +58,14 @@ func (a *authService) createTokenPair(user *domain.User) (domain.TokenPair, erro
 		"nbf": time.Now().Unix(),
 		"iat": time.Now().Unix(),
 		"iss": "auth_service",
-		"aud": user.Login,
+		"aud": user.ID,
 	})
 	refreshToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"exp": time.Now().Add(refreshTokenTimeExpire).Unix(),
 		"nbf": time.Now().Unix(),
 		"iat": time.Now().Unix(),
 		"iss": "auth_service",
-		"aud": user.Login,
+		"aud": user.ID,
 	})
 
 	var err error
@@ -103,10 +103,24 @@ func (a *authService) parseToken(tokenString string) (jwt.MapClaims, error) {
 }
 
 func (a *authService) RefreshToken(ctx context.Context, token string) (*domain.TokenPair, error) {
-	_, err := a.parseToken(token)
+	claims, err := a.parseToken(token)
 	if err != nil {
 		return nil, err
 	}
 
-	return nil, nil
+	userID := claims["aud"].(string)
+	user, err := a.repository.GetByIDAndRefreshToken(ctx, userID, token)
+	if err != nil {
+		return nil, err
+	}
+
+	newTokenPair, err := a.createTokenPair(user)
+	if err != nil {
+		return nil, fmt.Errorf("unknown server error: %w", err)
+	}
+
+	user.AccessToken = &newTokenPair.AccessToken
+	user.RefreshToken = &newTokenPair.RefreshToken
+
+	return &newTokenPair, a.repository.UpdateByID(ctx, user)
 }

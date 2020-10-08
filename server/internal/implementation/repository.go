@@ -3,6 +3,7 @@ package implementation
 import (
 	"context"
 	"database/sql"
+	"log"
 	"social-network/internal/domain"
 	"time"
 )
@@ -60,13 +61,20 @@ func (p *userRepository) GetByLogin(ctx context.Context, login string) (*domain.
 func (p *userRepository) GetByIDAndRefreshToken(ctx context.Context, id, token string) (*domain.User, error) {
 	var user domain.User
 
-	stmt, err := p.conn.Prepare(`SELECT * FROM user WHERE id = ? AND refresh_token = ?`)
+	stmt, err := p.conn.Prepare(`
+	SELECT
+		id, login, password, name, surname, sex, birthday, city, interests, access_token, refresh_token
+	FROM
+	     user
+	WHERE
+	      id = ? AND refresh_token = ?`)
 	if err != nil {
 		return nil, err
 	}
 	defer stmt.Close()
-
-	if err = stmt.QueryRowContext(ctx, id, token).Scan(&user); err != nil {
+	log.Println(id, token)
+	if err = stmt.QueryRowContext(ctx, id, token).Scan(&user.ID, &user.Login, &user.Password, &user.Name, &user.Surname,
+		&user.Sex, &user.Birthday, &user.City, &user.Interests, &user.AccessToken, &user.RefreshToken); err != nil {
 		return nil, err
 	}
 

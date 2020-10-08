@@ -1,6 +1,7 @@
 package http
 
 import (
+	"database/sql"
 	"github.com/gin-gonic/gin"
 	"net/http"
 	"social-network/internal/domain"
@@ -94,18 +95,22 @@ func makeRefreshTokenEndpoint(svc domain.AuthService) gin.HandlerFunc {
 		}
 
 		tokenPair, err := svc.RefreshToken(c, request.RefreshToken)
-		if err != nil {
+
+		switch err {
+		case nil:
+			c.JSON(http.StatusOK, SignInResponse{
+				AccessToken:  tokenPair.AccessToken,
+				RefreshToken: tokenPair.RefreshToken,
+			})
+		case sql.ErrNoRows:
+			c.JSON(http.StatusUnauthorized, ErrorResponse{
+				Message: "incorrect token",
+			})
+		default:
 			c.JSON(http.StatusInternalServerError, ErrorResponse{
 				Message: err.Error(),
 			})
-
-			return
 		}
-
-		c.JSON(http.StatusOK, SignInResponse{
-			AccessToken:  tokenPair.AccessToken,
-			RefreshToken: tokenPair.RefreshToken,
-		})
 	}
 }
 
