@@ -36,6 +36,7 @@ services:
     environment:
       - ADDR=0.0.0.0:9999
       - STORAGE_DSN=user:password@tcp(storage_stage:3306)/social-network?parseTime=true
+      - JWT_SECRET=secret
     networks:
       - stage_network
     depends_on:

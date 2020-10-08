@@ -10,8 +10,9 @@ import (
 )
 
 type Config struct {
-	Addr    string        `mapstructure:"addr"`
-	Storage StorageConfig `mapstructure:"storage"`
+	Addr      string        `mapstructure:"addr"`
+	Storage   StorageConfig `mapstructure:"storage"`
+	JWTSecret string        `mapstructure:"jwt_secret"`
 }
 
 type StorageConfig struct {
