@@ -124,7 +124,7 @@ func (a *authService) parseToken(tokenString string) (jwt.MapClaims, error) {
 		return claims, nil
 	}
 
-	return nil, fmt.Errorf("")
+	return nil, fmt.Errorf("parsing token err")
 }
 
 func (a *authService) RefreshToken(ctx context.Context, token string) (*domain.TokenPair, error) {
