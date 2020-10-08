@@ -7,10 +7,10 @@ import (
 
 type UserRepository interface {
 	GetTx(ctx context.Context) (*sql.Tx, error)
-	Persist(ctx context.Context, user *User) error
-	GetByLogin(ctx context.Context, login string) (*User, error)
-	GetByIDAndRefreshToken(ctx context.Context, id, token string) (*User, error)
+	Persist(tx *sql.Tx, user *User) error
+	GetByLogin(tx *sql.Tx, login string) (*User, error)
+	GetByIDAndRefreshToken(tx *sql.Tx, id, token string) (*User, error)
 	GetCount(tx *sql.Tx) (int, error)
 	GetByLimitAndOffsetExceptUserID(tx *sql.Tx, userID string, limit, offset int) ([]*User, error)
-	UpdateByID(ctx context.Context, user *User) error
+	UpdateByID(tx *sql.Tx, user *User) error
 }

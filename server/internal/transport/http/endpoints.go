@@ -155,6 +155,8 @@ func makeQuestionnairesEndpoint(svc domain.SocialService) gin.HandlerFunc {
 			return
 		}
 
+		// todo: make authorize action
+
 		quest, count, err := svc.GetQuestionnaires(c, "080b2d4b-096e-11eb-b4fd-0242c0a80002", *request.Limit, request.Offset)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, ErrorResponse{

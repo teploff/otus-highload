@@ -33,11 +33,25 @@ func NewAuthService(rep domain.UserRepository, cfg config.JWTConfig) *authServic
 }
 
 func (a *authService) SignUp(ctx context.Context, profile *domain.User) error {
-	return a.repository.Persist(ctx, profile)
+	tx, err := a.repository.GetTx(ctx)
+	if err != nil {
+		return err
+	}
+
+	if err = a.repository.Persist(tx, profile); err != nil {
+		return err
+	}
+
+	return tx.Commit()
 }
 
 func (a *authService) SignIn(ctx context.Context, credentials *domain.Credentials) (*domain.TokenPair, error) {
-	user, err := a.repository.GetByLogin(ctx, credentials.Login)
+	tx, err := a.repository.GetTx(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	user, err := a.repository.GetByLogin(tx, credentials.Login)
 	if err != nil {
 		return nil, err
 	}
@@ -54,7 +68,11 @@ func (a *authService) SignIn(ctx context.Context, credentials *domain.Credential
 	user.AccessToken = &tokenPair.AccessToken
 	user.RefreshToken = &tokenPair.RefreshToken
 
-	return &tokenPair, a.repository.UpdateByID(ctx, user)
+	if err = a.repository.UpdateByID(tx, user); err != nil {
+		return nil, err
+	}
+
+	return &tokenPair, tx.Commit()
 }
 
 func (a *authService) createTokenPair(user *domain.User) (domain.TokenPair, error) {
@@ -110,13 +128,18 @@ func (a *authService) parseToken(tokenString string) (jwt.MapClaims, error) {
 }
 
 func (a *authService) RefreshToken(ctx context.Context, token string) (*domain.TokenPair, error) {
+	tx, err := a.repository.GetTx(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	claims, err := a.parseToken(token)
 	if err != nil {
 		return nil, err
 	}
 
 	userID := claims["aud"].(string)
-	user, err := a.repository.GetByIDAndRefreshToken(ctx, userID, token)
+	user, err := a.repository.GetByIDAndRefreshToken(tx, userID, token)
 	if err != nil {
 		return nil, err
 	}
@@ -129,7 +152,11 @@ func (a *authService) RefreshToken(ctx context.Context, token string) (*domain.T
 	user.AccessToken = &newTokenPair.AccessToken
 	user.RefreshToken = &newTokenPair.RefreshToken
 
-	return &newTokenPair, a.repository.UpdateByID(ctx, user)
+	if err = a.repository.UpdateByID(tx, user); err != nil {
+		return nil, err
+	}
+
+	return &newTokenPair, tx.Commit()
 }
 
 type socialService struct {
