@@ -82,7 +82,7 @@ func makeSignInEndpoint(svc domain.AuthService) gin.HandlerFunc {
 		}
 
 		tokenPair, err := svc.SignIn(c, &domain.Credentials{
-			Login:    request.Login,
+			Email:    request.Email,
 			Password: request.Password,
 		})
 		if err != nil {

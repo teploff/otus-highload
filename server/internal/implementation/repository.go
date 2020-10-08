@@ -22,9 +22,9 @@ func (p *userRepository) GetTx(ctx context.Context) (*sql.Tx, error) {
 func (p *userRepository) Persist(tx *sql.Tx, user *domain.User) error {
 	_, err := tx.Exec(`
 		INSERT 
-			INTO user (login, password, name, surname, birthday, sex, city, interests) 
+			INTO user (email, password, name, surname, birthday, sex, city, interests) 
 		VALUES
-			( ?, ?, ?, ?, ?, ?, ?, ?)`, user.Login, user.Password, user.Name, user.Surname, user.Birthday, user.Sex,
+			( ?, ?, ?, ?, ?, ?, ?, ?)`, user.Email, user.Password, user.Name, user.Surname, user.Birthday, user.Sex,
 		user.City, user.Interests)
 	if err != nil {
 		tx.Rollback()
@@ -35,16 +35,16 @@ func (p *userRepository) Persist(tx *sql.Tx, user *domain.User) error {
 	return nil
 }
 
-func (p *userRepository) GetByLogin(tx *sql.Tx, login string) (*domain.User, error) {
+func (p *userRepository) GetByEmail(tx *sql.Tx, email string) (*domain.User, error) {
 	var user domain.User
 
 	err := tx.QueryRow(`
 		SELECT
-			id, login, password, name, surname, sex, birthday, city, interests, access_token, refresh_token
+			id, email, password, name, surname, sex, birthday, city, interests, access_token, refresh_token
 		FROM
 			 user 
 		WHERE 
-			  login = ?`, login).Scan(&user.ID, &user.Login, &user.Password, &user.Name, &user.Surname,
+			  email = ?`, email).Scan(&user.ID, &user.Email, &user.Password, &user.Name, &user.Surname,
 		&user.Sex, &user.Birthday, &user.City, &user.Interests, &user.AccessToken, &user.RefreshToken)
 	if err != nil {
 		tx.Rollback()
@@ -60,11 +60,11 @@ func (p *userRepository) GetByIDAndRefreshToken(tx *sql.Tx, id, token string) (*
 
 	err := tx.QueryRow(`
 		SELECT
-			id, login, password, name, surname, sex, birthday, city, interests, access_token, refresh_token
+			id, email, password, name, surname, sex, birthday, city, interests, access_token, refresh_token
 		FROM
 			user
 		WHERE
-			id = ? AND refresh_token = ?`, id, token).Scan(&user.ID, &user.Login, &user.Password, &user.Name,
+			id = ? AND refresh_token = ?`, id, token).Scan(&user.ID, &user.Email, &user.Password, &user.Name,
 		&user.Surname, &user.Sex, &user.Birthday, &user.City, &user.Interests, &user.AccessToken,
 		&user.RefreshToken)
 	if err != nil {
@@ -81,11 +81,11 @@ func (p *userRepository) GetByIDAndAccessToken(tx *sql.Tx, id, token string) (*d
 
 	err := tx.QueryRow(`
 		SELECT
-			id, login, password, name, surname, sex, birthday, city, interests, access_token, refresh_token
+			id, email, password, name, surname, sex, birthday, city, interests, access_token, refresh_token
 		FROM
 			user
 		WHERE
-			id = ? AND access_token = ?`, id, token).Scan(&user.ID, &user.Login, &user.Password, &user.Name,
+			id = ? AND access_token = ?`, id, token).Scan(&user.ID, &user.Email, &user.Password, &user.Name,
 		&user.Surname, &user.Sex, &user.Birthday, &user.City, &user.Interests, &user.AccessToken,
 		&user.RefreshToken)
 	if err != nil {
@@ -102,10 +102,10 @@ func (p *userRepository) UpdateByID(tx *sql.Tx, user *domain.User) error {
 		UPDATE 
 			user
 		SET
-		    login = ?, password = ?, name = ?, surname = ?, birthday = ?, sex = ?, city = ?, interests = ?,
+		    email = ?, password = ?, name = ?, surname = ?, birthday = ?, sex = ?, city = ?, interests = ?,
 		    access_token = ?, refresh_token = ?, update_time = ?
 		WHERE
-		    id = ?`, user.Login, user.Password, user.Name, user.Surname, user.Birthday, user.Sex,
+		    id = ?`, user.Email, user.Password, user.Name, user.Surname, user.Birthday, user.Sex,
 		user.City, user.Interests, user.AccessToken, user.RefreshToken, time.Now().UTC(), user.ID)
 	if err != nil {
 		tx.Rollback()
@@ -133,7 +133,7 @@ func (p *userRepository) GetByLimitAndOffsetExceptUserID(tx *sql.Tx, userID stri
 
 	rows, err := tx.Query(`
 		SELECT
-			id, login, password, name, surname, sex, birthday, city, interests, access_token, refresh_token
+			id, email, password, name, surname, sex, birthday, city, interests, access_token, refresh_token
 		FROM
 		    user
 		WHERE 
@@ -148,7 +148,7 @@ func (p *userRepository) GetByLimitAndOffsetExceptUserID(tx *sql.Tx, userID stri
 	for rows.Next() {
 		user := new(domain.User)
 
-		if err = rows.Scan(&user.ID, &user.Login, &user.Password, &user.Name, &user.Surname, &user.Sex, &user.Birthday,
+		if err = rows.Scan(&user.ID, &user.Email, &user.Password, &user.Name, &user.Surname, &user.Sex, &user.Birthday,
 			&user.City, &user.Interests, &user.AccessToken, &user.RefreshToken); err != nil {
 			tx.Rollback()
 

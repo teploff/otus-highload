@@ -6,16 +6,16 @@ import (
 )
 
 type Credentials struct {
-	Login    string `json:"login"`
+	Email    string `json:"email"`
 	Password string `json:"password"`
 }
 
-func NewCredentials(login string, password string) (*Credentials, error) {
+func NewCredentials(email string, password string) (*Credentials, error) {
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), 10)
 	if err != nil {
 		return nil, err
 	}
-	return &Credentials{Login: login, Password: string(hash)}, nil
+	return &Credentials{Email: email, Password: string(hash)}, nil
 }
 
 func (c *Credentials) DoesPasswordMatch(password string) bool {

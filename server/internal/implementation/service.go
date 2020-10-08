@@ -51,7 +51,7 @@ func (a *authService) SignIn(ctx context.Context, credentials *domain.Credential
 		return nil, err
 	}
 
-	user, err := a.repository.GetByLogin(tx, credentials.Login)
+	user, err := a.repository.GetByEmail(tx, credentials.Email)
 	if err != nil {
 		return nil, err
 	}
@@ -208,7 +208,7 @@ func (s *socialService) GetQuestionnaires(ctx context.Context, userID string, li
 	questionnaires := make([]*domain.Questionnaire, 0, len(users))
 	for _, user := range users {
 		questionnaires = append(questionnaires, &domain.Questionnaire{
-			Email:     user.Login,
+			Email:     user.Email,
 			Name:      user.Name,
 			Surname:   user.Surname,
 			Birthday:  user.Birthday,
