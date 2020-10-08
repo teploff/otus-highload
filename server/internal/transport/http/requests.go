@@ -23,8 +23,8 @@ type RefreshTokenRequest struct {
 }
 
 type QuestionnairesRequest struct {
-	Limit int `json:"limit" binding:"required"`
-	//Offset int `json:"offset" binding:"required"`
+	Limit  *int `json:"limit" binding:"required"`
+	Offset int  `json:"offset"`
 }
 
 type AuthorizationHeader struct {

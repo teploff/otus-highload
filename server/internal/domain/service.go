@@ -9,5 +9,5 @@ type AuthService interface {
 }
 
 type SocialService interface {
-	GetQuestionnaires(ctx context.Context, userID string, limit int) ([]*Questionnaire, int, error)
+	GetQuestionnaires(ctx context.Context, userID string, limit, offset int) ([]*Questionnaire, int, error)
 }

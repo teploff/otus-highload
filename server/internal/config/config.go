@@ -10,9 +10,9 @@ import (
 )
 
 type Config struct {
-	Addr      string        `mapstructure:"addr"`
-	Storage   StorageConfig `mapstructure:"storage"`
-	JWTSecret string        `mapstructure:"jwt_secret"`
+	Addr    string        `mapstructure:"addr"`
+	Storage StorageConfig `mapstructure:"storage"`
+	JWT     JWTConfig     `mapstructure:"jwt"`
 }
 
 type StorageConfig struct {
@@ -20,6 +20,12 @@ type StorageConfig struct {
 	ConnMaxLifetime time.Duration `mapstructure:"conn_max_lifetime"`
 	MaxOpenConns    int           `mapstructure:"max_open_conns"`
 	MaxIdleConns    int           `mapstructure:"max_idle_conns"`
+}
+
+type JWTConfig struct {
+	Secret                 string
+	AccessTokenTimeExpire  time.Duration `mapstructure:"access_token_time_expire"`
+	RefreshTokenTimeExpire time.Duration `mapstructure:"refresh_token_time_expire"`
 }
 
 // Load create configuration from file & environments.

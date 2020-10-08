@@ -6,4 +6,7 @@ storage:
   max_open_conns: 10
   max_idle_conns: 10
 
-jwt_secret: "some_secret"
+jwt:
+  secret: "some_secret"
+  access_token_time_expire: "1h"
+  refresh_token_time_expire: "24h"
