@@ -1,12 +1,14 @@
 package http
 
 import (
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"net/http"
 )
 
 func NewHTTPServer(addr string, endpoints *Endpoints) *http.Server {
 	router := gin.Default()
+	router.Use(cors.Default())
 
 	authGroup := router.Group("/auth")
 	{

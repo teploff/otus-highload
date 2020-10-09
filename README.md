@@ -1,1 +1,1 @@
-# otus_highload_front
+# Otus Highload project
