@@ -1,4 +1,4 @@
-# client
+# front
 
 > A Vue.js project
 
