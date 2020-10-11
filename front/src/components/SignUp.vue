@@ -1,5 +1,5 @@
 <template>
-  <form @submit="signUp">
+  <form>
     <md-field>
       <md-icon>email</md-icon>
       <label>Your Email</label>
@@ -53,7 +53,7 @@
       <md-textarea v-model="payload.interests" required></md-textarea>
     </md-field>
 
-    <md-button class="md-raised" type="submit">Register</md-button>
+    <md-button class="md-raised" id="signUpButton" v-on:click="signUp">Register</md-button>
   </form>
 </template>
 
@@ -68,7 +68,7 @@ export default {
       password: '',
       name: '',
       surname: '',
-      birthday: null,
+      birthday: Date(),
       sex: 'male',
       city: '',
       interests: '',
@@ -78,7 +78,7 @@ export default {
   }),
   methods: {
     signUp() {
-      const path = 'http://localhost:9999/auth/sign-in';
+      const path = 'http://localhost:9999/auth/sign-up';
       const headers = {
         'Content-Type': 'application/json',
       };
@@ -88,7 +88,8 @@ export default {
         })
         .catch((error) => {
           // eslint-отключение следующей строки
-          this.error = error;
+          this.error = JSON.parse(JSON.stringify(error.response));
+          console.log(error);
         });
       console.log(this.error);
     },
