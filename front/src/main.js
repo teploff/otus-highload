@@ -3,6 +3,7 @@
 // import 'bootstrap/dist/css/bootstrap.css';
 import Vue from 'vue';
 import VueMaterial from 'vue-material';
+import Vuelidate from 'vuelidate';
 import 'vue-material/dist/vue-material.css';
 import 'vue-material/dist/theme/default.css';
 
@@ -12,6 +13,7 @@ import router from './router';
 Vue.config.productionTip = false;
 
 Vue.use(VueMaterial);
+Vue.use(Vuelidate);
 
 /* eslint-disable no-new */
 new Vue({

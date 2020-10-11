@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <form @submit="signUp">
     <md-field>
       <md-icon>email</md-icon>
       <label>Your Email</label>
@@ -53,11 +53,13 @@
       <md-textarea v-model="payload.interests" required></md-textarea>
     </md-field>
 
-    <md-button class="md-raised">Register</md-button>
-  </div>
+    <md-button class="md-raised" type="submit">Register</md-button>
+  </form>
 </template>
 
 <script>
+import axios from 'axios';
+
 export default {
   name: 'SignUp',
   data: () => ({
@@ -71,6 +73,25 @@ export default {
       city: '',
       interests: '',
     },
+    error: null,
+    info: null,
   }),
+  methods: {
+    signUp() {
+      const path = 'http://localhost:9999/auth/sign-in';
+      const headers = {
+        'Content-Type': 'application/json',
+      };
+      axios.post(path, this.payload, { headers })
+        .then((response) => {
+          this.info = response.data;
+        })
+        .catch((error) => {
+          // eslint-отключение следующей строки
+          this.error = error;
+        });
+      console.log(this.error);
+    },
+  },
 };
 </script>
