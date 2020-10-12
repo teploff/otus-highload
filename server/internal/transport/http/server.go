@@ -12,6 +12,7 @@ func NewHTTPServer(addr string, endpoints *Endpoints) *http.Server {
 	config := cors.DefaultConfig()
 	config.AddAllowHeaders("Authorization")
 	config.AllowAllOrigins = true
+	config.AllowMethods = []string{"PUT", "POST"}
 
 	router.Use(cors.New(config))
 
