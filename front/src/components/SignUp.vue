@@ -78,7 +78,7 @@
               <img src="../../static/images/sign_up_image.jpg" alt="sing up image">
             </figure>
 
-            <a class="signup-image-link" href="#">I am already member</a>
+            <router-link class="signup-image-link" to="/sign-in">I am already member</router-link>
           </div>
         </div>
       </div>
