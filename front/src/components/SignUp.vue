@@ -63,7 +63,7 @@
               </div>
 
               <div class="form-group form-button">
-                <md-button class="md-raised" id="signUpButton" v-on:click="signUp">
+                <md-button class="md-dense md-raised md-primary sign-up-button" id="signUpButton" v-on:click="signUp">
                   Register
                 </md-button>
               </div>
@@ -183,5 +183,9 @@ export default {
 
   .form-button {
     text-align: center;
+  }
+
+  .sign-up-button {
+    width:40%;
   }
 </style>
