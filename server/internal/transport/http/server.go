@@ -8,7 +8,12 @@ import (
 
 func NewHTTPServer(addr string, endpoints *Endpoints) *http.Server {
 	router := gin.Default()
-	router.Use(cors.Default())
+
+	config := cors.DefaultConfig()
+	config.AddAllowHeaders("Authorization")
+	config.AllowAllOrigins = true
+
+	router.Use(cors.New(config))
 
 	authGroup := router.Group("/auth")
 	{
