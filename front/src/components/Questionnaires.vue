@@ -51,12 +51,42 @@ export default {
     getQuestionnaires() {
       const path = `${apiUrl}/questionnaires`;
       headers.Authorization = localStorage.getItem('access_token');
+
       axios.post(path, this.payload, { headers })
         .then((response) => {
           this.cards = JSON.parse(JSON.stringify(response.data));
         })
         .catch((error) => {
           const err = JSON.parse(JSON.stringify(error.response));
+          if (err.status === 401) {
+            this.refreshToken();
+          }
+          console.log(err);
+        });
+    },
+    refreshToken() {
+      const path = `${apiUrl}/auth/token`;
+      const refreshToken = localStorage.getItem('refresh_token');
+
+      if (refreshToken === null) {
+        this.$router.push({ name: 'SignIn' });
+      }
+
+      const payload = {
+        refresh_token: refreshToken,
+      };
+      axios.put(path, payload)
+        .then((response) => {
+          const tokenPair = JSON.parse(JSON.stringify(response.data));
+          localStorage.setItem('access_token', tokenPair.access_token);
+          localStorage.setItem('refresh_token', tokenPair.refresh_token);
+          this.$router.push({ name: 'Questionnaires' });
+        })
+        .catch((error) => {
+          const err = JSON.parse(JSON.stringify(error.response));
+          if (err.status === 401) {
+            this.$router.push({ name: 'SignIn' });
+          }
           console.log(err);
         });
     },

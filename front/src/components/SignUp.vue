@@ -115,7 +115,6 @@ export default {
           const err = JSON.parse(JSON.stringify(error.response));
           console.log(err);
         });
-      console.log(this.error);
     },
   },
 };
