@@ -88,6 +88,7 @@
 
 <script>
 import axios from 'axios';
+import { apiUrl, headers } from '../const';
 
 export default {
   name: 'SignUp',
@@ -107,10 +108,7 @@ export default {
   }),
   methods: {
     signUp() {
-      const path = 'http://localhost:9999/auth/sign-up';
-      const headers = {
-        'Content-Type': 'application/json',
-      };
+      const path = `${apiUrl}/auth/sign-up`;
       axios.post(path, this.payload, { headers })
         .then((response) => {
           this.info = response.data;
