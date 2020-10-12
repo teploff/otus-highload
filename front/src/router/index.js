@@ -3,6 +3,7 @@ import Router from 'vue-router';
 import Questionnaires from '../components/Questionnaires';
 import SignUp from '../components/SignUp';
 import SignIn from '../components/SignIn';
+import SignUpSuccess from '../components/SignUpSuccess';
 
 Vue.use(Router);
 
@@ -22,6 +23,11 @@ export default new Router({
       path: '/sign-up',
       name: 'SignUp',
       component: SignUp,
+    },
+    {
+      path: '/sign-up-success',
+      name: 'SignUpSuccess',
+      component: SignUpSuccess,
     },
   ],
   mode: 'history',

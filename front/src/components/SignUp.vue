@@ -43,7 +43,7 @@
                 </md-datepicker>
               </div>
 
-              <div align="center">
+              <div class="gender-item">
                 <md-radio v-model="payload.sex" value="male">Male</md-radio>
                 <md-radio v-model="payload.sex" value="female">Female</md-radio>
               </div>
@@ -103,20 +103,17 @@ export default {
       city: '',
       interests: '',
     },
-    error: null,
-    info: null,
   }),
   methods: {
     signUp() {
       const path = `${apiUrl}/auth/sign-up`;
       axios.post(path, this.payload, { headers })
-        .then((response) => {
-          this.info = response.data;
+        .then(() => {
+          this.$router.push({ name: 'SignUpSuccess' });
         })
         .catch((error) => {
-          // eslint-отключение следующей строки
-          this.error = JSON.parse(JSON.stringify(error.response));
-          console.log(error);
+          const err = JSON.parse(JSON.stringify(error.response));
+          console.log(err);
         });
       console.log(this.error);
     },
@@ -124,7 +121,7 @@ export default {
 };
 </script>
 
-<style>
+<style scoped>
   .main {
     background: #f8f8f8;
     padding: 150px 0;
@@ -170,6 +167,10 @@ export default {
     margin-left: 75px;
     margin-right: 75px;
     padding-left: 34px;
+  }
+
+  .gender-item {
+    text-align: center;
   }
 
   .signup-image-link {
