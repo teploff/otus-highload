@@ -25,12 +25,23 @@ services:
     networks:
       - stage_network
 
-  social_network:
+  migrator:
     build:
-      context: ..
-      dockerfile: deployments/server/Dockerfile
-    image: social_network:stage
-    container_name: social_network_stage
+      context: server
+      dockerfile: migrator.Dockerfile
+    image: mysql_migrator:stage
+    container_name: mysql_migrator_stage
+    depends_on:
+      - adminer
+    networks:
+      - stage_network
+
+  social_network_backend:
+    build:
+      context: server
+      dockerfile: Dockerfile
+    image: social_network_backend:stage
+    container_name: social_network_backend_stage
     ports:
       - '9999:9999'
     environment:
@@ -43,7 +54,17 @@ services:
       - stage_network
     depends_on:
       - storage
-      - adminer
+
+  social_network_frontend:
+    build:
+      context: front
+      dockerfile: Dockerfile
+    image: social_network_frontend:stage
+    container_name: social_network_frontend_stage
+    ports:
+      - '8081:80'
+    networks:
+      - stage_network
 
 networks:
   stage_network:
