@@ -26,7 +26,11 @@
   padding: 75px 0;
 }
 
-.sign-up-form, .form-title {
+.md-layout-item {
+  width: 100%;
+}
+
+.sign-up-form {
   margin-left: 75px;
   margin-right: 75px;
   padding-left: 34px;
@@ -61,6 +65,10 @@
 
 .form-group:last-child {
   margin-bottom: 0;
+}
+
+.md-field {
+  width: 75%;
 }
 
 .form-button {
