@@ -2,10 +2,11 @@
   <div class="main">
     <section class="sign-up">
       <div class="container">
-        <div class="sign-up-content">
-          <div class="sign-up-form">
+        <div class="md-layout md-gutter">
+          <div class="md-layout-item register-form">
             <h2 class="form-title">Sign up</h2>
-            <form class="register-form">
+
+            <form>
               <md-field class="form-group">
                 <md-icon>email</md-icon>
                 <label>Your Email</label>
@@ -60,6 +61,7 @@
                   <md-textarea v-model="payload.interests" required></md-textarea>
                 </md-field>
               </div>
+
               <div class="form-group form-button">
                 <md-button class="md-raised" id="signUpButton" v-on:click="signUp">
                   Register
@@ -67,7 +69,8 @@
               </div>
             </form>
           </div>
-          <div class="sign-up-image">
+
+          <div class="md-layout-item sign-up-image">
             <table width="100%">
               <tr>
                 <td id="signup_image_row_1"></td>
@@ -160,18 +163,8 @@ export default {
     -ms-border-radius: 20px;
   }
 
-  .sign-up-content {
+  .md-layout {
     padding: 75px 0;
-  }
-
-  .md-layout-item {
-    width: 100%;
-  }
-
-  .sign-up-form {
-    margin-left: 75px;
-    margin-right: 75px;
-    padding-left: 34px;
   }
 
   .sign-up-image {
@@ -187,7 +180,9 @@ export default {
   }
 
   .register-form {
-    width: 100%;
+    margin-left: 75px;
+    margin-right: 75px;
+    padding-left: 34px;
   }
 
   .sign-up-form, .sign-up-image, .sign-in-form, .sign-in-image {
@@ -195,19 +190,10 @@ export default {
     overflow: hidden;
   }
 
-  .form-group {
-    position: relative;
-    margin-bottom: 25px;
-    overflow: hidden;
-  }
-
   .form-group:last-child {
     margin-bottom: 0;
   }
 
-  .md-field {
-    width: 75%;
-  }
 
   .form-button {
     text-align: center;
