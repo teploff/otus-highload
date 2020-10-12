@@ -71,26 +71,11 @@
           </div>
 
           <div class="md-layout-item sign-up-image">
-            <table width="100%">
-              <tr>
-                <td id="signup_image_row_1"></td>
-              </tr>
-              <tr>
-                <td>
-                  <figure>
-                    <img src="../../static/images/sign_up_image.jpg" alt="sing up image">
-                  </figure>
-                </td>
-              </tr>
-              <tr>
-                <td>
-                  <a href="#" class="signup-image-link">I am already member</a>
-                </td>
-              </tr>
-              <tr>
-                <td id='signup_image_row_4'></td>
-              </tr>
-            </table>
+            <figure>
+              <img src="../../static/images/sign_up_image.jpg" alt="sing up image">
+            </figure>
+
+            <a class="signup-image-link" href="#">I am already member</a>
           </div>
         </div>
       </div>
@@ -168,7 +153,8 @@ export default {
   }
 
   .sign-up-image {
-    margin: 0 55px;
+    margin: 250px 10px 0 10px;
+    width: 100%;
   }
 
   .form-title {
@@ -185,15 +171,15 @@ export default {
     padding-left: 34px;
   }
 
-  .sign-up-form, .sign-up-image, .sign-in-form, .sign-in-image {
-    width: 50%;
-    overflow: hidden;
-  }
-
   .form-group:last-child {
     margin-bottom: 0;
   }
 
+  .signup-image-link {
+    font-size: 14px;
+    display: block;
+    text-align: center;
+  }
 
   .form-button {
     text-align: center;
