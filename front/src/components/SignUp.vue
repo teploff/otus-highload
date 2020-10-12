@@ -43,7 +43,7 @@
                 </md-datepicker>
               </div>
 
-              <div class="form-group">
+              <div class="form-group" align="center">
                 <md-radio v-model="payload.sex" value="male">Male</md-radio>
                 <md-radio v-model="payload.sex" value="female">Female</md-radio>
               </div>
@@ -63,7 +63,10 @@
               </div>
 
               <div class="form-group form-button">
-                <md-button class="md-dense md-raised md-primary sign-up-button" id="signUpButton" v-on:click="signUp">
+                <md-button
+                  class="md-dense md-raised md-primary sign-up-button"
+                  id="signUpButton"
+                  v-on:click="signUp">
                   Register
                 </md-button>
               </div>
