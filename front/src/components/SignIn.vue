@@ -13,23 +13,29 @@
           <div class="md-layout-item sign-in-form">
             <div class="md-layout-item register-form">
               <h2 class="form-title">Sign in</h2>
-              <form>
-                <md-field>
+
+              <form novalidate @submit.prevent="makeValidate">
+                <md-field :class="getValidationClass('email')">
                   <md-icon>email</md-icon>
                   <label>Your Email</label>
-                  <md-input v-model="payload.email" type="email" required></md-input>
+                  <md-input v-model="payload.email" type="email"></md-input>
+                  <span class="md-error" v-if="!$v.payload.email.required">Email is required</span>
+                  <span class="md-error" v-else-if="!$v.payload.email.email">Invalid email</span>
                 </md-field>
 
-                <md-field>
+                <md-field :class="getValidationClass('password')">
                   <md-icon>lock</md-icon>
                   <label>Your Password</label>
-                  <md-input v-model="payload.password" type="password" required></md-input>
+                  <md-input v-model="payload.password" type="password"></md-input>
+                  <span class="md-error" v-if="!$v.payload.password.required">
+                    Password is required
+                  </span>
                 </md-field>
 
                 <div class="form-button">
                   <md-button
                     class="md-dense md-raised md-primary sign-in-button"
-                    v-on:click="signIn">
+                    type="submit">
                     Log in
                   </md-button>
                 </div>
@@ -39,22 +45,57 @@
         </div>
       </div>
     </section>
+    <FlashMessage :position="'right top'"></FlashMessage>
   </div>
 </template>
 
 <script>
 import axios from 'axios';
+import { validationMixin } from 'vuelidate';
+import { required, email } from 'vuelidate/lib/validators';
 import { apiUrl, headers } from '../const';
 
 export default {
   name: 'SignIn',
+  mixins: [validationMixin],
   data: () => ({
     payload: {
       email: '',
       password: '',
     },
   }),
+  validations: {
+    payload: {
+      email: {
+        required,
+        email,
+      },
+      password: {
+        required,
+      },
+    },
+  },
   methods: {
+    getValidationClass(fieldName) {
+      const field = this.$v.payload[fieldName];
+
+      if (field) {
+        return {
+          'md-invalid': field.$invalid && field.$dirty,
+        };
+      }
+
+      return {
+        'md-invalid': false,
+      };
+    },
+    makeValidate() {
+      this.$v.$touch();
+
+      if (!this.$v.$invalid) {
+        this.signIn();
+      }
+    },
     signIn() {
       const path = `${apiUrl}/auth/sign-in`;
       axios.post(path, this.payload, { headers })
@@ -66,7 +107,12 @@ export default {
         })
         .catch((error) => {
           const err = JSON.parse(JSON.stringify(error.response));
-          console.log(err);
+          this.flashMessage.error(
+            { title: 'Error Message Title',
+              message: err.data.message,
+              position: 'center',
+              icon: '../../static/images/error.svg',
+            });
         });
     },
   },
