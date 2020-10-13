@@ -2,6 +2,8 @@ package implementation
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 	"fmt"
 	"github.com/dgrijalva/jwt-go"
 	"social-network/internal/config"
@@ -56,12 +58,19 @@ func (a *authService) SignIn(ctx context.Context, credentials *domain.Credential
 	}
 
 	user, err := a.repository.GetByEmail(tx, credentials.Email)
+	switch {
+	case errors.Is(err, sql.ErrNoRows):
+		return nil, fmt.Errorf("incorrect username or password")
+	case errors.Is(err, sql.ErrNoRows):
+		return nil, err
+
+	}
 	if err != nil {
 		return nil, err
 	}
 
 	if !user.DoesPasswordMatch(credentials.Password) {
-		return nil, fmt.Errorf("invalid credentials")
+		return nil, fmt.Errorf("incorrect username or password")
 	}
 
 	tokenPair, err := a.createTokenPair(user)
