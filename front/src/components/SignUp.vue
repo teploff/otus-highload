@@ -133,6 +133,7 @@
         </div>
       </div>
     </section>
+    <FlashMessage :position="'right top'"></FlashMessage>
   </div>
 </template>
 
@@ -223,7 +224,12 @@ export default {
         })
         .catch((error) => {
           const err = JSON.parse(JSON.stringify(error.response));
-          console.log(err);
+          this.flashMessage.error(
+            { title: 'Error Message Title',
+              message: err.data.message,
+              position: 'center',
+              icon: '../../static/images/error.svg',
+            });
         });
     },
   },
