@@ -4,8 +4,10 @@
 import Vue from 'vue';
 import VueMaterial from 'vue-material';
 import Vuelidate from 'vuelidate';
+import Paginate from 'vuejs-paginate';
 import 'vue-material/dist/vue-material.css';
 import 'vue-material/dist/theme/default.css';
+
 
 import App from './App';
 import router from './router';
@@ -14,6 +16,8 @@ Vue.config.productionTip = false;
 
 Vue.use(VueMaterial);
 Vue.use(Vuelidate);
+
+Vue.component('paginate', Paginate);
 
 /* eslint-disable no-new */
 new Vue({

@@ -33,7 +33,19 @@
       </div>
     </md-table-row>
     <md-table-row class="pagination-row">
-      todo need paginator
+      <div>
+        <paginate
+          v-model="page"
+          :page-count="Math.ceil(cards.count / countCardsInWindow)"
+          :click-handler="paginatorClick"
+          :prev-text="'Prev'"
+          :next-text="'Next'"
+          :container-class="'pagination'"
+          :page-class="'page-item'"
+          :first-last-button="true"
+        >
+        </paginate>
+      </div>
     </md-table-row>
   </md-table>
 </template>
@@ -53,6 +65,8 @@ export default {
       questionnaires: null,
       count: 0,
     },
+    countCardsInWindow: 10,
+    page: 1,
   }),
   methods: {
     getQuestionnaires() {
@@ -93,6 +107,24 @@ export default {
           const err = JSON.parse(JSON.stringify(error.response));
           if (err.status === 401) {
             this.$router.push({ name: 'SignIn' });
+          }
+          console.log(err);
+        });
+    },
+    paginatorClick(pageNum) {
+      const path = `${apiUrl}/questionnaires`;
+      headers.Authorization = localStorage.getItem('access_token');
+
+      this.payload.offset = (pageNum - 1) * this.countCardsInWindow;
+
+      axios.post(path, this.payload, { headers })
+        .then((response) => {
+          this.cards = JSON.parse(JSON.stringify(response.data));
+        })
+        .catch((error) => {
+          const err = JSON.parse(JSON.stringify(error.response));
+          if (err.status === 401) {
+            this.refreshToken();
           }
           console.log(err);
         });
