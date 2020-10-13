@@ -106,7 +106,7 @@ export default {
 
 <style scoped>
 .card-expansion {
-  margin: 25px 150px 10px 150px;
+  margin: 25px 175px 10px 175px;
   text-align: center;
 }
 
