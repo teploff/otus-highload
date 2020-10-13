@@ -3,6 +3,7 @@ package implementation
 import (
 	"context"
 	"database/sql"
+	"github.com/go-sql-driver/mysql"
 	"social-network/internal/domain"
 	"time"
 )
@@ -137,7 +138,9 @@ func (p *userRepository) GetByLimitAndOffsetExceptUserID(tx *sql.Tx, userID stri
 		FROM
 		    user
 		WHERE 
-			  id != ? LIMIT ? OFFSET ?`, userID, limit, offset)
+			  id != ?
+		ORDER BY create_time
+		LIMIT ? OFFSET ?`, userID, limit, offset)
 	if err != nil {
 		tx.Rollback()
 
@@ -159,4 +162,13 @@ func (p *userRepository) GetByLimitAndOffsetExceptUserID(tx *sql.Tx, userID stri
 	}
 
 	return users, nil
+}
+
+func (p *userRepository) CompareError(err error, number uint16) bool {
+	me, ok := err.(*mysql.MySQLError)
+	if !ok {
+		return false
+	}
+
+	return me.Number == number
 }
