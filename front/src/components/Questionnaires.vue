@@ -1,34 +1,41 @@
 <template>
-  <div class="card-expansion">
-    <md-card v-for="card in cards.questionnaires" v-bind:key="card.email">
-      <md-card-media>
-        <img v-if="card.sex === 'male'" src="static/images/boy.png" alt="People">
-        <img v-else src="static/images/girl.png" alt="People">
-      </md-card-media>
+  <md-table>
+    <md-table-row>
+      <div class="card-expansion">
+        <md-card v-for="card in cards.questionnaires" v-bind:key="card.email">
+          <md-card-media>
+            <img v-if="card.sex === 'male'" src="static/images/boy.png" alt="People">
+            <img v-else src="static/images/girl.png" alt="People">
+          </md-card-media>
 
-      <md-card-header>
-        <div class="md-title">{{ card.name }} {{ card.surname }}</div>
-        <div class="md-subhead">{{ card.email }}</div>
-        <div class="md-subhead">{{ card.sex }}</div>
-      </md-card-header>
+          <md-card-header>
+            <div class="md-title">{{ card.name }} {{ card.surname }}</div>
+            <div class="md-subhead">{{ card.email }}</div>
+            <div class="md-subhead">{{ card.sex }}</div>
+          </md-card-header>
 
-      <md-card-expand>
-        <md-card-actions md-alignment="right">
-          <md-card-expand-trigger>
-            <md-button>Learn more</md-button>
-          </md-card-expand-trigger>
-        </md-card-actions>
+          <md-card-expand>
+            <md-card-actions md-alignment="right">
+              <md-card-expand-trigger>
+                <md-button>Learn more</md-button>
+              </md-card-expand-trigger>
+            </md-card-actions>
 
-        <md-card-expand-content>
-          <md-card-content>
-            <p> Birthday: {{ card.birthday }} </p>
-            <p> City: {{ card.city }} </p>
-            <p> Interests: {{ card.interests }} </p>
-          </md-card-content>
-        </md-card-expand-content>
-      </md-card-expand>
-    </md-card>
-  </div>
+            <md-card-expand-content>
+              <md-card-content>
+                <p> Birthday: {{ card.birthday }} </p>
+                <p> City: {{ card.city }} </p>
+                <p> Interests: {{ card.interests }} </p>
+              </md-card-content>
+            </md-card-expand-content>
+          </md-card-expand>
+        </md-card>
+      </div>
+    </md-table-row>
+    <md-table-row class="pagination-row">
+      todo need paginator
+    </md-table-row>
+  </md-table>
 </template>
 
 <script>
@@ -99,6 +106,8 @@ export default {
 
 <style scoped>
 .card-expansion {
+  margin: 25px 150px 10px 150px;
+  text-align: center;
 }
 
 .md-card {
@@ -106,5 +115,10 @@ export default {
   margin: 4px;
   display: inline-block;
   vertical-align: top;
+}
+
+.pagination-row {
+  text-align: center;
+  margin-bottom: 75px;
 }
 </style>
