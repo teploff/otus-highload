@@ -39,6 +39,10 @@ func (a *authService) SignUp(ctx context.Context, profile *domain.User) error {
 	}
 
 	if err = a.repository.Persist(tx, profile); err != nil {
+		if a.repository.CompareError(err, domain.DuplicateKeyErrNumber) {
+			return fmt.Errorf(fmt.Sprintf("user with email: %s already exist", profile.Email))
+		}
+
 		return err
 	}
 
