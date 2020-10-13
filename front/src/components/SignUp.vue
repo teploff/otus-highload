@@ -6,39 +6,76 @@
           <div class="md-layout-item register-form">
             <h2 class="form-title">Sign up</h2>
 
-            <form>
-              <md-field>
+            <form novalidate @submit.prevent="makeValidate">
+              <md-field :class="getValidationClass('email')">
                 <md-icon>email</md-icon>
                 <label>Your Email</label>
-                <md-input v-model="payload.email" type="email" required></md-input>
+                <md-input v-model="payload.email" type="email"></md-input>
+                <span class="md-error" v-if="!$v.payload.email.required">Email is required</span>
+                <span class="md-error" v-else-if="!$v.payload.email.email">Invalid email</span>
               </md-field>
 
-              <md-field>
+              <md-field :class="getValidationClass('password')">
                 <md-icon>lock</md-icon>
                 <label>Your Password</label>
-                <md-input v-model="payload.password" type="password" required></md-input>
+                <md-input v-model="payload.password" type="password"></md-input>
+                <span class="md-error" v-if="!$v.payload.password.required">
+                  Password is required
+                </span>
+                <span class="md-error" v-else-if="!$v.payload.password.minLength">
+                  Password should be more than 6 characters
+                </span>
+                <span class="md-error" v-else-if="!$v.payload.password.maxLength">
+                  Password should be less than 20 characters
+                </span>
               </md-field>
 
-              <md-field :md-toggle-password="false">
+              <md-field
+                :md-toggle-password="false"
+                :class="getValidationClass('repeatedPassword')">
                 <md-icon>lock_open</md-icon>
                 <label>Type your password again</label>
-                <md-input type="password" required></md-input>
+                <md-input v-model="payload.repeatedPassword" type="password"></md-input>
+                <span class="md-error" v-if="!$v.payload.repeatedPassword.required">
+                  Repeated password is required
+                </span>
+                <span class="md-error" v-else-if="!$v.payload.repeatedPassword.sameAs">
+                  Passwords should are same
+                </span>
               </md-field>
 
-              <md-field>
+              <md-field :class="getValidationClass('name')">
                 <md-icon>person</md-icon>
                 <label>Your Name</label>
-                <md-input v-model="payload.name" type="text" required></md-input>
+                <md-input v-model="payload.name" type="text"></md-input>
+                <span class="md-error" v-if="!$v.payload.name.required">
+                  Name is required
+                </span>
+                <span class="md-error" v-else-if="!$v.payload.name.minLength">
+                  Name should be more than 2 characters
+                </span>
+                <span class="md-error" v-else-if="!$v.payload.name.maxLength">
+                  Name should be less than 20 characters
+                </span>
               </md-field>
 
-              <md-field>
+              <md-field :class="getValidationClass('surname')">
                 <md-icon>person</md-icon>
                 <label>Your Surname</label>
-                <md-input v-model="payload.surname" type="text" required></md-input>
+                <md-input v-model="payload.surname" type="text"></md-input>
+                <span class="md-error" v-if="!$v.payload.surname.required">
+                  Surname is required
+                </span>
+                <span class="md-error" v-else-if="!$v.payload.surname.minLength">
+                  Surname should be more than 6 characters
+                </span>
+                <span class="md-error" v-else-if="!$v.payload.surname.maxLength">
+                  Surname should be less than 20 characters
+                </span>
               </md-field>
 
               <div>
-                <md-datepicker v-model="payload.birthday" required>
+                <md-datepicker v-model="payload.birthday">
                   <label>Your Birthday</label>
                 </md-datepicker>
               </div>
@@ -48,25 +85,38 @@
                 <md-radio v-model="payload.sex" value="female">Female</md-radio>
               </div>
 
-              <md-field>
+              <md-field :class="getValidationClass('city')">
                 <md-icon>location_city</md-icon>
                 <label>Your City</label>
-                <md-input v-model="payload.city" type="text" required></md-input>
+                <md-input v-model="payload.city" type="text"></md-input>
+                <span class="md-error" v-if="!$v.payload.city.required">
+                  City is required
+                </span>
+                <span class="md-error" v-else-if="!$v.payload.city.minLength">
+                  City should be more than 2 characters
+                </span>
+                <span class="md-error" v-else-if="!$v.payload.city.maxLength">
+                  City should be less than 20 characters
+                </span>
               </md-field>
 
-              <div>
+              <md-field :class="getValidationClass('interests')">
                 <md-icon>flight_takeoff</md-icon>
-                <md-field>
-                  <label>Your Interests</label>
-                  <md-textarea v-model="payload.interests" required></md-textarea>
-                </md-field>
-              </div>
+                <label>Your Interests</label>
+                <md-textarea v-model="payload.interests"></md-textarea>
+                <span class="md-error" v-if="!$v.payload.interests.required">
+                Interests is required
+              </span>
+                <span class="md-error" v-else-if="!$v.payload.interests.minLength">
+                Interests should be more than 2 characters
+              </span>
+              </md-field>
 
               <div class="form-button">
                 <md-button
                   class="md-dense md-raised md-primary sign-up-button"
                   id="signUpButton"
-                  v-on:click="signUp">
+                  type="submit">
                   Register
                 </md-button>
               </div>
@@ -88,14 +138,18 @@
 
 <script>
 import axios from 'axios';
+import { validationMixin } from 'vuelidate';
+import { required, email, minLength, maxLength, sameAs } from 'vuelidate/lib/validators';
 import { apiUrl, headers } from '../const';
 
 export default {
   name: 'SignUp',
+  mixins: [validationMixin],
   data: () => ({
     payload: {
-      email: '',
+      email: null,
       password: '',
+      repeatedPassword: '',
       name: '',
       surname: '',
       birthday: Date(),
@@ -104,7 +158,63 @@ export default {
       interests: '',
     },
   }),
+  validations: {
+    payload: {
+      email: {
+        required,
+        email,
+      },
+      password: {
+        required,
+        minLength: minLength(6),
+        maxLength: maxLength(20),
+      },
+      repeatedPassword: {
+        required,
+        sameAs: sameAs('password'),
+      },
+      name: {
+        required,
+        minLength: minLength(2),
+        maxLength: maxLength(20),
+      },
+      surname: {
+        required,
+        minLength: minLength(2),
+        maxLength: maxLength(20),
+      },
+      city: {
+        required,
+        minLength: minLength(2),
+        maxLength: maxLength(20),
+      },
+      interests: {
+        required,
+        minLength: minLength(2),
+      },
+    },
+  },
   methods: {
+    getValidationClass(fieldName) {
+      const field = this.$v.payload[fieldName];
+
+      if (field) {
+        return {
+          'md-invalid': field.$invalid && field.$dirty,
+        };
+      }
+
+      return {
+        'md-invalid': false,
+      };
+    },
+    makeValidate() {
+      this.$v.$touch();
+
+      if (!this.$v.$invalid) {
+        this.signUp();
+      }
+    },
     signUp() {
       const path = `${apiUrl}/auth/sign-up`;
       axios.post(path, this.payload, { headers })
