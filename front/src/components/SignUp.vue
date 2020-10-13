@@ -124,6 +124,7 @@ export default {
   .main {
     background: #f8f8f8;
     padding: 150px 0;
+    font-family: Poppins,serif;
   }
   .sign-up {
     margin-bottom: 150px;
@@ -158,7 +159,6 @@ export default {
     line-height: 1.66;
     font-weight: bold;
     color: #222;
-    font-family: Poppins;
     font-size: 36px;
   }
 
@@ -173,7 +173,7 @@ export default {
   }
 
   .signup-image-link {
-    font-size: 14px;
+    font-size: 16px;
     display: block;
     text-align: center;
   }

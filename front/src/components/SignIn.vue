@@ -77,6 +77,7 @@ export default {
 .main {
   background: #f8f8f8;
   padding: 150px 0;
+  font-family: Poppins,serif;
 }
 .sign-in {
   margin-bottom: 150px;
@@ -135,7 +136,7 @@ export default {
 }
 
 .sign-in-image-link {
-  font-size: 14px;
+  font-size: 16px;
   display: block;
   text-align: center;
 }
