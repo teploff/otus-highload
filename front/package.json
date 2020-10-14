@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@smartweb/vue-flash-message": "^0.6.9",
+    "@vuejs-community/vue-filter-date-format": "^1.6.2",
     "axios": "^0.20.0",
     "bootstrap": "^4.5.2",
     "bootstrap-vue": "^2.17.3",
