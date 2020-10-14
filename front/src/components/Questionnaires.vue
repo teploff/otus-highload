@@ -30,21 +30,21 @@
             <md-card-header>
               <div class="md-title">{{ card.name }} {{ card.surname }}</div>
               <div class="md-subhead">{{ card.email }}</div>
-              <div class="md-subhead">{{ card.sex }}</div>
             </md-card-header>
 
             <md-card-expand>
               <md-card-actions md-alignment="right">
                 <md-card-expand-trigger>
-                  <md-button>Learn more</md-button>
+                  <md-button class="learn-more-button" style="color: #337ab7">Learn more</md-button>
                 </md-card-expand-trigger>
               </md-card-actions>
 
               <md-card-expand-content>
                 <md-card-content>
-                  <p> Birthday: {{ card.birthday }} </p>
-                  <p> City: {{ card.city }} </p>
-                  <p> Interests: {{ card.interests }} </p>
+                  <p style="text-align: left"> <b>Sex:</b> {{ card.sex }} </p>
+                  <p style="text-align: left"> <b>Birthday:</b> {{ card.birthday }} </p>
+                  <p style="text-align: left"> <b>City:</b> {{ card.city }} </p>
+                  <p style="text-align: left"> <b>Interests:</b> {{ card.interests }} </p>
                 </md-card-content>
               </md-card-expand-content>
             </md-card-expand>
@@ -184,6 +184,10 @@ export default {
 .logout-button {
   padding: 15px 25px 0 0;
   text-align: right;
+}
+
+.learn-more-button{
+  font-weight: bolder;
 }
 
 </style>
