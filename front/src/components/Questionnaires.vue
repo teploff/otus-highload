@@ -1,53 +1,73 @@
 <template>
-  <md-table>
-    <md-table-row>
-      <div class="card-expansion">
-        <md-card v-for="card in cards.questionnaires" v-bind:key="card.email">
-          <md-card-media>
-            <img v-if="card.sex === 'male'" src="static/images/boy.png" alt="People">
-            <img v-else src="static/images/girl.png" alt="People">
-          </md-card-media>
+  <div>
+    <div class="logout-button">
+      <md-button
+        class="md-dense md-raised md-primary"
+        @click="logOut">
+        Log out
+      </md-button>
+    </div>
+    <div v-show="cards.count === 0">
+      <md-empty-state
+        v-show="cards.count === 0"
+        md-rounded
+        md-icon="star"
+        md-label="You are the first!"
+        md-description="Congratulation you are the first user in this portal!
+        While there aren't other people but they will appear soon"
+        style="width: 600px; height: 600px; position: center">
+      </md-empty-state>
+    </div>
+    <md-table v-show="cards.count !== 0">
+      <md-table-row>
+        <div class="card-expansion">
+          <md-card v-for="card in cards.questionnaires" v-bind:key="card.email">
+            <md-card-media>
+              <img v-if="card.sex === 'male'" src="static/images/boy.png" alt="People">
+              <img v-else src="static/images/girl.png" alt="People">
+            </md-card-media>
 
-          <md-card-header>
-            <div class="md-title">{{ card.name }} {{ card.surname }}</div>
-            <div class="md-subhead">{{ card.email }}</div>
-            <div class="md-subhead">{{ card.sex }}</div>
-          </md-card-header>
+            <md-card-header>
+              <div class="md-title">{{ card.name }} {{ card.surname }}</div>
+              <div class="md-subhead">{{ card.email }}</div>
+              <div class="md-subhead">{{ card.sex }}</div>
+            </md-card-header>
 
-          <md-card-expand>
-            <md-card-actions md-alignment="right">
-              <md-card-expand-trigger>
-                <md-button>Learn more</md-button>
-              </md-card-expand-trigger>
-            </md-card-actions>
+            <md-card-expand>
+              <md-card-actions md-alignment="right">
+                <md-card-expand-trigger>
+                  <md-button>Learn more</md-button>
+                </md-card-expand-trigger>
+              </md-card-actions>
 
-            <md-card-expand-content>
-              <md-card-content>
-                <p> Birthday: {{ card.birthday }} </p>
-                <p> City: {{ card.city }} </p>
-                <p> Interests: {{ card.interests }} </p>
-              </md-card-content>
-            </md-card-expand-content>
-          </md-card-expand>
-        </md-card>
-      </div>
-    </md-table-row>
-    <md-table-row class="pagination-row">
-      <div>
-        <paginate
-          v-model="page"
-          :page-count="Math.ceil(cards.count / countCardsInWindow)"
-          :click-handler="paginatorClick"
-          :prev-text="'Prev'"
-          :next-text="'Next'"
-          :container-class="'pagination'"
-          :page-class="'page-item'"
-          :first-last-button="true"
-        >
-        </paginate>
-      </div>
-    </md-table-row>
-  </md-table>
+              <md-card-expand-content>
+                <md-card-content>
+                  <p> Birthday: {{ card.birthday }} </p>
+                  <p> City: {{ card.city }} </p>
+                  <p> Interests: {{ card.interests }} </p>
+                </md-card-content>
+              </md-card-expand-content>
+            </md-card-expand>
+          </md-card>
+        </div>
+      </md-table-row>
+      <md-table-row class="pagination-row">
+        <div>
+          <paginate
+            v-model="page"
+            :page-count="Math.ceil(cards.count / countCardsInWindow)"
+            :click-handler="paginatorClick"
+            :prev-text="'Prev'"
+            :next-text="'Next'"
+            :container-class="'pagination'"
+            :page-class="'page-item'"
+            :first-last-button="true"
+          >
+          </paginate>
+        </div>
+      </md-table-row>
+    </md-table>
+  </div>
 </template>
 
 <script>
@@ -129,6 +149,9 @@ export default {
           console.log(err);
         });
     },
+    logOut() {
+      console.log('log out!');
+    },
   },
   created() {
     this.getQuestionnaires();
@@ -138,7 +161,7 @@ export default {
 
 <style scoped>
 .card-expansion {
-  margin: 25px 175px 10px 175px;
+  margin: 0px 175px 10px 175px;
   text-align: center;
 }
 
@@ -153,4 +176,14 @@ export default {
   text-align: center;
   margin-bottom: 75px;
 }
+
+.md-empty-state {
+  max-width: 600px;
+}
+
+.logout-button {
+  padding: 15px 25px 0 0;
+  text-align: right;
+}
+
 </style>
