@@ -146,11 +146,11 @@ export default {
           if (err.status === 401) {
             this.refreshToken();
           }
-          console.log(err);
         });
     },
     logOut() {
-      console.log('log out!');
+      localStorage.clear();
+      this.$router.push({ name: 'SignIn' });
     },
   },
   created() {
@@ -161,7 +161,7 @@ export default {
 
 <style scoped>
 .card-expansion {
-  margin: 0px 175px 10px 175px;
+  margin: 0 175px 10px 175px;
   text-align: center;
 }
 
