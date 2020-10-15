@@ -60,8 +60,8 @@ export default {
   mixins: [validationMixin],
   data: () => ({
     payload: {
-      email: '',
-      password: '',
+      email: String,
+      password: String,
     },
   }),
   validations: {
