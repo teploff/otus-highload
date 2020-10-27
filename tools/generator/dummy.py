@@ -1,3 +1,4 @@
+from pathlib import Path
 import uuid
 
 from faker import Faker
@@ -7,16 +8,21 @@ from entity import User
 
 class Dummy:
     """
-
+    Dummy users' generator.
     """
 
-    def __init__(self, count: int):
+    def __init__(self, count: int, path: Path):
+        """
+        count - user count, which should be generated
+        path - path to directory, where generated users should be stored
+        """
         self.count = count
+        self.path = path
         self.users = []
 
-    def generate(self):
+    def generate(self) -> None:
         """
-
+        Generate <count> users using faker library.
         :return:
         """
 
@@ -33,14 +39,14 @@ class Dummy:
                 fake.text(max_nb_chars=100)
             ))
 
-    def make_snapshot(self, path: str):
+    def make_snapshot(self) -> None:
         """
-
-        :return:
+        Persist users to *.txt file.
+        Name of file gets from uuid.
         """
-        file_name = uuid.uuid4()
+        file_name = str(uuid.uuid4()) + ".txt"
 
-        with open(path + str(file_name) + '.txt', 'w') as f:
+        with open(self.path / file_name, 'w') as f:
             for user in self.users:
                 f.write(str(user))
                 f.write('\n')
