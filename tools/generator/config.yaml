@@ -1,0 +1,6 @@
+storage:
+  host: ${env:STORAGE_HOST, localhost}
+  user: ${env:STORAGE_USER, user}
+  password: ${env:STORAGE_PASSWORD, password}
+  db: ${env:STORAGE_DB, db}
+  charset: ${env:STORAGE_CHARSET, utf8mb4}
