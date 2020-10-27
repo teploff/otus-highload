@@ -1,5 +1,5 @@
 # User generation
-<img align="left" src="./static/image.png" alt="">
+<img src="./static/image.png" alt="">
 <p></p>
 
 ##  What's the point of that?
