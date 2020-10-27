@@ -10,7 +10,7 @@ class Configuration:
     """
     def __init__(self):
         self.fake_count = None
-        self.snapshots_path = False
+        self.snapshots_path = None
 
     def parse(self) -> None:
         """
