@@ -1,6 +1,6 @@
 # User generation
-<img align="left" src="./static/image.png">
-
+<img align="left" src="./static/image.png" alt="">
+<p></p>
 
 ##  What's the point of that?
 This tool is based on [Faker](https://github.com/joke2k/faker) lib. It cans without troubles to generate users which consist of fields, such as:
