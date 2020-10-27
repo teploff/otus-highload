@@ -36,7 +36,7 @@ class Dummy:
                 fake.date_of_birth(minimum_age=18, maximum_age=100),
                 'male' if fake.profile().get('sex') == 'M' else 'female',
                 fake.city(),
-                fake.text(max_nb_chars=100)
+                fake.sentence(nb_words=10)
             ))
 
     def make_snapshot(self) -> None:
