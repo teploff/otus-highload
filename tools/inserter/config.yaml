@@ -1,6 +1,7 @@
 storage:
   host: ${env:STORAGE_HOST, localhost}
+  port: ${env:STORAGE_PORT, 3306}
   user: ${env:STORAGE_USER, user}
   password: ${env:STORAGE_PASSWORD, password}
-  db: ${env:STORAGE_DB, db}
+  db: ${env:STORAGE_DB, social-network}
   charset: ${env:STORAGE_CHARSET, utf8mb4}

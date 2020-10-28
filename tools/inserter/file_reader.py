@@ -12,7 +12,7 @@ class Reader:
         :param path: path where all snapshots of users are stored.
         """
         self.path = path
-        self._users = []
+        self.users = []
 
     def do(self) -> None:
         """
@@ -34,6 +34,6 @@ class Reader:
 
             # TODO: fix empty string
             while line and line != ['']:
-                self._users.append(User(*line))
+                self.users.append(User(*line))
 
                 line = f.readline().rstrip().split('\t')
