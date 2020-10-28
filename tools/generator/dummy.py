@@ -25,11 +25,11 @@ class Dummy:
         Generate <count> users using faker library.
         :return:
         """
+        fake = Faker()
 
         for _ in range(self.count):
-            fake = Faker()
             self.users.append(User(
-                fake.email(),
+                fake.unique.email(),
                 fake.password(),
                 fake.first_name(),
                 fake.last_name(),
