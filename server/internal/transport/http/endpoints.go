@@ -20,7 +20,9 @@ func MakeEndpoints(auth domain.AuthService, social domain.SocialService) *Endpoi
 			RefreshToken: makeRefreshTokenEndpoint(auth),
 		},
 		Social: &SocialEndpoints{
-			Questionnaires: makeQuestionnairesEndpoint(auth, social)},
+			GetAllQuestionnaires:              makeGetAllQuestionnairesEndpoint(auth, social),
+			GetQuestionnairesByNameAndSurname: makeGetQuestionnairesByNameAndSurnameEndpoint(auth, social),
+		},
 	}
 }
 
@@ -132,10 +134,11 @@ func makeRefreshTokenEndpoint(svc domain.AuthService) gin.HandlerFunc {
 }
 
 type SocialEndpoints struct {
-	Questionnaires gin.HandlerFunc
+	GetAllQuestionnaires              gin.HandlerFunc
+	GetQuestionnairesByNameAndSurname gin.HandlerFunc
 }
 
-func makeQuestionnairesEndpoint(authSvc domain.AuthService, socialSvc domain.SocialService) gin.HandlerFunc {
+func makeGetAllQuestionnairesEndpoint(authSvc domain.AuthService, socialSvc domain.SocialService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var header AuthorizationHeader
 		if err := c.ShouldBindHeader(&header); err != nil {
@@ -146,7 +149,7 @@ func makeQuestionnairesEndpoint(authSvc domain.AuthService, socialSvc domain.Soc
 			return
 		}
 
-		var request QuestionnairesRequest
+		var request GetAllQuestionnairesRequest
 		if err := c.Bind(&request); err != nil {
 			c.JSON(http.StatusBadRequest, ErrorResponse{
 				Message: err.Error(),
@@ -176,6 +179,50 @@ func makeQuestionnairesEndpoint(authSvc domain.AuthService, socialSvc domain.Soc
 		c.JSON(http.StatusOK, QuestionnairesResponse{
 			Questionnaires: quest,
 			Count:          count,
+		})
+	}
+}
+
+func makeGetQuestionnairesByNameAndSurnameEndpoint(authSvc domain.AuthService, socialSvc domain.SocialService) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var header AuthorizationHeader
+		if err := c.ShouldBindHeader(&header); err != nil {
+			c.JSON(http.StatusUnauthorized, ErrorResponse{
+				Message: err.Error(),
+			})
+
+			return
+		}
+
+		var request GetQuestionnairesByNameAndSurnameRequest
+		if err := c.BindQuery(&request); err != nil {
+			c.JSON(http.StatusBadRequest, ErrorResponse{
+				Message: err.Error(),
+			})
+
+			return
+		}
+
+		if _, err := authSvc.Authenticate(c, header.AccessToken); err != nil {
+			c.JSON(http.StatusUnauthorized, ErrorResponse{
+				Message: err.Error(),
+			})
+
+			return
+		}
+
+		quest, err := socialSvc.GetQuestionnairesByNameAndSurname(c, request.Prefix)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, ErrorResponse{
+				Message: err.Error(),
+			})
+
+			return
+		}
+
+		c.JSON(http.StatusOK, QuestionnairesResponse{
+			Questionnaires: quest,
+			Count:          len(quest),
 		})
 	}
 }

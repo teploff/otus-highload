@@ -164,6 +164,40 @@ func (p *userRepository) GetByLimitAndOffsetExceptUserID(tx *sql.Tx, userID stri
 	return users, nil
 }
 
+func (p *userRepository) GetByPrefixOfNameAndSurname(tx *sql.Tx, prefix string) ([]*domain.User, error) {
+	users := make([]*domain.User, 0, 100)
+
+	rows, err := tx.Query(`
+		SELECT
+			id, email, password, name, surname, sex, birthday, city, interests, access_token, refresh_token
+		FROM
+		    user
+		WHERE 
+			  name LIKE ? AND surname LIKE ?
+		ORDER BY id`, prefix+"%", prefix+"%")
+	if err != nil {
+		tx.Rollback()
+
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		user := new(domain.User)
+
+		if err = rows.Scan(&user.ID, &user.Email, &user.Password, &user.Name, &user.Surname, &user.Sex, &user.Birthday,
+			&user.City, &user.Interests, &user.AccessToken, &user.RefreshToken); err != nil {
+			tx.Rollback()
+
+			return nil, err
+		}
+
+		users = append(users, user)
+	}
+
+	return users, nil
+}
+
 func (p *userRepository) CompareError(err error, number uint16) bool {
 	me, ok := err.(*mysql.MySQLError)
 	if !ok {

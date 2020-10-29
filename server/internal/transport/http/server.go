@@ -23,7 +23,8 @@ func NewHTTPServer(addr string, endpoints *Endpoints) *http.Server {
 		authGroup.PUT("/token", endpoints.Auth.RefreshToken)
 	}
 
-	router.POST("/questionnaires", endpoints.Social.Questionnaires)
+	router.POST("/questionnaires", endpoints.Social.GetAllQuestionnaires)
+	router.GET("/questionnaires", endpoints.Social.GetQuestionnairesByNameAndSurname)
 
 	return &http.Server{
 		Addr:    addr,

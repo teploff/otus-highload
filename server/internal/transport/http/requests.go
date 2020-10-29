@@ -22,9 +22,13 @@ type RefreshTokenRequest struct {
 	RefreshToken string `json:"refresh_token" binding:"required"`
 }
 
-type QuestionnairesRequest struct {
+type GetAllQuestionnairesRequest struct {
 	Limit  *int `json:"limit" binding:"required"`
 	Offset int  `json:"offset"`
+}
+
+type GetQuestionnairesByNameAndSurnameRequest struct {
+	Prefix string `json:"prefix" form:"prefix" binding:"required"`
 }
 
 type AuthorizationHeader struct {

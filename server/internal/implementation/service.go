@@ -234,3 +234,30 @@ func (s *socialService) GetQuestionnaires(ctx context.Context, userID string, li
 	// count - 1: without myself
 	return questionnaires, count - 1, tx.Commit()
 }
+
+func (s *socialService) GetQuestionnairesByNameAndSurname(ctx context.Context, prefix string) ([]*domain.Questionnaire, error) {
+	tx, err := s.repository.GetTx(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	users, err := s.repository.GetByPrefixOfNameAndSurname(tx, prefix)
+	if err != nil {
+		return nil, err
+	}
+
+	questionnaires := make([]*domain.Questionnaire, 0, len(users))
+	for _, user := range users {
+		questionnaires = append(questionnaires, &domain.Questionnaire{
+			Email:     user.Email,
+			Name:      user.Name,
+			Surname:   user.Surname,
+			Birthday:  user.Birthday,
+			Sex:       user.Sex,
+			City:      user.City,
+			Interests: user.Interests,
+		})
+	}
+
+	return questionnaires, tx.Commit()
+}
