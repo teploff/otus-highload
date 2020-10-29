@@ -1,3 +1,4 @@
+------------------------------------------------------------------------------------------------------------------------
 Without indexes:
 
 Running 1m test @ http://localhost:9999/questionnaires?prefix=m
@@ -37,3 +38,122 @@ Running 1m test @ http://localhost:9999/questionnaires?prefix=m
   Socket errors: connect 0, read 0, write 0, timeout 756
 Requests/sec:     12.94
 Transfer/sec:     28.37MB
+------------------------------------------------------------------------------------------------------------------------
+With index(name, surname, id):
+
+Running 1m test @ http://localhost:9999/questionnaires?prefix=m
+  1 threads and 1 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency   608.70ms   11.57ms 632.03ms   61.22%
+    Req/Sec     1.01      0.10     2.00     98.98%
+  98 requests in 1.00m, 214.87MB read
+Requests/sec:      1.63
+Transfer/sec:      3.58MB
+
+Running 1m test @ http://localhost:9999/questionnaires?prefix=m
+  10 threads and 10 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency   765.30ms   49.02ms 934.96ms   72.60%
+    Req/Sec     1.00      0.04     1.00     99.87%
+  781 requests in 1.00m, 1.67GB read
+Requests/sec:     13.00
+Transfer/sec:     28.51MB
+
+Running 1m test @ http://localhost:9999/questionnaires?prefix=m
+  10 threads and 100 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency     1.44s   318.66ms   1.98s    70.10%
+    Req/Sec     2.54      3.37    20.00     87.43%
+  779 requests in 1.00m, 1.67GB read
+  Socket errors: connect 0, read 0, write 0, timeout 682
+Requests/sec:     12.97
+Transfer/sec:     28.43MB
+
+Running 1m test @ http://localhost:9999/questionnaires?prefix=m
+  1000 threads and 1000 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency     1.18s   371.46ms   1.95s    63.64%
+    Req/Sec     0.01      0.11     1.00     98.83%
+  770 requests in 1.00m, 1.65GB read
+  Socket errors: connect 0, read 0, write 0, timeout 748
+Requests/sec:     12.81
+Transfer/sec:     28.09MB
+------------------------------------------------------------------------------------------------------------------------
+With index(name, surname):
+
+Running 1m test @ http://localhost:9999/questionnaires?prefix=m
+  1 threads and 1 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency   610.97ms   10.57ms 631.11ms   67.35%
+    Req/Sec     1.00      0.00     1.00    100.00%
+  98 requests in 1.00m, 214.87MB read
+Requests/sec:      1.63
+Transfer/sec:      3.58MB
+
+Running 1m test @ http://localhost:9999/questionnaires?prefix=m
+  10 threads and 10 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency   768.45ms   43.97ms 944.25ms   73.65%
+    Req/Sec     1.00      0.05     1.00     99.74%
+  778 requests in 1.00m, 1.67GB read
+Requests/sec:     12.95
+Transfer/sec:     28.40MB
+
+Running 1m test @ http://localhost:9999/questionnaires?prefix=m
+  10 threads and 100 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency     1.46s   359.01ms   1.98s    61.46%
+    Req/Sec     2.33      3.09    20.00     90.54%
+  782 requests in 1.00m, 1.67GB read
+  Socket errors: connect 0, read 0, write 0, timeout 686
+Requests/sec:     13.02
+Transfer/sec:     28.54MB
+
+Running 1m test @ http://localhost:9999/questionnaires?prefix=m
+  1000 threads and 1000 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency     1.13s   348.89ms   1.94s    63.64%
+    Req/Sec     0.01      0.11     1.00     98.72%
+  782 requests in 1.00m, 1.67GB read
+  Socket errors: connect 0, read 0, write 0, timeout 760
+Requests/sec:     13.01
+Transfer/sec:     28.53MB
+------------------------------------------------------------------------------------------------------------------------
+With index(name), index(surname):
+
+Running 1m test @ http://localhost:9999/questionnaires?prefix=m
+  1 threads and 1 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency   609.22ms    9.93ms 631.17ms   61.22%
+    Req/Sec     1.00      0.00     1.00    100.00%
+  98 requests in 1.00m, 214.87MB read
+Requests/sec:      1.63
+Transfer/sec:      3.58MB
+
+Running 1m test @ http://localhost:9999/questionnaires?prefix=m
+  10 threads and 10 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency   758.49ms   42.76ms 945.46ms   73.44%
+    Req/Sec     1.00      0.00     1.00    100.00%
+  787 requests in 1.00m, 1.69GB read
+Requests/sec:     13.10
+Transfer/sec:     28.72MB
+
+Running 1m test @ http://localhost:9999/questionnaires?prefix=m
+  10 threads and 100 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency     1.41s   336.98ms   1.99s    68.00%
+    Req/Sec     2.28      3.09    20.00     90.48%
+  795 requests in 1.00m, 1.70GB read
+  Socket errors: connect 0, read 0, write 0, timeout 695
+Requests/sec:     13.23
+Transfer/sec:     29.00MB
+
+  1000 threads and 1000 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency     1.18s   395.13ms   1.97s    52.38%
+    Req/Sec     0.01      0.10     1.00     98.99%
+  789 requests in 1.00m, 1.69GB read
+  Socket errors: connect 0, read 0, write 0, timeout 768
+Requests/sec:     13.13
+Transfer/sec:     28.79MB
