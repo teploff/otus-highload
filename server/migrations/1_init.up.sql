@@ -12,4 +12,4 @@ CREATE TABLE IF NOT EXISTS user (
     refresh_token VARCHAR(350) NULL ,
     create_time   TIMESTAMP    NOT NULL DEFAULT CURRENT_TIMESTAMP,
     update_time   TIMESTAMP    NULL
-);
+) ENGINE=InnoDB;
