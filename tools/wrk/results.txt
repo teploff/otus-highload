@@ -1,3 +1,5 @@
+Without indexes:
+
 Running 1m test @ http://localhost:9999/questionnaires?prefix=m
   1 threads and 1 connections
   Thread Stats   Avg      Stdev     Max   +/- Stdev
