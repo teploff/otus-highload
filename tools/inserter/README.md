@@ -1,5 +1,5 @@
 # Insert generated user in MySQL using python
-<img src="./static/image.png" alt="">
+<img width="160" src="static/image.png" alt="">
 
 ##  What's the point of that?
 This tool is based on [PyMySQL](https://github.com/PyMySQL/PyMySQL) lib for inserting in MySQL database.
