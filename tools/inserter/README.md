@@ -47,5 +47,5 @@ But if they will be absent configuration will take their from default values whi
 - social-network;
 - utf8mb4.
 
-##NOTE: 
+## NOTE
 In *../generator/snapshot* directory there are 1m compressed generated users in *.tar.gz archives. If you want use it - before launch inserting you should uncompressed their.
