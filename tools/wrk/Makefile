@@ -33,7 +33,7 @@ launch_1000:
 	docker run --rm --net=host \
 		williamyeh/wrk  \
 		-H "Authorization: ${ACCESS_TOKEN}" \
-		-t 1000 \
+		-t 10 \
 		-c 1000 \
 		-d 1m \
 		http://localhost:9999/questionnaires?prefix=ma ;\
