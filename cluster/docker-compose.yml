@@ -1,9 +1,9 @@
 version: '3.7'
 
 services:
-  storage_1:
+  storage_master:
     image: mysql
-    container_name: storage_stage_1
+    container_name: storage_master
     command: --default-authentication-plugin=mysql_native_password
     ports:
       - '3306:3306'
@@ -14,9 +14,9 @@ services:
       MYSQL_DATABASE: social-network
     networks:
       - stage_network
-  storage_2:
+  storage_slave_1:
     image: mysql
-    container_name: storage_stage_2
+    container_name: storage_slave_1
     command: --default-authentication-plugin=mysql_native_password
     ports:
       - '3307:3306'
@@ -27,9 +27,9 @@ services:
       MYSQL_DATABASE: social-network
     networks:
       - stage_network
-  storage_3:
+  storage_slave_2:
     image: mysql
-    container_name: storage_stage_3
+    container_name: storage_slave_2
     command: --default-authentication-plugin=mysql_native_password
     ports:
       - '3308:3306'
