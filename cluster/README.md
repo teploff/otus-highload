@@ -69,8 +69,10 @@ GRANT REPLICATION SLAVE ON *.* TO 'replica'@'%';
 show master status;
 ```
 
-Результат может отличаться, но формат будет таким:
-<img align="center" src="static/show_master_status.png">
+Результат может отличаться, но формат будет таким:<br />
+<p align="center">
+    <img src="static/show_master_status.png">
+</p>
 
 ## Конфигурирование первого slave-а
 Заходим в master-container:
@@ -145,8 +147,10 @@ start slave;
 show slave status\G
 ```
 
-Если видим следующее, то все у нас в порядке:
-<img align="center" src="static/status_slave.png">
+Если видим следующее, то все у нас в порядке:<br />
+<p align="center">
+    <img src="static/status_slave.png">
+</p>
 
 ## Конфигурирование второго slave-а
 Заходим в master-container:
@@ -218,9 +222,10 @@ start slave;
 show slave status\G
 ```
 
-Если видим следующее, то все у нас в порядке:
-<img align="center" src="static/status_slave.png">
-
+Если видим следующее, то все у нас в порядке:<br />
+<p align="center">
+    <img src="static/status_slave.png">
+</p>
 ## Применение миграций
 Еще одним хорошим способом проверки работы реплик является применение на мастере миграций.
 Для того, чтобы накатить миграции выполним:
@@ -237,5 +242,7 @@ mysql -u root -p
 use social-network;
 show tables;
 ```
-И должны увидеть следующее:
-<img align="center" src="static/show_tables.png">
+И должны увидеть следующее:<br />
+<p align="center">
+  <img src="static/show_tables.png">
+</p>
