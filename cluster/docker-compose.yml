@@ -14,6 +14,7 @@ services:
       MYSQL_DATABASE: social-network
     networks:
       - stage_network
+
   storage_slave_1:
     image: mysql
     container_name: storage_slave_1
@@ -27,6 +28,7 @@ services:
       MYSQL_DATABASE: social-network
     networks:
       - stage_network
+
   storage_slave_2:
     image: mysql
     container_name: storage_slave_2
@@ -40,6 +42,48 @@ services:
       MYSQL_DATABASE: social-network
     networks:
       - stage_network
+
+  backend_with_master_node:
+    build:
+      context: ../server
+      dockerfile: Dockerfile
+    image: social_network_backend:stage
+    container_name: backend_with_master_node
+    ports:
+      - '9999:9999'
+    environment:
+      - ADDR=0.0.0.0:9999
+      - STORAGE_DSN=user:password@tcp(storage_master:3306)/social-network?parseTime=true
+      - JWT_SECRET=secret
+      - JWT_ACCESS_TOKEN_TIME_EXPIRE=1h
+      - JWT_REFRESH_TOKEN_TIME_EXPIRE=24h
+    networks:
+      - stage_network
+    depends_on:
+      - storage_master
+      - storage_slave_1
+      - storage_slave_2
+
+  backend_with_slave_node:
+    build:
+      context: ../server
+      dockerfile: Dockerfile
+    image: social_network_backend:stage
+    container_name: backend_with_slave_node
+    ports:
+      - '9999:9999'
+    environment:
+      - ADDR=0.0.0.0:9999
+      - STORAGE_DSN=user:password@tcp(storage_slave_1:3306)/social-network?parseTime=true
+      - JWT_SECRET=secret
+      - JWT_ACCESS_TOKEN_TIME_EXPIRE=1h
+      - JWT_REFRESH_TOKEN_TIME_EXPIRE=24h
+    networks:
+      - stage_network
+    depends_on:
+      - storage_master
+      - storage_slave_1
+      - storage_slave_2
 
 networks:
   stage_network:
