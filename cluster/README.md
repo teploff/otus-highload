@@ -11,6 +11,8 @@
 5. [ Нагрузочное тестирование](#stress-testing)
     - [ Подготовка ](#preparation)
     - [ Осуществление ](#implementation)
+
+<a name="task"></a>
 ## Задание
 1. Настроить асинхронную репликацию, в которой будет 2 slave-а и 1 master.
 2. Выбрать 2 самых тяжелых по работе на стороне backend-а запроса.
@@ -41,6 +43,7 @@
 
 <a name="async-replica"></a>
 ## Настройка асинхронной(async) репликации
+
 <a name="launch-databases"></a>
 ### Запуск трех независимых узлов MySQL
 Для того, чтобы запустить в docker-ах три instance-а MySQL баз данных(которые в дальнейшем станут двумя slave-ами и 
@@ -48,6 +51,7 @@
 ```shell script
 make init
 ```
+
 <a name="master-config"></a>
 ### Конфигурирование master-а
 Заходим в master-container:
@@ -339,7 +343,7 @@ export ACCESS_TOKEN=$(curl -X POST -H "Content-Type: application/json" \
 
 <a name="implementation"></a>
 ### Осуществление
-Запускаем нагрузочные тесты из двух терминалов:
+Запускаем нагрузочные тесты из двух разных терминалов:
 ```shell script
 make wrk_1
 ```
@@ -359,7 +363,7 @@ make down_backend_wmn
 make launch_backend_wsn
 ```
 
-Запускаем нагрузочные тесты из двух терминалов:
+Запускаем нагрузочные тесты из двух разных терминалов:
 ```shell script
 make wrk_1
 ```
