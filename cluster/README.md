@@ -1,9 +1,14 @@
-## Запуск инфраструктуры
+# MySQL anysc and semisync replications 
+В данном тексте идет описание того, как настроить в **MySQL 8.0** асинхронную(**async**) и полусинхронную(**semisync**) **репликацию**
+при помощи **docker** и **go** версии не ниже 1.15 
+
+# Настраиваем асинхронную(async) репликацию
+### Запуск инфраструктуры
 Для того, чтобы запустить в docker-ах три instance-а MySQL баз данных (один- master, два - slave-а), необходимо выполнить:
 ```shell script
 make init
 ```
-## Конфигурирование master-а
+### Конфигурирование master-а
 Заходим в master-container:
 ```shell script
 docker exec -it storage_master bash
@@ -152,7 +157,7 @@ show slave status\G
     <img src="static/status_slave.png">
 </p>
 
-## Конфигурирование второго slave-а
+### Конфигурирование второго slave-а
 Заходим в master-container:
 ```shell script
 docker exec -it storage_slave_2 bash
