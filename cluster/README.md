@@ -4,7 +4,7 @@
 2. [ Сведения ](#information)
 3. [ Настройка асинхронной(async) репликации ](#async-replica)
     - [ Запуск трех независимых узлов MySQL ](#launch-databases)
-    - [ Конфигурирование master-а ](#master-config")
+    - [ Конфигурирование master-а ](#master-config)
     - [ Конфигурирование первого slave-а](#first-slave-config)
     - [ Конфигурирование второго slave-а](#second-slave-config)
 4. [ Применение миграций ](#migration)
