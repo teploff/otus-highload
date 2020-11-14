@@ -127,11 +127,6 @@ docker exec -it storage_slave_1 bash
 mysql -u root -p
 ```
 
-Останавливаем slave-а:
-```mysql based
-stop slave;
-```
-
 Вносим информацию о master-е:
 ```mysql based
 CHANGE MASTER TO
