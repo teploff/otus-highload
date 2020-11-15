@@ -8,12 +8,14 @@
     - [ Конфигурирование первого slave-а](#first-slave-config)
     - [ Конфигурирование второго slave-а](#second-slave-config)
 4. [ Применение миграций ](#migration)
-5. [ Нагрузочное тестирование](#stress-testing)
-    - [ Подготовка ](#preparation)
-    - [ Осуществление ](#implementation)
+5. [ Нагрузочное тестирование на чтение](#read-stress-testing)
+    - [ Подготовка ](#read-stress-testing-preparation)
+    - [ Выполнение ](#read-stress-testing-implementation)
 6. [ Подключение row based binary logging format ](#enable-row-based)
 7. [ Подключение GTID ](#gtid)
 8. [ Настроить полусинхронную репликацию ](#semi-sync-replica)
+9. [ Создать нагрузку на запись ](#write-stress-testing)
+10. [ Назначение нового master-узла ](#master-promoting)
 
 <a name="task"></a>
 ## Задание
@@ -297,8 +299,8 @@ show tables;
   <img src="static/show_tables.png">
 </p>
 
-<a name="stress-testing"></a>
-## Нагрузочное тестирование
+<a name="read-stress-testing"></a>
+## Нагрузочное тестирование на чтение
 Необходимо с помощью утилиты [wrk](https://github.com/wg/wrk) реализовать нагрузочный тест, который бы состоял из двух
 тяжелых запросов на чтение с сайта.
 
@@ -307,7 +309,7 @@ show tables;
 количество анкет. В моем случае, это подстрока *m* и *j*, для которых результат поиска будут равны 10500 и 7451 анкет
 соответственно.
 
-<a name="preparation"></a>
+<a name="read-stress-testing-preparation"></a>
 ### Подготовка
 Для осуществления нагрузочного тестирования необходимы данные, на основе которых будет происходить выборка.
 В качестве данных подойдут сгенерированные пользователи(1 миллион), которые были получены в предыдущем домашнем задании.
@@ -362,8 +364,8 @@ export ACCESS_TOKEN=$(curl -X POST -H "Content-Type: application/json" \
     http://localhost:9999/auth/sign-in | jq '.access_token')
 ```
 
-<a name="implementation"></a>
-### Осуществление
+<a name="read-stress-testing-implementation"></a>
+### Выполнение
 Запускаем нагрузочные тесты из двух разных терминалов:
 ```shell script
 make wrk_1
@@ -553,3 +555,45 @@ show variables like 'rpl_semi_sync_slave_enabled';
 <p align="center">
 <img src="static/show_variables_semi_sync_slave_enabled.png">
 </p>
+
+<a name="write-stress-testing"></a>
+## Создать нагрузку на запись
+<a name="write-stress-testing-preparation"></a>
+### Подготовка 
+Повторим сборку кластера для репликации, пропуская при этом шаг 
+[нагрузочного тестирования на чтение](#read-stress-testing), и переходим сразу на выполнение нагрузочного теста на
+запись.
+<a name="write-stress-testing-implementation"></a>
+### Выполнение
+Для осуществления нагрузки на запись, так же воспользуемся [insert-ом](https://github.com/teploff/otus-highload/tree/main/tools/inserter).
+Распакуем data-set и запишем сгенерированных пользователей, которые были получены утилитой 
+[generator](https://github.com/teploff/otus-highload/tree/main/tools/generator):
+```shell script
+cd ../tools/inserter/
+mkdir snapshot
+tar -xzf ../generator/snapshot/data_set_3.tar.gz -C ./snapshot
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+python main.py -cfg=./config.yaml -path=./snapshot -size=1
+deactivate
+rm -rf ./snapshot ./venv
+cd ../../cluster/
+```
+
+Убиваем master-узел командой:
+```shell script
+docker rm -f storage_master
+```
+
+Заканчиваем операцию записи и смотрим, сколько удалось записать срок пользователей в БД:
+```text
+
+```
+
+<a name="master-promoting)"></a>
+## Назначение нового master-узла 
+
+
+
+show variables like 'gtid_executed';
