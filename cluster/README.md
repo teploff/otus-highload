@@ -407,10 +407,10 @@ docker stats storage_master > master_dump_after.txt
 ## Результаты
 Детально с результатами метрик нагрузки на master можно ознакомиться [тут](https://github.com/teploff/otus-highload/tree/main/cluster/metrics).
 Из результатов видно, что при переводе нагрузки с master на slave нагрузка на:
-- CPU упала c ***~ 995.11%*** на ***~ 0.09%***;
-- RAM упала с ***~ 3.12%*** на ***~ 3.10%***;
-- NET I/O возросла с ***~ 435MB / 985MB*** на ***~ 440MB / 1.85GB***;
-- BLOCK I/O возросла с ***~ 127MB / 3.81GB*** на ***~ 131MB / 3.81GB***;
+- CPU упала c ***~995.11%*** на ***~0.09%***;
+- RAM упала с ***~3.12%*** на ***~3.10%***;
+- NET I/O возросла с ***~435MB/985MB*** на ***~440MB/1.85GB***;
+- BLOCK I/O возросла с ***~127MB/3.81GB*** на ***~131MB/3.81GB***;
 
 <a name="enable-row-based"></a>
 ## Подключение row based binary logging format
