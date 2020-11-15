@@ -13,6 +13,7 @@
     - [ Осуществление ](#implementation)
 6. [ Подключение row based binary logging format ](#enable-row-based)
 7. [ Подключение GTID ](#gtid)
+8. [ Настроить полусинхронную репликацию ](#semi-sync-replica)
 
 <a name="task"></a>
 ## Задание
@@ -327,6 +328,23 @@ deactivate
 rm -rf ./snapshot ./venv
 ```
 
+Проверяем, например, на втором slave-е, что сгенерированные пользователи записались и их число 1м:
+```shell script
+docker exec -it storage_slave_2 bash
+mysql -u root -p
+```
+
+Затем в оболочке MySQL:
+```mysql based
+use social-network;
+select count(*) from user;
+```
+
+Если все указали корректно, должны увидеть следующее:
+<p align="center">
+  <img src="static/show_count_written_users.png">
+</p>
+
 Запускаем backend mater-node на запись:
 ```shell script
 make launch_backend_wmn
@@ -406,7 +424,10 @@ docker restart storage_master
 docker restart storage_slave_1
 docker restart storage_slave_2
 ```
-При успешном конфигурировании во всех трех docker-container-ах должны увидеть следующее:<br />
+При успешном конфигурировании во всех трех docker-container-ах должны увидеть следующее:
+```mysql based
+show variables like 'binlog_format';
+```
 <p align="center">
 <img src="static/show_row_bin_log_format.png">
 </p>
@@ -431,14 +452,22 @@ docker exec -it storage_slave_1 bash
 docker exec -it storage_slave_2 bash
 ```
 - открыть конфигурацию, располагающуюся по пути: **/etc/mysql/conf.d/mysql.cnf**;
-- вконец добавить строки **gtid_mode = on** и **enforce_gtid_consistency = true**;
+- вконец добавить строки 
+```text
+[mysqld]
+gtid_mode = on
+enforce_gtid_consistency = true
+```
 - перезапустить каждый из контейнеров:
 ```shell script
 docker restart storage_master
 docker restart storage_slave_1
 docker restart storage_slave_2
 ```
-При успешном конфигурировании во всех трех docker-container-ах должны увидеть следующее:<br />
+При успешном конфигурировании во всех трех docker-container-ах должны увидеть следующее:
+```mysql based
+show variables like 'gtid_mode';
+```
 <p align="center">
 <img src="static/show_gtid_enable_mod.png">
 </p>
@@ -449,3 +478,77 @@ STOP SLAVE;
 CHANGE MASTER TO MASTER_AUTO_POSITION = 1;
 START SLAVE;
 ```
+
+<a name="semi-sync-replica"></a>
+## Настроить полусинхронную репликацию
+Переходим на master, затем в mysql оболочку и применяем команду:
+```mysql based
+INSTALL PLUGIN rpl_semi_sync_master SONAME 'semisync_master.so';
+```
+
+Так же переходим на каждую salve реплику и применяем команду:
+```mysql based
+INSTALL PLUGIN rpl_semi_sync_slave SONAME 'semisync_slave.so';
+```
+
+Если все прошло успешно, то на master при введении команды:
+```mysql based
+SELECT
+    PLUGIN_NAME, PLUGIN_STATUS
+FROM
+    INFORMATION_SCHEMA.PLUGINS
+WHERE
+    PLUGIN_NAME LIKE '%semi%';
+```
+
+Должны увидеть следующее:
+<p align="center">
+<img src="static/show_master_semisync_replica.png">
+</p>
+
+
+А на slave узлах при введении той же команды должны увидеть:
+<p align="center">
+<img src="static/show_slave_semisync_replica.png">
+</p>
+
+Так же необходимо в конфигурации master узла(располагающуюся по пути: **/etc/mysql/conf.d/mysql.cnf**) задать параметры **включения режима репликации** и 
+**время ожидания ответа в мс**
+```shell script
+[mysqld]
+rpl_semi_sync_master_enabled=1
+rpl_semi_sync_master_timeout=1000 # 1 second
+```
+
+А так же на slave-ах:
+```shell script
+[mysqld]
+rpl_semi_sync_slave_enabled=1
+```
+
+И перезапускаем docker container-ы:
+```shell script
+docker restart storage_master
+docker restart storage_slave_1
+docker restart storage_slave_2
+```
+
+Проверяем, что конфигурация принялась успешно.
+На master-е в оболочке MySQL выполняем команду:
+```mysql based
+show variables like 'rpl_semi_sync_master_enabled';
+show variables like 'rpl_semi_sync_master_timeout';
+```
+Если все ок, то вывод будет таким:
+<p align="center">
+<img src="static/show_variables_semi_sync_master_enabled.png">
+</p>
+
+На slave-ах в оболочке MySQL выполняем команду:
+```mysql based
+show variables like 'rpl_semi_sync_slave_enabled';
+```
+Если все ок, то вывод будет таким:
+<p align="center">
+<img src="static/show_variables_semi_sync_master_enabled.png">
+</p>
