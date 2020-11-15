@@ -326,6 +326,7 @@ pip install -r requirements.txt
 python main.py -cfg=./config.yaml -path=./snapshot -size=10000
 deactivate
 rm -rf ./snapshot ./venv
+cd ../../cluster/
 ```
 
 Проверяем, например, на втором slave-е, что сгенерированные пользователи записались и их число 1м:
@@ -550,5 +551,5 @@ show variables like 'rpl_semi_sync_slave_enabled';
 ```
 Если все ок, то вывод будет таким:
 <p align="center">
-<img src="static/show_variables_semi_sync_master_enabled.png">
+<img src="static/show_variables_semi_sync_slave_enabled.png">
 </p>
