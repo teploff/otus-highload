@@ -397,11 +397,8 @@ docker exec -it storage_master bash
 docker exec -it storage_slave_1 bash
 docker exec -it storage_slave_2 bash
 ```
-- открыть конфигурацию, располагающуюся по пути: **/etc/mysql/conf.d/mysql.cnf**
-- изменить строку **binlog_format = STATEMENT** на **binlog_format = ROW**
-```mysql based
-SET GLOBAL binlog_format = 'ROW';
-```
+- открыть конфигурацию, располагающуюся по пути: **/etc/mysql/conf.d/mysql.cnf**;
+- изменить строку **binlog_format = STATEMENT** на **binlog_format = ROW**;
 - перезапустить каждый из контейнеров:
 ```shell script
 docker restart storage_master
