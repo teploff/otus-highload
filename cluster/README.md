@@ -12,6 +12,7 @@
     - [ Подготовка ](#preparation)
     - [ Осуществление ](#implementation)
 6. [ Подключение row based binary logging format ](#enable-row-based)
+7. [ Подключение GTID ](#gtid)
 
 <a name="task"></a>
 ## Задание
@@ -409,3 +410,42 @@ docker restart storage_slave_2
 <p align="center">
 <img src="static/show_row_bin_log_format.png">
 </p>
+
+<a name="gtid"></a>
+## Подключение GTID
+Для того, чтобы понять, включен ли у нас режим GTID, необходимо зайти в каждый из docker-контейнеров, перейти в 
+оболочку mysql и выполнить:
+```mysql based
+show variables like 'gtid_mode';
+```
+Во всех трех docker-container-ах должны увидеть следующее:<br />
+<p align="center">
+<img src="static/show_gtid_disable_mod.png">
+</p>
+
+Для того, чтобы поменять GTID mode с OFF на ON, необходимо: 
+- перейти в каждый из docker container-ов MySQL;
+```shell script
+docker exec -it storage_master bash
+docker exec -it storage_slave_1 bash
+docker exec -it storage_slave_2 bash
+```
+- открыть конфигурацию, располагающуюся по пути: **/etc/mysql/conf.d/mysql.cnf**;
+- вконец добавить строки **gtid_mode = on** и **enforce_gtid_consistency = true**;
+- перезапустить каждый из контейнеров:
+```shell script
+docker restart storage_master
+docker restart storage_slave_1
+docker restart storage_slave_2
+```
+При успешном конфигурировании во всех трех docker-container-ах должны увидеть следующее:<br />
+<p align="center">
+<img src="static/show_gtid_enable_mod.png">
+</p>
+
+Переходим на каждый из slave-ов, далее в оболочку MySQL и выполняем следующее:
+```shell script
+STOP SLAVE;
+CHANGE MASTER TO MASTER_AUTO_POSITION = 1;
+START SLAVE;
+```
