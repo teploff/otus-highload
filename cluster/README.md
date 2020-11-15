@@ -15,6 +15,8 @@
 7. [ Подключение GTID ](#gtid)
 8. [ Настроить полусинхронную репликацию ](#semi-sync-replica)
 9. [ Создать нагрузку на запись ](#write-stress-testing)
+    - [ Подготовка ](#write-stress-testing-preparation)
+    - [ Выполнение ](#write-stress-testing-implementation)
 10. [ Назначение нового master-узла ](#master-promoting)
 
 <a name="task"></a>
