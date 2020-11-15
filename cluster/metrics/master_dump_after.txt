@@ -1,0 +1,246 @@
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.09%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.12%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.12%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.13%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.13%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.13%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.13%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.13%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.13%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.13%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.13%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.13%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.13%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.12%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.12%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.12%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.12%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.13%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.13%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.13%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.13%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.12%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.12%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.13%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.13%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.12%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.12%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.12%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.12%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.12%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.12%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.13%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.13%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.12%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.12%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.12%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.12%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.12%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.12%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.13%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.13%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.12%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.12%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.12%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.12%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.11%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.11%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.12%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.12%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.13%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.13%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.12%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.12%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.13%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.13%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.12%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.12%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.12%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.12%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.12%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.12%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.12%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.12%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.12%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.12%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.12%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.12%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.12%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.12%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.12%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.12%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.13%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.13%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.12%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.12%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.13%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.13%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.12%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.12%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.12%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.12%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.12%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.12%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.12%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.12%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.12%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.12%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.12%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.12%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.12%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.12%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.12%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.12%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.11%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.11%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.12%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.12%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.12%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.12%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.13%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.13%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.12%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.12%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.12%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.12%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.13%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.13%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.13%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.13%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.12%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.12%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.13%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.13%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.12%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.12%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.12%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.12%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.12%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.12%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.12%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.12%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.12%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
+[2J[HCONTAINER ID        NAME                CPU %               MEM USAGE / LIMIT     MEM %               NET I/O             BLOCK I/O           PIDS
+a393e05d5495        storage_master      0.12%               496.4MiB / 15.65GiB   3.10%               440MB / 1.85GB      131MB / 3.81GB      48
