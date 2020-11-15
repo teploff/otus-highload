@@ -11,6 +11,7 @@
 5. [ Нагрузочное тестирование](#stress-testing)
     - [ Подготовка ](#preparation)
     - [ Осуществление ](#implementation)
+6. [ Подключение row based binary logging format ](#enable-row-based)
 
 <a name="task"></a>
 ## Задание
@@ -376,3 +377,38 @@ make wrk_2
 docker stats storage_master > master_dump_after.txt
 ```
 Ждем окончания нагрузочного теста, который идет 60s и так же жмем Ctrl + C.
+
+<a name="enable-row-based"></a>
+## Подключение row based binary logging format
+Для того, чтобы понять, какой именно сейчас у нас стоит тип для binary logging format-a, необходимо зайти в каждый из
+docker-контейнеров, перейти в оболочку mysql и выполнить:
+```mysql based
+show variables like 'binlog_format';
+```
+Во всех трех docker-container-ах должны увидеть следующее:<br />
+<p align="center">
+<img src="static/show_statement_bin_log_format.png">
+</p>
+
+Для того, чтобы поменять STATEMENT binary logging format на ROW, необходимо: 
+- перейти в каждый из docker container-ов MySQL;
+```shell script
+docker exec -it storage_master bash
+docker exec -it storage_slave_1 bash
+docker exec -it storage_slave_2 bash
+```
+- открыть конфигурацию, располагающуюся по пути: **/etc/mysql/conf.d/mysql.cnf**
+- изменить строку **binlog_format = STATEMENT** на **binlog_format = ROW**
+```mysql based
+SET GLOBAL binlog_format = 'ROW';
+```
+- перезапустить каждый из контейнеров:
+```shell script
+docker restart storage_master
+docker restart storage_slave_1
+docker restart storage_slave_2
+```
+При успешном конфигурировании во всех трех docker-container-ах должны увидеть следующее:<br />
+<p align="center">
+<img src="static/show_row_bin_log_format.png">
+</p>
