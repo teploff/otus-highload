@@ -626,7 +626,7 @@ show slave status\G
 <img src="static/show_replication_failed_connect.png">
 </p>
 
-<a name="master-promoting)"></a>
+<a name="master-promoting"></a>
 ## Назначение нового master-узла 
 Переходим на тот slave-узел, которых хотим назначить master-ом, например, storage_slave_1:
 ```shell script
