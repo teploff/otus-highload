@@ -1,3 +1,4 @@
+import logging
 from typing import List
 
 import pymysql
@@ -37,6 +38,9 @@ class MySQLDriver:
                             user.city,
                             user.interests))
                     self.connection.commit()
+                    self.written_users += len(users)
+        except pymysql.OperationalError:
+            logging.info(f'{repository.written_users} users was written in database')
         finally:
-            self.written_users += len(users)
+            logging.info(f'{repository.written_users} users was written in database')
             self.connection.close()
