@@ -542,7 +542,7 @@ docker restart storage_slave_2
 show variables like 'rpl_semi_sync_master_enabled';
 show variables like 'rpl_semi_sync_master_timeout';
 ```
-Если все ок, то вывод будет таким:
+Если все ок, то вывод будет таким:<br/>
 <p align="center">
 <img src="static/show_variables_semi_sync_master_enabled.png">
 </p>
@@ -591,9 +591,61 @@ docker rm -f storage_master
 
 ```
 
+Переходим в каждый из slave-узлов и удостоверяемся в отсутствии подключения к master-узлу:
+```shell script
+show slave status\G
+```
+Должны на каждом из slave-узле увидеть следующую ошибку:
+<br/>
+<p align="center">
+<img src="static/show_replication_failed_connect.png">
+</p>
+
 <a name="master-promoting)"></a>
 ## Назначение нового master-узла 
+Переходим на тот slave-узел, которых хотим назначить master-ом, например, storage_slave_1:
+```shell script
+docker exec -it storage_slave_1 bash
+mysql -u root -p
+```
 
+Останавливаем режим SLAVE:
+```mysql based
+stop slave;
+```
 
+Создаем пользователя для репликации:
+```mysql based
+create user 'replica'@'%' IDENTIFIED BY 'oTUSlave#2020';
+```
+
+Наделяем созданного пользователя полномочиями:
+```mysql based
+GRANT REPLICATION SLAVE ON *.* TO 'replica'@'%';
+```
+
+Перенастраиваем master на себя:
+```mysql based
+reset master;
+```
+
+Выходим из docker container-а и заходим в контейнер storage_slave_2, в оболочку mysql:
+```mysql based
+stop slave;
+CHANGE MASTER TO MASTER_HOST='storage_slave_1';
+```
+
+Проверяем, что на slave-узле, все работает и ему удалось подсоединиться к новому master-у:
+```mysql based
+show slave status\G
+```
+
+Если все настроили корректно, должны увидеть следующее:<br/>
+<p align="center">
+<img src="static/status_slave.png">
+</p>
+
+           Retrieved_Gtid_Set: 2cd47c18-2755-11eb-8446-0242ac160003:1-1369
+           Executed_Gtid_Set: 2cd47c18-2755-11eb-8446-0242ac160003:1-1369
 
 show variables like 'gtid_executed';
