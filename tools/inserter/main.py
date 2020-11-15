@@ -1,3 +1,5 @@
+import logging
+
 from driver import MySQLDriver
 from file_reader import Reader
 from settings import Configuration
@@ -13,6 +15,8 @@ def app():
 
     repository = MySQLDriver(cfg.storage)
     repository.insert(list(divide_sequence_into_chunks(reader.users, cfg.batch_size)))
+
+    logging.info(f'{repository.written_users} users was written in database')
 
 
 if __name__ == '__main__':

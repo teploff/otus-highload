@@ -15,6 +15,7 @@ class MySQLDriver:
             db=settings['db'],
             charset=settings['charset'],
             cursorclass=pymysql.cursors.DictCursor)
+        self.written_users = 0
 
     def insert(self, users_set: List[List[User]]):
         try:
@@ -36,5 +37,6 @@ class MySQLDriver:
                             user.city,
                             user.interests))
                     self.connection.commit()
+                    self.written_users += len(users)
         finally:
             self.connection.close()
