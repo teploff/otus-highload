@@ -37,6 +37,6 @@ class MySQLDriver:
                             user.city,
                             user.interests))
                     self.connection.commit()
-                    self.written_users += len(users)
         finally:
+            self.written_users += len(users)
             self.connection.close()
