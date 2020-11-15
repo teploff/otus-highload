@@ -598,10 +598,23 @@ cd ../../cluster/
 docker rm -f storage_master
 ```
 
-Заканчиваем операцию записи и смотрим, сколько удалось записать срок пользователей в БД:
-```text
+Заканчиваем операцию записи и смотрим, сколько удалось записать срок пользователей в БД.
 
+При этом смотрим, сколько транзакций удалось получить и сколько применить. Выполняем команду:
+```mysql based
+show slave status\G
 ```
+и смотрим на переменные, такие как:
+```shell script
+Retrieved_Gtid_Set: 2cd47c18-2755-11eb-8446-0242ac160003:1-1369
+Executed_Gtid_Set: 2cd47c18-2755-11eb-8446-0242ac160003:1-1369
+```
+
+Так же можем явно запросить, например, переменную **gtid_executed** и получим следующее:
+<br/>
+<p align="center">
+<img src="static/show_gtid_executed_slave.png">
+</p>
 
 Переходим в каждый из slave-узлов и удостоверяемся в отсутствии подключения к master-узлу:
 ```shell script
@@ -656,8 +669,3 @@ show slave status\G
 <p align="center">
 <img src="static/status_slave.png">
 </p>
-
-           Retrieved_Gtid_Set: 2cd47c18-2755-11eb-8446-0242ac160003:1-1369
-           Executed_Gtid_Set: 2cd47c18-2755-11eb-8446-0242ac160003:1-1369
-
-show variables like 'gtid_executed';
