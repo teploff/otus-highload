@@ -444,7 +444,7 @@ docker restart storage_slave_2
 </p>
 
 Переходим на каждый из slave-ов, далее в оболочку MySQL и выполняем следующее:
-```shell script
+```mysql based
 STOP SLAVE;
 CHANGE MASTER TO MASTER_AUTO_POSITION = 1;
 START SLAVE;
