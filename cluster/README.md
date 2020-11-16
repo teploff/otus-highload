@@ -133,7 +133,7 @@ show master status;
 </p>
 
 <a name="first-slave-config"></a>
-## Конфигурирование первого slave-а
+### Конфигурирование первого slave-а
 Заходим в master-container:
 ```shell script
 docker exec -it storage_slave_1 bash
