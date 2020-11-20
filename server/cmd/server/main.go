@@ -1,23 +1,17 @@
 package main
 
 import (
-	"context"
 	"database/sql"
 	"flag"
-	"log"
 	"os"
 	"os/signal"
+	"social-network/internal/app"
 	"social-network/internal/config"
-	"social-network/internal/implementation"
-	"social-network/internal/transport/http"
 	"syscall"
-	"time"
 
 	_ "github.com/go-sql-driver/mysql"
 	"go.uber.org/zap"
 )
-
-const httpTimeoutClose = 5 * time.Second
 
 func main() {
 	configFile := flag.String("config", "./configs/config.yaml", "configuration file path")
@@ -48,24 +42,14 @@ func main() {
 		logger.Fatal("mysql ping fail, ", zap.Error(err))
 	}
 
-	authSvc := implementation.NewAuthService(implementation.NewUserRepository(mysqlConn), cfg.JWT)
-	socialSvc := implementation.NewSocialService(implementation.NewUserRepository(mysqlConn))
-	srv := http.NewHTTPServer(cfg.Addr, http.MakeEndpoints(authSvc, socialSvc))
-
-	go func() {
-		if err = srv.ListenAndServe(); err != nil {
-			logger.Fatal("http serve error, ", zap.Error(err))
-		}
-	}()
+	application := app.NewApp(cfg,
+		app.WithLogger(logger),
+	)
+	go application.Run(mysqlConn)
 
 	done := make(chan os.Signal, 1)
 	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 	<-done
 
-	ctx, cancel := context.WithTimeout(context.Background(), httpTimeoutClose)
-	defer cancel()
-
-	if err = srv.Shutdown(ctx); err != nil {
-		log.Fatal("http closing error, ", zap.Error(err))
-	}
+	application.Stop()
 }
