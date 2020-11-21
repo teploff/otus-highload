@@ -8,6 +8,12 @@
     - [ Цель ](#task-goal)
     - [ Приобретенные навыки ](#task-skills)
     - [ Постановка задачи ](#task-statement)
+2. [Сведения](#information)
+    - [ Используемые инструменты ](#information-tools)
+    - [ Характеристики железа ](#information-computer)
+
+<a name="information-tools"></a>
+### Используемые инструменты
 
 <a name="task"></a>
 ## Задание
@@ -33,3 +39,19 @@
 3. Выбрать любой запрос, переписать его на lua-процедуру и поместить его в tarantool.
 4. Провести нагрузочное тестирование, сравнить tarantool и MySQL по производительности.
 
+<a name="information"></a>
+## Сведения
+
+<a name="information-tools"></a>
+### Используемые инструменты
+Для выполнения дз понадобятся следующие инструменты: 
+- [docker](https://docs.docker.com/get-docker/) (>= version 19.03.8) & [docker compose](https://docs.docker.com/compose/install/) (>= version 1.25.5);
+- [golang](https://golang.org/doc/install) (>= version 1.15)
+- [jq](https://stedolan.github.io/jq/download/) (>= version 1.5)
+
+<a name="information-computer"></a>
+### Характеристики железа
+Настройка репликации, проведение нагрузочного тестирования и т.д. проводились на железе со следующими характеристиками:
+- CPU - AMD Ryzen 9: 12 ядер 24 потока;
+- RAM - 2xHyperX Fury Black: DDR4 DIMM 3000MHz 8GB;
+- SSD - Intel® SSD 540s Series: 480GB, 2.5in SATA 6Gb/s, 16nm, TLC
