@@ -12,9 +12,6 @@
     - [ Используемые инструменты ](#information-tools)
     - [ Характеристики железа ](#information-computer)
 
-<a name="information-tools"></a>
-### Используемые инструменты
-
 <a name="task"></a>
 ## Задание
 Репликация из MySQL в tarantool.
