@@ -8,9 +8,12 @@
     - [ Цель ](#task-goal)
     - [ Приобретенные навыки ](#task-skills)
     - [ Постановка задачи ](#task-statement)
-2. [Сведения](#information)
+2. [ Сведения ](#information)
     - [ Используемые инструменты ](#information-tools)
     - [ Характеристики железа ](#information-computer)
+3. [ Настройка репликации ](#replication)
+    - [ Настройка на стороне MySQL ](#replication-mysql)
+    - [ Настройка на стороне Tarantool ](#replication-tarantool)
 
 <a name="task"></a>
 ## Задание
@@ -52,3 +55,84 @@
 - CPU - AMD Ryzen 9: 12 ядер 24 потока;
 - RAM - 2xHyperX Fury Black: DDR4 DIMM 3000MHz 8GB;
 - SSD - Intel® SSD 540s Series: 480GB, 2.5in SATA 6Gb/s, 16nm, TLC
+
+<a name="replication"></a>
+## Настройка репликации
+Перед тем как перейти к настройке репликации на стороне MySQL и Tarantool необходимо поднять инфраструктуру, состоящую
+из двух docker-контейнеров, а именно экземпляра MySQL и экземпляра Tarantool:
+```shell script
+make init
+```
+
+## Replicator
+Заходим в replicator-container:
+```shell script
+docker exec -it replicator bash
+```
+
+Репликатор будет работать в виде демона systemd под названием replicatord, поэтому давайте отредактируем его служебный 
+файл systemd, а именно replicatord.service, в репозитории:
+```shell script
+cd mysql-tarantool-replication
+nano replicatord.service
+```
+
+Измените следующую строку:
+```text
+ExecStart=/usr/local/sbin/replicatord -c /usr/local/etc/replicatord.cfg
+```
+
+Замените расширение .cfg на .yml:
+```text
+ExecStart=/usr/local/sbin/replicatord -c /usr/local/etc/replicatord.yml
+```
+
+Затем скопируем некоторые файлы из репозитория replicatord в другие места locations:
+```text
+cp replicatord /usr/local/sbin/replicatord
+cp replicatord.service /etc/systemd/system
+```
+
+### MySQL
+Заходим в mysql-container:
+```shell script
+docker exec -it storage_mysql bash
+```
+
+Создаем папку mysql в директории */var/log/* папку mysql и даем права доступа к ней пользователю *mysql*:
+```shell script
+cd /var/log && mkdir mysql && chown mysql:mysql mysql
+```
+
+Устанавливаем текстовый редактор для конфигурирования, по умолчанию редактор не идет в комплектации container-а:
+```shell script
+apt-get update && apt-get install nano
+```
+
+Открываем конфигурацию, которая располагается по пути **/etc/mysql/conf.d/mysql.cnf**, c помощью **nano**:
+```shell script
+nano /etc/mysql/conf.d/mysql.cnf
+```
+
+Дописываем в секцию **[mysqld]** следующие строки:
+```textmate
+[mysqld]
+secure-file-priv = ""
+binlog_format = ROW
+server_id = 1
+log-bin=mysql-bin
+interactive_timeout=3600
+wait_timeout=3600
+max_allowed_packet=32M
+default_authentication_plugin=mysql_native_password
+``` 
+
+Выходим из контейнера и рестартуем его:
+```shell script
+docker restart storage_master
+```
+
+
+
+mkdir /var/log/tarantool
+chown tarantool:tarantool /var/log/tarantool
