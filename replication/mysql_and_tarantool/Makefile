@@ -1,7 +1,7 @@
 .PHONY: init migrate down
 
 init:
-	docker-compose up -d storage_mysql storage_tarantool storage_tarantool_replica ;\
+	docker-compose up -d storage_mysql storage_tarantool replicator ;\
 
 migrate:
 	cd ../server/tools/migrator && \
