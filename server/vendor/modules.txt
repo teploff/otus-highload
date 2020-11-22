@@ -25,6 +25,19 @@ github.com/go-playground/validator/v10
 # github.com/go-sql-driver/mysql v1.5.0
 ## explicit
 github.com/go-sql-driver/mysql
+# github.com/gobwas/httphead v0.0.0-20200921212729-da3d93bc3c58
+## explicit
+github.com/gobwas/httphead
+# github.com/gobwas/pool v0.2.1
+## explicit
+github.com/gobwas/pool
+github.com/gobwas/pool/internal/pmath
+github.com/gobwas/pool/pbufio
+github.com/gobwas/pool/pbytes
+# github.com/gobwas/ws v1.0.4
+## explicit
+github.com/gobwas/ws
+github.com/gobwas/ws/wsutil
 # github.com/golang-migrate/migrate v3.5.4+incompatible
 ## explicit
 github.com/golang-migrate/migrate
@@ -34,6 +47,9 @@ github.com/golang-migrate/migrate/source
 github.com/golang-migrate/migrate/source/file
 # github.com/golang/protobuf v1.3.3
 github.com/golang/protobuf/proto
+# github.com/gorilla/websocket v1.4.2
+## explicit
+github.com/gorilla/websocket
 # github.com/hashicorp/hcl v1.0.0
 github.com/hashicorp/hcl
 github.com/hashicorp/hcl/hcl/ast

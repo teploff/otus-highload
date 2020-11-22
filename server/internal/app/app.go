@@ -9,6 +9,7 @@ import (
 	"social-network/internal/config"
 	"social-network/internal/implementation"
 	httptransport "social-network/internal/transport/http"
+	wstransport "social-network/internal/transport/ws"
 	"time"
 )
 
@@ -27,14 +28,16 @@ func WithLogger(l *zap.Logger) Option {
 type App struct {
 	cfg     *config.Config
 	httpSrv *http.Server
+	wsConns *wstransport.Conns
 	logger  *zap.Logger
 }
 
 // NewApp returns instance of app.
 func NewApp(cfg *config.Config, opts ...Option) *App {
 	app := &App{
-		cfg:    cfg,
-		logger: zap.NewNop(),
+		cfg:     cfg,
+		wsConns: wstransport.NewWSConnects(),
+		logger:  zap.NewNop(),
 	}
 
 	for _, opt := range opts {
@@ -48,8 +51,9 @@ func NewApp(cfg *config.Config, opts ...Option) *App {
 func (a *App) Run(mysqlConn *sql.DB) {
 	authSvc := implementation.NewAuthService(implementation.NewUserRepository(mysqlConn), a.cfg.JWT)
 	socialSvc := implementation.NewSocialService(implementation.NewUserRepository(mysqlConn))
+	messengerSvc := implementation.NewMessenger(a.logger, a.wsConns)
 
-	a.httpSrv = httptransport.NewHTTPServer(a.cfg.Addr, httptransport.MakeEndpoints(authSvc, socialSvc))
+	a.httpSrv = httptransport.NewHTTPServer(a.cfg.Addr, httptransport.MakeEndpoints(authSvc, socialSvc, messengerSvc))
 
 	go func() {
 		if err := a.httpSrv.ListenAndServe(); err != nil {
@@ -59,6 +63,8 @@ func (a *App) Run(mysqlConn *sql.DB) {
 }
 
 func (a *App) Stop() {
+	a.wsConns.Close()
+
 	ctx, cancel := context.WithTimeout(context.Background(), httpTimeoutClose)
 	defer cancel()
 

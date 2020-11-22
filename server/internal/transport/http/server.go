@@ -26,6 +26,8 @@ func NewHTTPServer(addr string, endpoints *Endpoints) *http.Server {
 	router.POST("/questionnaires", endpoints.Social.GetAllQuestionnaires)
 	router.GET("/questionnaires", endpoints.Social.GetQuestionnairesByNameAndSurname)
 
+	router.GET("/ws", endpoints.Ws.Connect)
+
 	return &http.Server{
 		Addr:    addr,
 		Handler: router,

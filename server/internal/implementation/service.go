@@ -6,8 +6,11 @@ import (
 	"errors"
 	"fmt"
 	"github.com/dgrijalva/jwt-go"
+	"go.uber.org/zap"
+	"net"
 	"social-network/internal/config"
 	"social-network/internal/domain"
+	wstransport "social-network/internal/transport/ws"
 	"time"
 )
 
@@ -260,4 +263,30 @@ func (s *socialService) GetQuestionnairesByNameAndSurname(ctx context.Context, p
 	}
 
 	return questionnaires, tx.Commit()
+}
+
+type messenger struct {
+	logger *zap.Logger
+	conns  *wstransport.Conns
+}
+
+func NewMessenger(logger *zap.Logger, conns *wstransport.Conns) *messenger {
+	return &messenger{
+		logger: logger,
+		conns:  conns,
+	}
+}
+
+func (m *messenger) AddConnection(userID string, conn net.Conn) {
+	m.conns.Add(userID, conn)
+}
+
+func (m *messenger) RemoveConnection(userID string, conn net.Conn) {
+	m.conns.Remove(userID, conn)
+}
+
+func (m *messenger) CreateMessage(msg []byte) error {
+	m.logger.Info(fmt.Sprintf("get message %s", string(msg)))
+
+	return nil
 }

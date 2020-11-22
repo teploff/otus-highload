@@ -1,6 +1,9 @@
 package domain
 
-import "context"
+import (
+	"context"
+	"net"
+)
 
 type AuthService interface {
 	SignUp(ctx context.Context, user *User) error
@@ -12,4 +15,10 @@ type AuthService interface {
 type SocialService interface {
 	GetQuestionnaires(ctx context.Context, userID string, limit, offset int) ([]*Questionnaire, int, error)
 	GetQuestionnairesByNameAndSurname(ctx context.Context, prefix string) ([]*Questionnaire, error)
+}
+
+type Messenger interface {
+	AddConnection(userID string, conn net.Conn)
+	RemoveConnection(userID string, conn net.Conn)
+	CreateMessage(msg []byte) error
 }

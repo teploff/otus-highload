@@ -3,6 +3,8 @@ package http
 import (
 	"database/sql"
 	"github.com/gin-gonic/gin"
+	"github.com/gobwas/ws"
+	"github.com/gobwas/ws/wsutil"
 	"net/http"
 	"social-network/internal/domain"
 )
@@ -10,9 +12,10 @@ import (
 type Endpoints struct {
 	Auth   *AuthEndpoints
 	Social *SocialEndpoints
+	Ws     *WsEndpoints
 }
 
-func MakeEndpoints(auth domain.AuthService, social domain.SocialService) *Endpoints {
+func MakeEndpoints(auth domain.AuthService, social domain.SocialService, messenger domain.Messenger) *Endpoints {
 	return &Endpoints{
 		Auth: &AuthEndpoints{
 			SignUp:       makeSignUpEndpoint(auth),
@@ -22,6 +25,9 @@ func MakeEndpoints(auth domain.AuthService, social domain.SocialService) *Endpoi
 		Social: &SocialEndpoints{
 			GetAllQuestionnaires:              makeGetAllQuestionnairesEndpoint(auth, social),
 			GetQuestionnairesByNameAndSurname: makeGetQuestionnairesByNameAndSurnameEndpoint(auth, social),
+		},
+		Ws: &WsEndpoints{
+			Connect: makeWsConnectEndpoint(auth, messenger),
 		},
 	}
 }
@@ -224,5 +230,66 @@ func makeGetQuestionnairesByNameAndSurnameEndpoint(authSvc domain.AuthService, s
 			Questionnaires: quest,
 			Count:          len(quest),
 		})
+	}
+}
+
+type WsEndpoints struct {
+	Connect gin.HandlerFunc
+}
+
+func makeWsConnectEndpoint(authSvc domain.AuthService, messenger domain.Messenger) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var header AuthorizationHeader
+		if err := c.ShouldBindHeader(&header); err != nil {
+			c.JSON(http.StatusUnauthorized, ErrorResponse{
+				Message: err.Error(),
+			})
+
+			return
+		}
+
+		userID, err := authSvc.Authenticate(c, header.AccessToken)
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, ErrorResponse{
+				Message: err.Error(),
+			})
+
+			return
+		}
+
+		conn, _, _, err := ws.UpgradeHTTP(c.Request, c.Writer)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, ErrorResponse{
+				Message: err.Error(),
+			})
+
+			return
+		}
+
+		messenger.AddConnection(userID, conn)
+
+		go func() {
+			defer conn.Close()
+
+			for {
+				msg, _, err := wsutil.ReadClientData(conn)
+				if err != nil {
+					messenger.RemoveConnection(userID, conn)
+
+					return
+				}
+
+				messenger.CreateMessage(msg)
+
+				//err = wsutil.WriteServerMessage(conn, op, msg)
+				//if err != nil {
+				//	c.JSON(http.StatusUnauthorized, ErrorResponse{
+				//		Message: err.Error(),
+				//	})
+				//
+				//	return
+				//}
+			}
+		}()
 	}
 }
