@@ -49,3 +49,24 @@ type Questionnaire struct {
 	City      string    `json:"city"`
 	Interests string    `json:"interests"`
 }
+
+type Message struct {
+	ID         string    `json:"id"`
+	Text       string    `json:"text"`
+	Status     int       `json:"status"`
+	CreateTime time.Time `json:"create_time"`
+	UserID     string    `json:"user_id"`
+	ChatID     string    `json:"chat_id"`
+}
+
+type Chat struct {
+	ID           string         `json:"id"`
+	CreateTime   time.Time      `json:"create_time"`
+	Participants []*Participant `json:"participants"`
+}
+
+type Participant struct {
+	ID      string `json:"id"`
+	Name    string `json:"name"`
+	Surname string `json:"surname"`
+}

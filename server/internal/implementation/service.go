@@ -6,11 +6,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/dgrijalva/jwt-go"
-	"go.uber.org/zap"
-	"net"
 	"social-network/internal/config"
 	"social-network/internal/domain"
-	wstransport "social-network/internal/transport/ws"
 	"time"
 )
 
@@ -265,28 +262,66 @@ func (s *socialService) GetQuestionnairesByNameAndSurname(ctx context.Context, p
 	return questionnaires, tx.Commit()
 }
 
-type messenger struct {
-	logger *zap.Logger
-	conns  *wstransport.Conns
+type messengerService struct {
+	repository domain.MessengerRepository
 }
 
-func NewMessenger(logger *zap.Logger, conns *wstransport.Conns) *messenger {
-	return &messenger{
-		logger: logger,
-		conns:  conns,
+func NewMessengerService(repository domain.MessengerRepository) *messengerService {
+	return &messengerService{repository: repository}
+}
+
+func (m *messengerService) CreateChat(ctx context.Context, masterID, slaveID string) (string, error) {
+	tx, err := m.repository.GetTx(ctx)
+	if err != nil {
+		return "", err
 	}
+
+	chatID, err := m.repository.CreateChat(tx, masterID, slaveID)
+	if err != nil {
+		return "", err
+	}
+
+	return chatID, tx.Commit()
 }
 
-func (m *messenger) AddConnection(userID string, conn net.Conn) {
-	m.conns.Add(userID, conn)
+func (m *messengerService) GetChats(ctx context.Context, userID string, limit, offset int) ([]*domain.Chat, int, error) {
+	tx, err := m.repository.GetTx(ctx)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	chats, total, err := m.repository.GetChats(tx, userID, limit, offset)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return chats, total, tx.Commit()
 }
 
-func (m *messenger) RemoveConnection(userID string, conn net.Conn) {
-	m.conns.Remove(userID, conn)
+func (m *messengerService) SendMessages(ctx context.Context, userID, chatID string, messages []*domain.Message) error {
+	tx, err := m.repository.GetTx(ctx)
+	if err != nil {
+		return err
+	}
+
+	err = m.repository.SendMessages(tx, userID, chatID, messages)
+	if err != nil {
+		return err
+	}
+
+	return tx.Commit()
 }
 
-func (m *messenger) CreateMessage(msg []byte) error {
-	m.logger.Info(fmt.Sprintf("get message %s", string(msg)))
+func (m *messengerService) GetMessages(ctx context.Context, userID, chatID string, limit, offset int) ([]*domain.Message, int, error) {
+	tx, err := m.repository.GetTx(ctx)
+	if err != nil {
+		return nil, 0, err
+	}
 
-	return nil
+	messages, total, err := m.repository.GetMessages(tx, userID, chatID, limit, offset)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return messages, total, tx.Commit()
 }

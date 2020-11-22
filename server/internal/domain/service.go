@@ -2,7 +2,6 @@ package domain
 
 import (
 	"context"
-	"net"
 )
 
 type AuthService interface {
@@ -17,8 +16,9 @@ type SocialService interface {
 	GetQuestionnairesByNameAndSurname(ctx context.Context, prefix string) ([]*Questionnaire, error)
 }
 
-type Messenger interface {
-	AddConnection(userID string, conn net.Conn)
-	RemoveConnection(userID string, conn net.Conn)
-	CreateMessage(msg []byte) error
+type MessengerService interface {
+	CreateChat(ctx context.Context, masterID, slaveID string) (string, error)
+	GetChats(ctx context.Context, userID string, limit, offset int) ([]*Chat, int, error)
+	SendMessages(ctx context.Context, userID, chatID string, messages []*Message) error
+	GetMessages(ctx context.Context, userID, chatID string, limit, offset int) ([]*Message, int, error)
 }
