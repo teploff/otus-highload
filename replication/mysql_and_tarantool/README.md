@@ -64,6 +64,10 @@
 make init
 ```
 
+В большинстве своем случае настройка, будет происходить согласно [статье](https://www.tarantool.io/ru/learn/improving-mysql/), 
+однако статья не рассчитана на docker-container'ы и в ней есть ряд моментов, которые не работают.
+Ниже приводится подробное описание настройки каждого из container-ов:
+ 
 ## Replicator
 Заходим в replicator-container:
 ```shell script
@@ -91,6 +95,11 @@ ExecStart=/usr/local/sbin/replicatord -c /usr/local/etc/replicatord.yml
 ```text
 cp replicatord /usr/local/sbin/replicatord
 cp replicatord.service /etc/systemd/system
+```
+
+Выходим из container-а:
+```shell script
+exit 
 ```
 
 ### MySQL
@@ -129,10 +138,160 @@ default_authentication_plugin=mysql_native_password
 
 Выходим из контейнера и рестартуем его:
 ```shell script
-docker restart storage_master
+exit
+docker restart storage_mysql
 ```
 
 
+### Tarantool
+Заходим в tarantool-container:
+```shell script
+docker exec -it storage_tarantool sh
+```
 
-mkdir /var/log/tarantool
-chown tarantool:tarantool /var/log/tarantool
+Создаем папку tarantool в директории */var/log/* и даем права доступа к ней пользователю *tarantool*:
+```shell script
+mkdir /var/log/tarantool && chown tarantool:tarantool /var/log/tarantool
+```
+
+Устанавливаем текстовый редактор для конфигурирования, по умолчанию редактор не идет в комплектации container-а:
+```shell script
+apk update && apk add nano
+```
+
+Сейчас напишем стандартную Tarantool-программу путем редактирования Lua-примера, который поставляется вместе с 
+Tarantool'ом:
+```shell script
+nano /usr/local/etc/tarantool/instances.available/example.lua
+```
+
+Полностью заменим содержимое файла следующим текстом:
+``` text
+box.cfg {
+    listen = '*:3301';
+    memtx_memory = 128 * 1024 * 1024; -- 128Mb
+    memtx_min_tuple_size = 16;
+    memtx_max_tuple_size = 128 * 1024 * 1024; -- 128Mb
+    vinyl_memory = 128 * 1024 * 1024; -- 128Mb
+    vinyl_cache = 128 * 1024 * 1024; -- 128Mb
+    vinyl_max_tuple_size = 128 * 1024 * 1024; -- 128Mb
+    vinyl_write_threads = 2;
+    wal_mode = "none";
+    wal_max_size = 256 * 1024 * 1024;
+    checkpoint_interval = 60 * 60; -- one hour
+    checkpoint_count = 6;
+    force_recovery = true;
+ 
+     -- 1 – SYSERROR
+     -- 2 – ERROR
+     -- 3 – CRITICAL
+     -- 4 – WARNING
+     -- 5 – INFO
+     -- 6 – VERBOSE
+     -- 7 – DEBUG
+     log_level = 7;
+     log_nonblock = true;
+     too_long_threshold = 0.5;
+ }
+ 
+ local function bootstrap()
+     box.schema.user.grant('guest','read,write,execute','universe')    
+
+     if not box.space.mysqldaemon then
+         s = box.schema.space.create('mysqldaemon')
+         s:create_index('primary',
+         {type = 'tree', parts = {1, 'unsigned'}})
+     end
+ 
+     if not box.space.mysqldata then
+         t = box.schema.space.create('mysqldata')
+         t:create_index('primary',
+         {type = 'tree', parts = {1, 'unsigned'}})
+     end
+ 
+ end
+ 
+ bootstrap()
+```
+
+Необходимо создать символьную ссылку из instances.available (доступные экземпляры) на директорию под названием 
+instances.enabled (активные экземпляры -- похоже на NGINX). В /usr/local/etc/tarantool выполните следующую команду:
+```shell script
+ln -s /usr/local/etc/tarantool/instances.available/example.lua instances.enabled
+```
+
+Далее мы можем запустить Lua-программу с помощью tarantoolctl (надстройки для systemd):
+```shell script
+tarantoolctl start example.lua
+```
+
+Переходим в console Tarantool'у, где можно проверить, что необходимые space's были успешно созданы:
+```shell script
+console
+box.space._space:select()
+```
+
+Для того, чтобы выйти из консоли, необходимо нажать **Ctrl + D**.
+
+### Правки
+Заходим в replicator-container:
+```shell script
+docker exec -it replicator bash
+```
+
+Переходим к конфигурации репликатора:
+```shell script
+cd mysql-tarantool-replication
+nano replicatord.yml
+```
+
+Заменяем ее полностью на:
+```yaml
+mysql:
+    host: storage_mysql
+    port: 3306
+    user: root
+    password: password
+    connect_retry: 15 # seconds
+
+tarantool:
+    host: storage_tarantool:3301
+    binlog_pos_space: 512
+    binlog_pos_key: 0
+    connect_retry: 15 # seconds
+    sync_retry: 1000 # milliseconds
+
+mappings:
+    - database: menagerie
+      table: pet
+      columns: [ id, name2, owner, species ]
+      space: 513
+      key_fields: [ 0 ]
+
+spaces:
+    513:
+        replace_null:
+            1: { string: "" }
+            2: { string: "" }
+```
+
+Далее необходимо скопировать replicatord.yml в место, где systemd будет искать его:
+```shell script
+cp replicatord.yml /usr/local/etc/replicatord.yml
+```
+
+Выходим из container-а и перезапускаем replicator:
+```shell script
+exit
+docker restart replicator
+```
+
+
+create user 'replica'@'%' IDENTIFIED BY 'oTUSlave#2020';
+GRANT REPLICATION CLIENT ON *.* TO 'replica'@'%';
+GRANT REPLICATION SLAVE ON *.* TO 'replica'@'%';
+GRANT SELECT ON *.* TO 'replica'@'%';
+FLUSH PRIVILEGES;
+
+
+sudo apt-get install cmake gcc+ libncurses5-dev libboost-dev
