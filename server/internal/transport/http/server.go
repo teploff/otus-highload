@@ -26,6 +26,15 @@ func NewHTTPServer(addr string, endpoints *Endpoints) *http.Server {
 	router.POST("/questionnaires", endpoints.Social.GetAllQuestionnaires)
 	router.GET("/questionnaires", endpoints.Social.GetQuestionnairesByNameAndSurname)
 
+	messengerGroup := router.Group("/messenger")
+	{
+		messengerGroup.POST("/chat", endpoints.Messenger.CreateChat)
+		messengerGroup.GET("/chat", endpoints.Messenger.GetChats)
+		messengerGroup.DELETE("/chat", endpoints.Messenger.GetChats)
+		messengerGroup.POST("/messages", endpoints.Messenger.SendMessage)
+		messengerGroup.GET("/messages", endpoints.Messenger.GetChats)
+	}
+
 	router.GET("/ws", endpoints.Ws.Connect)
 
 	return &http.Server{

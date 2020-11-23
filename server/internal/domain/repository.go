@@ -24,9 +24,11 @@ type UserRepository interface {
 type MessengerRepository interface {
 	GetTx(ctx context.Context) (*sql.Tx, error)
 	CreateChat(tx *sql.Tx, masterID, slaveID string) (string, error)
-	GetChats(tx *sql.Tx, userID string, limit, offset int) ([]*Chat, int, error)
+	GetCountChats(tx *sql.Tx, userID string) (int, error)
+	GetChats(tx *sql.Tx, userID string, limit, offset int) ([]*Chat, error)
 	SendMessages(tx *sql.Tx, userID, chatID string, messages []*Message) error
-	GetMessages(tx *sql.Tx, userID, chatID string, limit, offset int) ([]*Message, int, error)
+	GetCountMessages(tx *sql.Tx, userID, chatID string) (int, error)
+	GetMessages(tx *sql.Tx, userID, chatID string, limit, offset int) ([]*Message, error)
 }
 
 type WSPoolRepository interface {

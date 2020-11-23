@@ -290,7 +290,12 @@ func (m *messengerService) GetChats(ctx context.Context, userID string, limit, o
 		return nil, 0, err
 	}
 
-	chats, total, err := m.repository.GetChats(tx, userID, limit, offset)
+	total, err := m.repository.GetCountChats(tx, userID)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	chats, err := m.repository.GetChats(tx, userID, limit, offset)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -318,7 +323,12 @@ func (m *messengerService) GetMessages(ctx context.Context, userID, chatID strin
 		return nil, 0, err
 	}
 
-	messages, total, err := m.repository.GetMessages(tx, userID, chatID, limit, offset)
+	total, err := m.repository.GetCountMessages(tx, userID, chatID)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	messages, err := m.repository.GetMessages(tx, userID, chatID, limit, offset)
 	if err != nil {
 		return nil, 0, err
 	}

@@ -3,7 +3,6 @@ package implementation
 import (
 	"context"
 	"database/sql"
-	uuid "github.com/satori/go.uuid"
 	"net"
 	"social-network/internal/domain"
 	wstransport "social-network/internal/transport/ws"
@@ -238,7 +237,7 @@ func (m *messengerRepository) CreateChat(tx *sql.Tx, masterID, slaveID string) (
 		return "", err
 	}
 
-	_, err := tx.Exec(`
+	_, err = tx.Exec(`
 		INSERT 
 			INTO user_chat (user_id, chat_id) 
 		VALUES
@@ -249,7 +248,7 @@ func (m *messengerRepository) CreateChat(tx *sql.Tx, masterID, slaveID string) (
 		return "", err
 	}
 
-	_, err := tx.Exec(`
+	_, err = tx.Exec(`
 		INSERT 
 			INTO user_chat (user_id, chat_id) 
 		VALUES
@@ -263,19 +262,38 @@ func (m *messengerRepository) CreateChat(tx *sql.Tx, masterID, slaveID string) (
 	return chatID, nil
 }
 
-func (m *messengerRepository) GetChats(tx *sql.Tx, userID string, limit, offset int) ([]*domain.Chat, int, error) {
-	users := make([]*domain.Chat, 0, 10)
+func (m *messengerRepository) GetCountChats(tx *sql.Tx, userID string) (int, error) {
+	var count int
+
+	err := tx.QueryRow(`
+		SELECT 
+			count(*)
+		FROM user_chat
+		JOIN chat
+		    ON user_chat.chat_id = chat.id
+		WHERE user_chat.user_id = ?`, userID).Scan(&count)
+	if err != nil {
+		tx.Rollback()
+
+		return 0, err
+	}
+
+	return count, nil
+}
+
+func (m *messengerRepository) GetChats(tx *sql.Tx, userID string, limit, offset int) ([]*domain.Chat, error) {
+	chats := make([]*domain.Chat, 0, 10)
 
 	rows, err := tx.Query(`
 		SELECT
-			chat.id, chat.create_time
-		FROM chat
+			chat.id, chat.create_time, user.id, user.name, user.surname
+		FROM user
 		JOIN user_chat
-			ON chat.id = user_chat.chat_id
-		JOIN user
-			ON user_chat.user_id = user.id
-		WHERE user.id != ?
-		GROUP BY chat.id
+			ON user.id = user_chat.user_id
+		JOIN chat
+			ON user_chat.chat_id = chat.id
+		WHERE user.id = ?
+		ORDER BY chat.id
 		LIMIT ? OFFSET ?`, userID, limit, offset)
 	if err != nil {
 		tx.Rollback()
@@ -285,34 +303,132 @@ func (m *messengerRepository) GetChats(tx *sql.Tx, userID string, limit, offset 
 	defer rows.Close()
 
 	for rows.Next() {
-		user := new(domain.User)
+		var row struct {
+			chatID         string
+			chatCreateTime time.Time
+			userID         string
+			userName       string
+			userSurname    string
+		}
 
-		if err = rows.Scan(&user.ID, &user.Email, &user.Password, &user.Name, &user.Surname, &user.Sex, &user.Birthday,
-			&user.City, &user.Interests, &user.AccessToken, &user.RefreshToken); err != nil {
+		if err = rows.Scan(&row.userID, &row.chatCreateTime, &row.userID, &row.userName, &row.userSurname); err != nil {
 			tx.Rollback()
 
 			return nil, err
 		}
 
-		users = append(users, user)
+		exist := false
+		for _, chat := range chats {
+			if chat.ID == row.chatID {
+				if chat.Participants == nil {
+					chat.Participants = make([]*domain.Participant, 0, 1)
+				}
+
+				chat.Participants = append(chat.Participants, &domain.Participant{
+					ID:      row.userID,
+					Name:    row.userName,
+					Surname: row.userSurname,
+				})
+
+				exist = true
+				break
+			}
+		}
+
+		if !exist {
+			participants := make([]*domain.Participant, 0, 1)
+			participants = append(participants, &domain.Participant{
+				ID:      row.userID,
+				Name:    row.userName,
+				Surname: row.userSurname,
+			})
+
+			chats = append(chats, &domain.Chat{
+				ID:           row.chatID,
+				CreateTime:   row.chatCreateTime,
+				Participants: participants,
+			})
+		}
 	}
 
-	return users, nil
+	return chats, nil
 }
 
 func (m *messengerRepository) SendMessages(tx *sql.Tx, userID, chatID string, messages []*domain.Message) error {
-	panic("implement me")
+	for _, message := range messages {
+		_, err := tx.Exec(`
+		INSERT 
+			INTO message (text, status, create_time, user_id, chat_id) 
+		VALUES
+			( ?, ?, ?, ?, ?)`, message.Text, message.Status, time.Now().UTC(), userID, chatID)
+		if err != nil {
+			tx.Rollback()
+
+			return err
+		}
+	}
+
+	return nil
 }
 
-func (m *messengerRepository) GetMessages(tx *sql.Tx, userID, chatID string, limit, offset int) ([]*domain.Message, int, error) {
-	panic("implement me")
+func (m *messengerRepository) GetCountMessages(tx *sql.Tx, userID, chatID string) (int, error) {
+	var count int
+
+	err := tx.QueryRow(`
+		SELECT 
+			count(*)
+		FROM user_chat
+		JOIN chat
+		    ON user_chat.chat_id = chat.id
+		JOIN message
+			ON user_chat.chat_id = message.chat_id
+		WHERE user_chat.user_id = ? AND user_chat.chat_id = ?`, userID, chatID).Scan(&count)
+	if err != nil {
+		tx.Rollback()
+
+		return 0, err
+	}
+
+	return count, nil
+}
+
+func (m *messengerRepository) GetMessages(tx *sql.Tx, userID, chatID string, limit, offset int) ([]*domain.Message, error) {
+	messages := make([]*domain.Message, 0, 10)
+
+	rows, err := tx.Query(`
+		SELECT
+			id, text, max(status), create_time
+		FROM message
+		WHERE user_id = ? AND chat_id = ?
+		GROUP BY id
+		LIMIT ? OFFSET ?`, userID, chatID, limit, offset)
+	if err != nil {
+		tx.Rollback()
+
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var message domain.Message
+
+		if err = rows.Scan(&message.ID, &message.Text, &message.Status, &message.CreateTime); err != nil {
+			tx.Rollback()
+
+			return nil, err
+		}
+
+		messages = append(messages, &message)
+	}
+
+	return messages, nil
 }
 
 type wsPoolRepository struct {
 	conns *wstransport.Conns
 }
 
-func NewMessenger(conns *wstransport.Conns) *wsPoolRepository {
+func NewWSPoolRepository(conns *wstransport.Conns) *wsPoolRepository {
 	return &wsPoolRepository{
 		conns: conns,
 	}

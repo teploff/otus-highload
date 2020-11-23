@@ -51,7 +51,8 @@ func NewApp(cfg *config.Config, opts ...Option) *App {
 func (a *App) Run(mysqlConn *sql.DB) {
 	authSvc := implementation.NewAuthService(implementation.NewUserRepository(mysqlConn), a.cfg.JWT)
 	socialSvc := implementation.NewSocialService(implementation.NewUserRepository(mysqlConn))
-	messengerSvc := implementation.NewMessenger(a.logger, a.wsConns)
+	messengerSvc := implementation.NewMessengerService(implementation.NewMessengerRepository(mysqlConn))
+	//implementation.NewWSPoolRepository(a.wsConns)
 
 	a.httpSrv = httptransport.NewHTTPServer(a.cfg.Addr, httptransport.MakeEndpoints(authSvc, socialSvc, messengerSvc))
 
