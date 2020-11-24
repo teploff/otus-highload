@@ -1,3 +1,5 @@
+import logging
+
 from driver import MySQLDriver
 from file_reader import Reader
 from settings import Configuration
@@ -5,6 +7,9 @@ from utils import divide_sequence_into_chunks
 
 
 def app():
+    logger = logging.getLogger()
+    logger.setLevel(logging.INFO)
+
     cfg = Configuration()
     cfg.parse()
 
