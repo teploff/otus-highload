@@ -16,7 +16,6 @@ class MySQLDriver:
             db=settings['db'],
             charset=settings['charset'],
             cursorclass=pymysql.cursors.DictCursor)
-        self.written_users = 0
 
     def insert(self, users_set: List[List[User]]):
         try:
@@ -38,9 +37,6 @@ class MySQLDriver:
                             user.city,
                             user.interests))
                     self.connection.commit()
-                    self.written_users += len(users)
-        except pymysql.OperationalError:
-            logging.info(f'{repository.written_users} users was written in database')
+                    logging.info('Insert is completed')
         finally:
-            logging.info(f'{repository.written_users} users was written in database')
             self.connection.close()
