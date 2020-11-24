@@ -306,7 +306,7 @@ func makeGetChatsEndpoint(authSvc domain.AuthService, messSvc domain.MessengerSe
 			return
 		}
 
-		_, err := authSvc.Authenticate(c, header.AccessToken)
+		userID, err := authSvc.Authenticate(c, header.AccessToken)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized, ErrorResponse{
 				Message: err.Error(),
@@ -314,6 +314,45 @@ func makeGetChatsEndpoint(authSvc domain.AuthService, messSvc domain.MessengerSe
 
 			return
 		}
+
+		var request GetChatsRequest
+		if err = c.BindQuery(&request); err != nil {
+			c.JSON(http.StatusBadRequest, ErrorResponse{
+				Message: err.Error(),
+			})
+
+			return
+		}
+
+		const (
+			defaultLimit  = 10
+			defaultOffset = 0
+		)
+
+		if request.Limit == nil {
+			request.Limit = new(int)
+			*request.Limit = defaultLimit
+		}
+		if request.Offset == nil {
+			request.Offset = new(int)
+			*request.Offset = defaultOffset
+		}
+
+		chats, total, err := messSvc.GetChats(c, userID, *request.Limit, *request.Offset)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, ErrorResponse{
+				Message: err.Error(),
+			})
+
+			return
+		}
+
+		c.JSON(http.StatusOK, GetChatsResponse{
+			Total:  total,
+			Limit:  request.Limit,
+			Offset: request.Offset,
+			Chats:  chats,
+		})
 	}
 }
 

@@ -333,7 +333,7 @@ func (m *messengerRepository) GetChats(tx *sql.Tx, userID string, limit, offset 
 
 	rows, err := tx.Query(`
 		SELECT
-			chat.id, chat.create_time, user.id, user.name, user.surname
+			chat.id, chat.create_time
 		FROM user
 		JOIN user_chat
 			ON user.id = user_chat.user_id
@@ -347,55 +347,80 @@ func (m *messengerRepository) GetChats(tx *sql.Tx, userID string, limit, offset 
 
 		return nil, err
 	}
-	defer rows.Close()
+
+	type chatRow struct {
+		id         string
+		createTime time.Time
+	}
+	chatRows := make([]*chatRow, 0)
 
 	for rows.Next() {
-		var row struct {
-			chatID         string
-			chatCreateTime time.Time
-			userID         string
-			userName       string
-			userSurname    string
-		}
-
-		if err = rows.Scan(&row.userID, &row.chatCreateTime, &row.userID, &row.userName, &row.userSurname); err != nil {
+		var row chatRow
+		if err = rows.Scan(&row.id, &row.createTime); err != nil {
 			tx.Rollback()
 
 			return nil, err
 		}
 
-		exist := false
-		for _, chat := range chats {
-			if chat.ID == row.chatID {
-				if chat.Participants == nil {
-					chat.Participants = make([]*domain.Participant, 0, 1)
-				}
+		chatRows = append(chatRows, &row)
+	}
+	rows.Close()
 
-				chat.Participants = append(chat.Participants, &domain.Participant{
-					ID:      row.userID,
-					Name:    row.userName,
-					Surname: row.userSurname,
+	for _, chat := range chatRows {
+		rows, err = tx.Query(`
+		SELECT
+			user.id, user.name, user.surname
+		FROM user_chat
+		JOIN user
+			ON user_chat.user_id = user.id
+		WHERE user_chat.chat_id = ? AND user_chat.user_id != ?`, chat.id, userID)
+		if err != nil {
+			tx.Rollback()
+
+			return nil, err
+		}
+
+		for rows.Next() {
+			var user struct {
+				ID      string
+				Name    string
+				Surname string
+			}
+			if err = rows.Scan(&user.ID, &user.Name, &user.Surname); err != nil {
+				tx.Rollback()
+
+				return nil, err
+			}
+
+			exist := false
+			for _, c := range chats {
+				if c.ID == chat.id {
+					c.Participants = append(c.Participants, &domain.Participant{
+						ID:      user.ID,
+						Name:    user.Name,
+						Surname: user.Surname,
+					})
+
+					exist = true
+				}
+			}
+
+			if !exist {
+				c := &domain.Chat{
+					ID:           chat.id,
+					CreateTime:   chat.createTime,
+					Participants: make([]*domain.Participant, 0),
+				}
+				c.Participants = append(c.Participants, &domain.Participant{
+					ID:      user.ID,
+					Name:    user.Name,
+					Surname: user.Surname,
 				})
 
-				exist = true
-				break
+				chats = append(chats, c)
 			}
 		}
-
-		if !exist {
-			participants := make([]*domain.Participant, 0, 1)
-			participants = append(participants, &domain.Participant{
-				ID:      row.userID,
-				Name:    row.userName,
-				Surname: row.userSurname,
-			})
-
-			chats = append(chats, &domain.Chat{
-				ID:           row.chatID,
-				CreateTime:   row.chatCreateTime,
-				Participants: participants,
-			})
-		}
+		rows.Close()
 	}
 
 	return chats, nil
