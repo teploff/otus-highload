@@ -1,15 +1,11 @@
 .PHONY: init migrate launch_backend_wmn down_backend_wmn launch_backend_wsn down_backend_wsn wrk_1 wrk_2 down
 
 init:
-	docker-compose up -d storage_master storage_slave_1 storage_slave_2;\
+	docker-compose up -d storage_master storage_slave_1 storage_slave_2 ;\
 
 migrate:
-	cd ../server/tools/migrator && \
-		go build main.go && \
-		mv main ../../../cluster && \
-		cd - ;\
-	./main --dir="../server/migrations" --dsn="user:password@tcp(localhost:3306)/social-network" "up" ;\
-	rm main ;\
+	docker-compose -f docker-compose.yml up --build migrator  ;\
+	docker-compose rm -f mysql_migrator_replica ;\
 
 launch_backend_wmn:
 	docker-compose up --build -d backend_with_master_node ;\

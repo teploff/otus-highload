@@ -69,7 +69,7 @@ docker exec -it storage_master bash
 
 Создаем папку mysql в директории */var/log/* папку mysql и даем права доступа к ней пользователю *mysql*:
 ```shell script
-cd /var/log && mkdir mysql && chown mysql:mysql mysql
+mkdir /var/log/mysql && chown mysql:mysql /var/log/mysql
 ```
 
 Устанавливаем текстовый редактор для конфигурирования, по умолчанию редактор не идет в комплектации container-а:
@@ -134,14 +134,14 @@ show master status;
 
 <a name="first-slave-config"></a>
 ### Конфигурирование первого slave-а
-Заходим в master-container:
+Заходим в первый slave-container:
 ```shell script
 docker exec -it storage_slave_1 bash
 ```
 
 Создаем папку mysql в директории */var/log/* папку mysql и даем права доступа к ней пользователю *mysql*:
 ```shell script
-cd /var/log && mkdir mysql && chown mysql:mysql mysql
+mkdir /var/log/mysql && chown mysql:mysql /var/log/mysql
 ```
 
 Устанавливаем текстовый редактор для конфигурирования, по умолчанию редактор не идет в комплектации container-а:
@@ -207,14 +207,14 @@ show slave status\G
 
 <a name="second-slave-config"></a>
 ### Конфигурирование второго slave-а
-Заходим в master-container:
+Заходим во второй slave-container:
 ```shell script
 docker exec -it storage_slave_2 bash
 ```
 
 Создаем папку mysql в директории */var/log/* папку mysql и даем права доступа к ней пользователю *mysql*:
 ```shell script
-cd /var/log && mkdir mysql && chown mysql:mysql mysql
+mkdir /var/log/mysql && chown mysql:mysql /var/log/mysql
 ```
 
 Устанавливаем текстовый редактор для конфигурирования, по умолчанию редактор не идет в комплектации container-а:
@@ -287,6 +287,7 @@ show slave status\G
 ```shell script
 make migrate
 ```
+
 Теперь перейдем в контейнеры slave-ов и проверим, что в базе данных *social-network* появились таблицы.
 Ниже представлен пример для первого slave-а.
 ```shell script
@@ -321,7 +322,7 @@ show tables;
 Распакуем data-set'ы и запишем сгенерированных пользователей, которые были получены утилитой 
 [generator](https://github.com/teploff/otus-highload/tree/main/tools/generator):
 ```shell script
-cd ../tools/inserter/
+cd ../../tools/inserter/
 mkdir snapshot
 tar -xzf ../generator/snapshot/data_set_1.tar.gz -C ./snapshot
 tar -xzf ../generator/snapshot/data_set_2.tar.gz -C ./snapshot
@@ -331,7 +332,7 @@ pip install -r requirements.txt
 python main.py -cfg=./config.yaml -path=./snapshot -size=10000
 deactivate
 rm -rf ./snapshot ./venv
-cd ../../cluster/
+cd ../../replication/only_mysql
 ```
 
 Проверяем, например, на втором slave-е, что сгенерированные пользователи записались и их число 1м:
@@ -404,13 +405,17 @@ docker stats storage_master > master_dump_after.txt
 Ждем окончания нагрузочного теста, который идет 60s и так же жмем Ctrl + C.
 
 <a name="results-stress-testing-implementation"></a>
-## Результаты
-Детально с результатами метрик нагрузки на master можно ознакомиться [тут](https://github.com/teploff/otus-highload/tree/main/cluster/metrics).
+### Результаты
+Детально с результатами метрик нагрузки на master можно ознакомиться [тут](https://github.com/teploff/otus-highload/tree/main/replication/only_mysql/metrics).
 Из результатов видно, что при переводе нагрузки с master на slave нагрузка на:
 - CPU упала c ***~995.11%*** на ***~0.09%***;
 - RAM упала с ***~3.12%*** на ***~3.10%***;
 - NET I/O возросла с ***~435MB/985MB*** на ***~440MB/1.85GB***;
 - BLOCK I/O возросла с ***~127MB/3.81GB*** на ***~131MB/3.81GB***;
+
+Потребление CPU существенно снизилось исходя из того, что вычисления теперь легли на плечи slave-узла. Однако 
+потребление памяти master-узлом практически не изменилось в связи с тем, что данные, которые мы записывали на 
+master-узел никуда не делись и просто-напросто "закешировались".
 
 <a name="enable-row-based"></a>
 ## Подключение row based binary logging format
@@ -479,6 +484,7 @@ docker restart storage_master
 docker restart storage_slave_1
 docker restart storage_slave_2
 ```
+
 При успешном конфигурировании во всех трех docker-container-ах должны увидеть следующее:
 ```mysql based
 show variables like 'gtid_mode';
@@ -527,8 +533,8 @@ WHERE
 <img src="static/show_slave_semisync_replica.png">
 </p>
 
-Так же необходимо в конфигурации master узла(располагающуюся по пути: **/etc/mysql/conf.d/mysql.cnf**) задать параметры **включения режима репликации** и 
-**время ожидания ответа в мс**
+Так же необходимо в конфигурации master узла(располагающуюся по пути: **/etc/mysql/conf.d/mysql.cnf**) задать параметры 
+**включения режима репликации** и **время ожидания ответа в мс**
 ```shell script
 [mysqld]
 rpl_semi_sync_master_enabled=1

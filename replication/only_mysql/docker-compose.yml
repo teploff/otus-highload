@@ -46,11 +46,9 @@ services:
   migrator:
     build:
       context: ../../server
-      dockerfile: migrator.Dockerfile
-    image: mysql_migrator:stage
-    container_name: mysql_migrator_stage
-    depends_on:
-      - adminer
+      dockerfile: migratorreplica.Dockerfile
+    image: mysql_migrator:replica
+    container_name: mysql_migrator_replica
     networks:
       - stage_network
 
