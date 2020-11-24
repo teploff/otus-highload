@@ -328,6 +328,34 @@ func (m *messengerRepository) GetCountChats(tx *sql.Tx, userID string) (int, err
 	return count, nil
 }
 
+func (m *messengerRepository) GetChat(tx *sql.Tx, masterID, slaveID string) (*domain.Chat, error) {
+	var chat domain.Chat
+
+	err := tx.QueryRow(`
+		SELECT 
+			C1.id, C1.create_time
+		FROM (
+			SELECT
+				chat.id, chat.create_time
+			FROM user
+			JOIN user_chat
+				ON user.id = user_chat.user_id
+			JOIN chat
+				ON user_chat.chat_id = chat.id
+			WHERE user.id = ?
+		) as C1
+		JOIN user_chat AS UC1
+			ON C1.id = UC1.chat_id
+		where UC1.user_id = ?`, masterID, slaveID).Scan(&chat.ID, &chat.CreateTime)
+	if err != nil {
+		tx.Rollback()
+
+		return nil, err
+	}
+
+	return &chat, nil
+}
+
 func (m *messengerRepository) GetChats(tx *sql.Tx, userID string, limit, offset int) ([]*domain.Chat, error) {
 	chats := make([]*domain.Chat, 0, 10)
 

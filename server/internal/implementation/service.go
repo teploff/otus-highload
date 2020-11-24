@@ -297,6 +297,20 @@ func (m *messengerService) CreateChat(ctx context.Context, masterID, slaveID str
 	return chatID, tx.Commit()
 }
 
+func (m *messengerService) GetChat(ctx context.Context, masterID, slaveID string) (*domain.Chat, error) {
+	tx, err := m.messRep.GetTx(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	chat, err := m.messRep.GetChat(tx, masterID, slaveID)
+	if err != nil {
+		return nil, err
+	}
+
+	return chat, tx.Commit()
+}
+
 func (m *messengerService) GetChats(ctx context.Context, userID string, limit, offset int) ([]*domain.Chat, int, error) {
 	tx, err := m.messRep.GetTx(ctx)
 	if err != nil {

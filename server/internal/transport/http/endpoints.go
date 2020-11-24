@@ -31,8 +31,9 @@ func MakeEndpoints(auth domain.AuthService, social domain.SocialService, messeng
 		},
 		Messenger: &MessengerEndpoints{
 			CreateChat:  makeCreateChatEndpoint(auth, messenger),
-			GetChats:    makeGetChatsEndpoint(auth, messenger),
+			GetChat:     makeGetChatEndpoint(auth, messenger),
 			DeleteChats: makeDeleteChatsEndpoint(auth, messenger),
+			GetChats:    makeGetChatsEndpoint(auth, messenger),
 			GetMessages: makeGetMessagesEndpoint(auth, messenger),
 			SendMessage: makeSendMessageEndpoint(auth, messenger),
 		},
@@ -245,8 +246,9 @@ func makeGetQuestionnairesByNameAndSurnameEndpoint(authSvc domain.AuthService, s
 
 type MessengerEndpoints struct {
 	CreateChat  gin.HandlerFunc
-	GetChats    gin.HandlerFunc
+	GetChat     gin.HandlerFunc
 	DeleteChats gin.HandlerFunc
+	GetChats    gin.HandlerFunc
 	GetMessages gin.HandlerFunc
 	SendMessage gin.HandlerFunc
 }
@@ -292,6 +294,70 @@ func makeCreateChatEndpoint(authSvc domain.AuthService, messSvc domain.Messenger
 		c.JSON(http.StatusOK, CreateChatResponse{
 			ChatID: chatID,
 		})
+	}
+}
+
+func makeGetChatEndpoint(authSvc domain.AuthService, messSvc domain.MessengerService) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var header AuthorizationHeader
+		if err := c.ShouldBindHeader(&header); err != nil {
+			c.JSON(http.StatusUnauthorized, ErrorResponse{
+				Message: err.Error(),
+			})
+
+			return
+		}
+
+		userID, err := authSvc.Authenticate(c, header.AccessToken)
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, ErrorResponse{
+				Message: err.Error(),
+			})
+
+			return
+		}
+
+		var request GetChatRequest
+		if err = c.BindQuery(&request); err != nil {
+			c.JSON(http.StatusBadRequest, ErrorResponse{
+				Message: err.Error(),
+			})
+
+			return
+		}
+
+		chat, err := messSvc.GetChat(c, userID, request.CompanionID)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, ErrorResponse{
+				Message: err.Error(),
+			})
+
+			return
+		}
+
+		c.JSON(http.StatusOK, GetChatResponse{ID: chat.ID, CreateTime: chat.CreateTime})
+	}
+}
+
+func makeDeleteChatsEndpoint(authSvc domain.AuthService, messSvc domain.MessengerService) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var header AuthorizationHeader
+		if err := c.ShouldBindHeader(&header); err != nil {
+			c.JSON(http.StatusUnauthorized, ErrorResponse{
+				Message: err.Error(),
+			})
+
+			return
+		}
+
+		_, err := authSvc.Authenticate(c, header.AccessToken)
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, ErrorResponse{
+				Message: err.Error(),
+			})
+
+			return
+		}
 	}
 }
 
@@ -353,28 +419,6 @@ func makeGetChatsEndpoint(authSvc domain.AuthService, messSvc domain.MessengerSe
 			Offset: request.Offset,
 			Chats:  chats,
 		})
-	}
-}
-
-func makeDeleteChatsEndpoint(authSvc domain.AuthService, messSvc domain.MessengerService) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		var header AuthorizationHeader
-		if err := c.ShouldBindHeader(&header); err != nil {
-			c.JSON(http.StatusUnauthorized, ErrorResponse{
-				Message: err.Error(),
-			})
-
-			return
-		}
-
-		_, err := authSvc.Authenticate(c, header.AccessToken)
-		if err != nil {
-			c.JSON(http.StatusUnauthorized, ErrorResponse{
-				Message: err.Error(),
-			})
-
-			return
-		}
 	}
 }
 

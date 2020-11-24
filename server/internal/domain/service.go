@@ -18,7 +18,8 @@ type SocialService interface {
 
 type MessengerService interface {
 	CreateChat(ctx context.Context, masterID, slaveID string) (string, error)
-	GetChats(ctx context.Context, userID string, limit, offset int) ([]*Chat, int, error)
+	GetChat(ctx context.Context, masterID, slaveID string) (*Chat, error)
 	SendMessages(ctx context.Context, userID, chatID string, messages []*Message) error
+	GetChats(ctx context.Context, userID string, limit, offset int) ([]*Chat, int, error)
 	GetMessages(ctx context.Context, userID, chatID string, limit, offset int) ([]*Message, int, error)
 }
