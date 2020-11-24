@@ -433,13 +433,55 @@ func makeGetMessagesEndpoint(authSvc domain.AuthService, messSvc domain.Messenge
 			return
 		}
 
-		_, err := authSvc.Authenticate(c, header.AccessToken)
+		userID, err := authSvc.Authenticate(c, header.AccessToken)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized, ErrorResponse{
 				Message: err.Error(),
 			})
 
 			return
+		}
+
+		var request GetMessagesRequest
+		if err = c.BindQuery(&request); err != nil {
+			c.JSON(http.StatusBadRequest, ErrorResponse{
+				Message: err.Error(),
+			})
+
+			return
+		}
+
+		const (
+			defaultLimit  = 10
+			defaultOffset = 0
+		)
+
+		if request.Limit == nil {
+			request.Limit = new(int)
+			*request.Limit = defaultLimit
+		}
+		if request.Offset == nil {
+			request.Offset = new(int)
+			*request.Offset = defaultOffset
+		}
+
+		messages, total, err := messSvc.GetMessages(c, userID, request.ChatID, *request.Limit, *request.Offset)
+		switch err {
+		case nil:
+			c.JSON(http.StatusOK, GetMessagesResponse{
+				Total:    total,
+				Limit:    request.Limit,
+				Offset:   request.Offset,
+				Messages: messages,
+			})
+		case sql.ErrNoRows:
+			c.JSON(http.StatusNotFound, ErrorResponse{
+				Message: fmt.Sprintf("chat id [%s] not found", request.ChatID),
+			})
+		default:
+			c.JSON(http.StatusBadRequest, ErrorResponse{
+				Message: err.Error(),
+			})
 		}
 	}
 }

@@ -328,7 +328,7 @@ func (m *messengerRepository) GetCountChats(tx *sql.Tx, userID string) (int, err
 	return count, nil
 }
 
-func (m *messengerRepository) GetChat(tx *sql.Tx, masterID, slaveID string) (*domain.Chat, error) {
+func (m *messengerRepository) GetChatWithCompanion(tx *sql.Tx, masterID, slaveID string) (*domain.Chat, error) {
 	var chat domain.Chat
 
 	err := tx.QueryRow(`
@@ -347,6 +347,27 @@ func (m *messengerRepository) GetChat(tx *sql.Tx, masterID, slaveID string) (*do
 		JOIN user_chat AS UC1
 			ON C1.id = UC1.chat_id
 		where UC1.user_id = ?`, masterID, slaveID).Scan(&chat.ID, &chat.CreateTime)
+	if err != nil {
+		tx.Rollback()
+
+		return nil, err
+	}
+
+	return &chat, nil
+}
+
+func (m *messengerRepository) GetChatAsParticipant(tx *sql.Tx, userID string) (*domain.Chat, error) {
+	var chat domain.Chat
+
+	err := tx.QueryRow(`
+		SELECT
+			chat.id, chat.create_time
+		FROM user
+		JOIN user_chat
+			ON user.id = user_chat.user_id
+		JOIN chat
+			ON user_chat.chat_id = chat.id
+		WHERE user.id = ?`, userID).Scan(&chat.ID, &chat.CreateTime)
 	if err != nil {
 		tx.Rollback()
 
@@ -484,18 +505,19 @@ func (m *messengerRepository) SendMessages(tx *sql.Tx, userID, chatID string, me
 	return nil
 }
 
-func (m *messengerRepository) GetCountMessages(tx *sql.Tx, userID, chatID string) (int, error) {
+func (m *messengerRepository) GetCountMessages(tx *sql.Tx, chatID string) (int, error) {
 	var count int
-
+	//select count(*) from (select max(create_time) from message where chat_id = "188a4d72-64a7-4dd4-beae-df8ca11fce70" group by id) AS a;
 	err := tx.QueryRow(`
 		SELECT 
 			count(*)
-		FROM user_chat
-		JOIN chat
-		    ON user_chat.chat_id = chat.id
-		JOIN message
-			ON user_chat.chat_id = message.chat_id
-		WHERE user_chat.user_id = ? AND user_chat.chat_id = ?`, userID, chatID).Scan(&count)
+		FROM (
+		    SELECT
+		    	MAX(create_time)
+		    FROM message
+		    WHERE chat_id = ?
+		    GROUP BY id
+		) AS MSG`, chatID).Scan(&count)
 	if err != nil {
 		tx.Rollback()
 
@@ -505,16 +527,16 @@ func (m *messengerRepository) GetCountMessages(tx *sql.Tx, userID, chatID string
 	return count, nil
 }
 
-func (m *messengerRepository) GetMessages(tx *sql.Tx, userID, chatID string, limit, offset int) ([]*domain.Message, error) {
+func (m *messengerRepository) GetMessages(tx *sql.Tx, chatID string, limit, offset int) ([]*domain.Message, error) {
 	messages := make([]*domain.Message, 0, 10)
 
 	rows, err := tx.Query(`
 		SELECT
-			id, text, max(status), create_time
+			id, text, status, user_id, max(create_time) as create_time
 		FROM message
-		WHERE user_id = ? AND chat_id = ?
-		GROUP BY id
-		LIMIT ? OFFSET ?`, userID, chatID, limit, offset)
+		WHERE chat_id = ?
+		GROUP BY id, text, status, user_id
+		LIMIT ? OFFSET ?`, chatID, limit, offset)
 	if err != nil {
 		tx.Rollback()
 
@@ -525,7 +547,7 @@ func (m *messengerRepository) GetMessages(tx *sql.Tx, userID, chatID string, lim
 	for rows.Next() {
 		var message domain.Message
 
-		if err = rows.Scan(&message.ID, &message.Text, &message.Status, &message.CreateTime); err != nil {
+		if err = rows.Scan(&message.ID, &message.Text, &message.Status, &message.UserID, &message.CreateTime); err != nil {
 			tx.Rollback()
 
 			return nil, err

@@ -38,3 +38,10 @@ type GetChatsResponse struct {
 	Offset *int           `json:"offset"`
 	Chats  []*domain.Chat `json:"chats"`
 }
+
+type GetMessagesResponse struct {
+	Total    int               `json:"total"`
+	Limit    *int              `json:"limit"`
+	Offset   *int              `json:"offset"`
+	Messages []*domain.Message `json:"messages"`
+}

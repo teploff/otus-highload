@@ -303,7 +303,7 @@ func (m *messengerService) GetChat(ctx context.Context, masterID, slaveID string
 		return nil, err
 	}
 
-	chat, err := m.messRep.GetChat(tx, masterID, slaveID)
+	chat, err := m.messRep.GetChatWithCompanion(tx, masterID, slaveID)
 	if err != nil {
 		return nil, err
 	}
@@ -350,12 +350,17 @@ func (m *messengerService) GetMessages(ctx context.Context, userID, chatID strin
 		return nil, 0, err
 	}
 
-	total, err := m.messRep.GetCountMessages(tx, userID, chatID)
+	_, err = m.messRep.GetChatAsParticipant(tx, userID)
 	if err != nil {
 		return nil, 0, err
 	}
 
-	messages, err := m.messRep.GetMessages(tx, userID, chatID, limit, offset)
+	total, err := m.messRep.GetCountMessages(tx, chatID)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	messages, err := m.messRep.GetMessages(tx, chatID, limit, offset)
 	if err != nil {
 		return nil, 0, err
 	}

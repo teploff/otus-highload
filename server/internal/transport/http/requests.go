@@ -55,3 +55,9 @@ type SendMessagesRequest struct {
 	ChatID   string                 `json:"chat_id" binding:"required"`
 	Messages []*domain.ShortMessage `json:"messages" binding:"required,dive"`
 }
+
+type GetMessagesRequest struct {
+	ChatID string `json:"chat_id" form:"chat_id" binding:"required"`
+	Limit  *int   `json:"limit" form:"limit"`
+	Offset *int   `json:"offset" form:"offset"`
+}
