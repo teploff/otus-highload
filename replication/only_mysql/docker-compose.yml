@@ -43,9 +43,20 @@ services:
     networks:
       - stage_network
 
+  migrator:
+    build:
+      context: ../../server
+      dockerfile: migrator.Dockerfile
+    image: mysql_migrator:stage
+    container_name: mysql_migrator_stage
+    depends_on:
+      - adminer
+    networks:
+      - stage_network
+
   backend_with_master_node:
     build:
-      context: ../server
+      context: ../../server
       dockerfile: Dockerfile
     image: social_network_backend:stage
     container_name: backend_with_master_node
@@ -66,7 +77,7 @@ services:
 
   backend_with_slave_node:
     build:
-      context: ../server
+      context: ../../server
       dockerfile: Dockerfile
     image: social_network_backend:stage
     container_name: backend_with_slave_node
