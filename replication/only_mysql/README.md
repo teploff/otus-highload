@@ -587,7 +587,7 @@ show variables like 'rpl_semi_sync_slave_enabled';
 Распакуем data-set и запишем сгенерированных пользователей, которые были получены утилитой 
 [generator](https://github.com/teploff/otus-highload/tree/main/tools/generator):
 ```shell script
-cd ../tools/inserter/
+cd ../../tools/inserter/
 mkdir snapshot
 tar -xzf ../generator/snapshot/data_set_3.tar.gz -C ./snapshot
 python3 -m venv venv
@@ -596,7 +596,7 @@ pip install -r requirements.txt
 python main.py -cfg=./config.yaml -path=./snapshot -size=1
 deactivate
 rm -rf ./snapshot ./venv
-cd ../../cluster/
+cd ../../replication/only_mysql
 ```
 
 Убиваем master-узел командой:
