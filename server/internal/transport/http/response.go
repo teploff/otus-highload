@@ -19,3 +19,7 @@ type QuestionnairesResponse struct {
 	Questionnaires []*domain.Questionnaire `json:"questionnaires"`
 	Count          int                     `json:"count"`
 }
+
+type CreateChatResponse struct {
+	ChatID string `json:"chat_id"`
+}

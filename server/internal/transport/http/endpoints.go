@@ -262,7 +262,7 @@ func makeCreateChatEndpoint(authSvc domain.AuthService, messSvc domain.Messenger
 			return
 		}
 
-		_, err := authSvc.Authenticate(c, header.AccessToken)
+		userID, err := authSvc.Authenticate(c, header.AccessToken)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized, ErrorResponse{
 				Message: err.Error(),
@@ -271,6 +271,27 @@ func makeCreateChatEndpoint(authSvc domain.AuthService, messSvc domain.Messenger
 			return
 		}
 
+		var request CreateChatRequest
+		if err = c.Bind(&request); err != nil {
+			c.JSON(http.StatusBadRequest, ErrorResponse{
+				Message: err.Error(),
+			})
+
+			return
+		}
+
+		chatID, err := messSvc.CreateChat(c, userID, request.CompanionID)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, ErrorResponse{
+				Message: err.Error(),
+			})
+
+			return
+		}
+
+		c.JSON(http.StatusOK, CreateChatResponse{
+			ChatID: chatID,
+		})
 	}
 }
 

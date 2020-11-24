@@ -3,6 +3,7 @@ package implementation
 import (
 	"context"
 	"database/sql"
+	uuid "github.com/satori/go.uuid"
 	"net"
 	"social-network/internal/domain"
 	wstransport "social-network/internal/transport/ws"
@@ -37,6 +38,26 @@ func (p *userRepository) Persist(tx *sql.Tx, user *domain.User) error {
 	}
 
 	return nil
+}
+
+func (p *userRepository) GetByID(tx *sql.Tx, id string) (*domain.User, error) {
+	var user domain.User
+
+	err := tx.QueryRow(`
+		SELECT
+			id, email, password, name, surname, sex, birthday, city, interests, access_token, refresh_token
+		FROM
+			 user 
+		WHERE 
+			  id = ?`, id).Scan(&user.ID, &user.Email, &user.Password, &user.Name, &user.Surname,
+		&user.Sex, &user.Birthday, &user.City, &user.Interests, &user.AccessToken, &user.RefreshToken)
+	if err != nil {
+		tx.Rollback()
+
+		return nil, err
+	}
+
+	return &user, nil
 }
 
 func (p *userRepository) GetByEmail(tx *sql.Tx, email string) (*domain.User, error) {
@@ -224,13 +245,39 @@ func (m *messengerRepository) GetTx(ctx context.Context) (*sql.Tx, error) {
 
 func (m *messengerRepository) CreateChat(tx *sql.Tx, masterID, slaveID string) (string, error) {
 	var chatID string
-
 	err := tx.QueryRow(`
+		SELECT
+			UC1.chat_id
+		FROM 
+		(
+		    SELECT
+		    	user_id, chat_id
+		    FROM user_chat
+		    WHERE user_id = ?
+		) UC1
+		JOIN (
+		    SELECT
+		    	user_id, chat_id
+		    FROM user_chat
+		    WHERE user_id = ?
+		) UC2
+		    ON UC1.chat_id = UC2.chat_id`, masterID, slaveID).Scan(&chatID)
+	switch err {
+	case nil:
+		return chatID, nil
+	case sql.ErrNoRows:
+		chatID = uuid.NewV4().String()
+	default:
+		tx.Rollback()
+
+		return "", err
+	}
+
+	_, err = tx.Exec(`
 		INSERT 
-			INTO chat (create_time) 
+			INTO chat (id, create_time) 
 		VALUES
-			(?);
-		SELECT LAST_INSERT_ID();`, time.Now().UTC()).Scan(&chatID)
+			(?, ?)`, chatID, time.Now().UTC())
 	if err != nil {
 		tx.Rollback()
 

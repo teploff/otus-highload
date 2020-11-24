@@ -34,3 +34,7 @@ type GetQuestionnairesByNameAndSurnameRequest struct {
 type AuthorizationHeader struct {
 	AccessToken string `json:"access_token" binding:"required" header:"Authorization"`
 }
+
+type CreateChatRequest struct {
+	CompanionID string `json:"companion_id" binding:"required"`
+}

@@ -263,20 +263,33 @@ func (s *socialService) GetQuestionnairesByNameAndSurname(ctx context.Context, p
 }
 
 type messengerService struct {
-	repository domain.MessengerRepository
+	userRep domain.UserRepository
+	messRep domain.MessengerRepository
 }
 
-func NewMessengerService(repository domain.MessengerRepository) *messengerService {
-	return &messengerService{repository: repository}
+func NewMessengerService(userRep domain.UserRepository, messengerRep domain.MessengerRepository) *messengerService {
+	return &messengerService{
+		userRep: userRep,
+		messRep: messengerRep,
+	}
 }
 
 func (m *messengerService) CreateChat(ctx context.Context, masterID, slaveID string) (string, error) {
-	tx, err := m.repository.GetTx(ctx)
+	tx, err := m.messRep.GetTx(ctx)
 	if err != nil {
 		return "", err
 	}
 
-	chatID, err := m.repository.CreateChat(tx, masterID, slaveID)
+	_, err = m.userRep.GetByID(tx, slaveID)
+	switch err {
+	case nil:
+	case sql.ErrNoRows:
+		return "", fmt.Errorf("chat companion with id=[%s] doesn't exist", slaveID)
+	default:
+		return "", err
+	}
+
+	chatID, err := m.messRep.CreateChat(tx, masterID, slaveID)
 	if err != nil {
 		return "", err
 	}
@@ -285,17 +298,17 @@ func (m *messengerService) CreateChat(ctx context.Context, masterID, slaveID str
 }
 
 func (m *messengerService) GetChats(ctx context.Context, userID string, limit, offset int) ([]*domain.Chat, int, error) {
-	tx, err := m.repository.GetTx(ctx)
+	tx, err := m.messRep.GetTx(ctx)
 	if err != nil {
 		return nil, 0, err
 	}
 
-	total, err := m.repository.GetCountChats(tx, userID)
+	total, err := m.messRep.GetCountChats(tx, userID)
 	if err != nil {
 		return nil, 0, err
 	}
 
-	chats, err := m.repository.GetChats(tx, userID, limit, offset)
+	chats, err := m.messRep.GetChats(tx, userID, limit, offset)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -304,12 +317,12 @@ func (m *messengerService) GetChats(ctx context.Context, userID string, limit, o
 }
 
 func (m *messengerService) SendMessages(ctx context.Context, userID, chatID string, messages []*domain.Message) error {
-	tx, err := m.repository.GetTx(ctx)
+	tx, err := m.messRep.GetTx(ctx)
 	if err != nil {
 		return err
 	}
 
-	err = m.repository.SendMessages(tx, userID, chatID, messages)
+	err = m.messRep.SendMessages(tx, userID, chatID, messages)
 	if err != nil {
 		return err
 	}
@@ -318,17 +331,17 @@ func (m *messengerService) SendMessages(ctx context.Context, userID, chatID stri
 }
 
 func (m *messengerService) GetMessages(ctx context.Context, userID, chatID string, limit, offset int) ([]*domain.Message, int, error) {
-	tx, err := m.repository.GetTx(ctx)
+	tx, err := m.messRep.GetTx(ctx)
 	if err != nil {
 		return nil, 0, err
 	}
 
-	total, err := m.repository.GetCountMessages(tx, userID, chatID)
+	total, err := m.messRep.GetCountMessages(tx, userID, chatID)
 	if err != nil {
 		return nil, 0, err
 	}
 
-	messages, err := m.repository.GetMessages(tx, userID, chatID, limit, offset)
+	messages, err := m.messRep.GetMessages(tx, userID, chatID, limit, offset)
 	if err != nil {
 		return nil, 0, err
 	}
