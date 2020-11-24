@@ -455,7 +455,7 @@ func makeSendMessageEndpoint(authSvc domain.AuthService, messSvc domain.Messenge
 			return
 		}
 
-		_, err := authSvc.Authenticate(c, header.AccessToken)
+		userID, err := authSvc.Authenticate(c, header.AccessToken)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized, ErrorResponse{
 				Message: err.Error(),
@@ -463,6 +463,25 @@ func makeSendMessageEndpoint(authSvc domain.AuthService, messSvc domain.Messenge
 
 			return
 		}
+
+		var request SendMessagesRequest
+		if err = c.Bind(&request); err != nil {
+			c.JSON(http.StatusBadRequest, ErrorResponse{
+				Message: err.Error(),
+			})
+
+			return
+		}
+
+		if err = messSvc.SendMessages(c, userID, request.ChatID, request.Messages); err != nil {
+			c.JSON(http.StatusBadRequest, ErrorResponse{
+				Message: err.Error(),
+			})
+
+			return
+		}
+
+		c.JSON(http.StatusOK, EmptyResponse{})
 	}
 }
 

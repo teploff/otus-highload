@@ -454,18 +454,31 @@ func (m *messengerRepository) GetChats(tx *sql.Tx, userID string, limit, offset 
 	return chats, nil
 }
 
-func (m *messengerRepository) SendMessages(tx *sql.Tx, userID, chatID string, messages []*domain.Message) error {
-	for _, message := range messages {
-		_, err := tx.Exec(`
-		INSERT 
-			INTO message (text, status, create_time, user_id, chat_id) 
-		VALUES
-			( ?, ?, ?, ?, ?)`, message.Text, message.Status, time.Now().UTC(), userID, chatID)
-		if err != nil {
-			tx.Rollback()
+func (m *messengerRepository) SendMessages(tx *sql.Tx, userID, chatID string, messages []*domain.ShortMessage) error {
+	sqlStr := "INSERT INTO message (text, status, create_time, user_id, chat_id) VALUES "
+	vals := make([]interface{}, 0, len(messages)*6)
 
-			return err
-		}
+	for _, msg := range messages {
+		sqlStr += "( ?, ?, ?, ?, ?),"
+		vals = append(vals, msg.Text, msg.Status, time.Now().UTC(), userID, chatID)
+	}
+
+	//trim the last ,
+	sqlStr = sqlStr[0 : len(sqlStr)-1]
+
+	//prepare the statement
+	stmt, err := tx.Prepare(sqlStr)
+	if err != nil {
+		tx.Rollback()
+
+		return err
+	}
+
+	//format all vals at once
+	if _, err = stmt.Exec(vals...); err != nil {
+		tx.Rollback()
+
+		return err
 	}
 
 	return nil

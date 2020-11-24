@@ -50,10 +50,14 @@ type Questionnaire struct {
 	Interests string    `json:"interests"`
 }
 
+type ShortMessage struct {
+	Text   string `json:"text" binding:"required"`
+	Status int    `json:"status" binding:"oneof=0 1 2 3"`
+}
+
 type Message struct {
-	ID         string    `json:"id"`
-	Text       string    `json:"text"`
-	Status     int       `json:"status"`
+	ID string `json:"id"`
+	ShortMessage
 	CreateTime time.Time `json:"create_time"`
 	UserID     string    `json:"user_id"`
 	ChatID     string    `json:"chat_id"`

@@ -330,7 +330,7 @@ func (m *messengerService) GetChats(ctx context.Context, userID string, limit, o
 	return chats, total, tx.Commit()
 }
 
-func (m *messengerService) SendMessages(ctx context.Context, userID, chatID string, messages []*domain.Message) error {
+func (m *messengerService) SendMessages(ctx context.Context, userID, chatID string, messages []*domain.ShortMessage) error {
 	tx, err := m.messRep.GetTx(ctx)
 	if err != nil {
 		return err

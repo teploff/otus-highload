@@ -28,7 +28,7 @@ type MessengerRepository interface {
 	GetCountChats(tx *sql.Tx, userID string) (int, error)
 	GetChat(tx *sql.Tx, masterID, slaveID string) (*Chat, error)
 	GetChats(tx *sql.Tx, userID string, limit, offset int) ([]*Chat, error)
-	SendMessages(tx *sql.Tx, userID, chatID string, messages []*Message) error
+	SendMessages(tx *sql.Tx, userID, chatID string, messages []*ShortMessage) error
 	GetCountMessages(tx *sql.Tx, userID, chatID string) (int, error)
 	GetMessages(tx *sql.Tx, userID, chatID string, limit, offset int) ([]*Message, error)
 }

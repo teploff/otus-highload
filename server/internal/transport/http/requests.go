@@ -1,6 +1,9 @@
 package http
 
-import "time"
+import (
+	"social-network/internal/domain"
+	"time"
+)
 
 type SignUpRequest struct {
 	Email     string    `json:"email" binding:"required"`
@@ -46,4 +49,9 @@ type GetChatRequest struct {
 type GetChatsRequest struct {
 	Limit  *int `json:"limit" form:"limit"`
 	Offset *int `json:"offset" form:"offset"`
+}
+
+type SendMessagesRequest struct {
+	ChatID   string                 `json:"chat_id" binding:"required"`
+	Messages []*domain.ShortMessage `json:"messages" binding:"required,dive"`
 }
