@@ -5,7 +5,7 @@ init:
 
 migrate:
 	docker-compose -f docker-compose.yml up --build migrator  ;\
-	docker-compose rm -f mysql_migrator_replica ;\
+	docker rm -f mysql_migrator_replica ;\
 
 launch_backend_wmn:
 	docker-compose up --build -d backend_with_master_node ;\
