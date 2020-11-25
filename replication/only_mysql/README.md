@@ -645,6 +645,7 @@ show variables like 'gtid_executed';
 ```shell script
 show slave status\G
 ```
+
 Должны на каждом из slave-узле увидеть следующую ошибку:
 <br/>
 <p align="center">
@@ -656,7 +657,8 @@ show slave status\G
 use social-network;
 select count(*) from user;
 ```
-И на **КАЖДОМ** из slave-ах получаем одно и то же число:
+
+И на каждом из slave-ах получаем одно и то же число:
 <br/>
 <p align="center">
 <img src="static/show_count_rows_in_slaves.jpg">
