@@ -5,19 +5,20 @@
 3. [ Настройка асинхронной(async) репликации ](#async-replica)
     - [ Запуск трех независимых узлов MySQL ](#launch-databases)
     - [ Конфигурирование master-а ](#master-config)
-    - [ Конфигурирование первого slave-а](#first-slave-config)
-    - [ Конфигурирование второго slave-а](#second-slave-config)
+    - [ Конфигурирование первого slave-а ](#first-slave-config)
+    - [ Конфигурирование второго slave-а ](#second-slave-config)
 4. [ Применение миграций ](#migration)
-5. [ Нагрузочное тестирование на чтение](#read-stress-testing)
+5. [ Нагрузочное тестирование на чтение ](#read-stress-testing)
     - [ Подготовка ](#read-stress-testing-preparation)
     - [ Выполнение ](#read-stress-testing-implementation)
-    - [ Результаты ](#results-stress-testing-implementation)
+    - [ Результаты ](#read-results-stress-testing-implementation)
 6. [ Подключение row based binary logging format ](#enable-row-based)
 7. [ Подключение GTID ](#gtid)
 8. [ Настроить полусинхронную репликацию ](#semi-sync-replica)
-9. [ Создать нагрузку на запись ](#write-stress-testing)
+9. [ Нагрузочное тестирование на запись ](#write-stress-testing)
     - [ Подготовка ](#write-stress-testing-preparation)
     - [ Выполнение ](#write-stress-testing-implementation)
+    - [ Результаты ](#write-results-stress-testing-implementation)
 10. [ Назначение нового master-узла ](#master-promoting)
 
 <a name="task"></a>
@@ -404,7 +405,7 @@ docker stats storage_master > master_dump_after.txt
 ```
 Ждем окончания нагрузочного теста, который идет 60s и так же жмем Ctrl + C.
 
-<a name="results-stress-testing-implementation"></a>
+<a name="read-results-stress-testing-implementation"></a>
 ### Результаты
 Детально с результатами метрик на master-узле до и после перевода нагрузки на slave-узел можно ознакомиться 
 [тут](https://github.com/teploff/otus-highload/blob/main/replication/only_mysql/metrics/master_dump_before.txt) и
@@ -661,8 +662,19 @@ select count(*) from user;
 <img src="static/show_count_rows_in_slaves.jpg">
 </p>
 
-Если подвести итог, то при включении GTID все транзакции, которые были отвечены клиенту как успешно выполненные так же
-были успешно реплицированы на ВСЕ slave-узлы, участвующие с данным master-ом в асинхронной репликации.
+<a name="write-results-stress-testing-implementation"></a>
+### Результаты
+В результате выполнения квази-нагрузочного(т.к. все таки было прерывание) тестирования на запись в master-узел было 
+обнаружено следующее:
+- успешно записанных записей в master, число которых мы залогировали, оказалось ровно 286;
+- связь с master-узлом на обоих slave-ах потеряна;
+- на стороне обоих slave-узлах величины переменных *Retrieved_Gtid_Set* и *Executed_Gtid_Set* равны значению
+ac1c0dda-2ef0-11eb-9e9b-0242ac130002:1-286 соответственно;
+- количество записей на обоих slave-узлах ровно 286.
+
+Если подвести итог, то при включении GTID все транзакции, которые были успешно выполнены, как на стороне master, так и 
+всех его slave-узлах, были залогированы на стороне клиентского приложения, которое осуществляло операцию записи, в 
+данным случае это tool-inserter. Ни одна из транзакций на стороне slave-узла потеряна не была.
 
 <a name="master-promoting"></a>
 ## Назначение нового master-узла 
