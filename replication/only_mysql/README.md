@@ -406,7 +406,9 @@ docker stats storage_master > master_dump_after.txt
 
 <a name="results-stress-testing-implementation"></a>
 ### Результаты
-Детально с результатами метрик нагрузки на master можно ознакомиться [тут](https://github.com/teploff/otus-highload/tree/main/replication/only_mysql/metrics).
+Детально с результатами метрик на master-узле до и после перевода нагрузки на slave-узел можно ознакомиться 
+[тут](https://github.com/teploff/otus-highload/blob/main/replication/only_mysql/metrics/master_dump_before.txt) и
+[тут](https://github.com/teploff/otus-highload/blob/main/replication/only_mysql/metrics/master_dump_after.txt).
 Из результатов видно, что при переводе нагрузки с master на slave нагрузка на:
 - CPU упала c ***~995.11%*** на ***~0.09%***;
 - RAM упала с ***~3.12%*** на ***~3.10%***;
