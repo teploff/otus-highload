@@ -610,7 +610,7 @@ grep -o -i "Insert is completed" insertion_log.txt | wc -l
 ```
 
 Получилось число **286**, однако ваши результаты могут отличаться от моих. 
-Детальный лог, на основе которого получился такой результат располагается [тут](https://github.com/teploff/otus-highload/tree/main/replication/only_mysql/metrics/insertion_log.txt).
+Детальный лог, на основе которого получился такой результат, располагается [тут](https://github.com/teploff/otus-highload/tree/main/replication/only_mysql/metrics/insertion_log.txt).
 
 Подчищаем временные файлы и python-окружение, которое использовалось для нагрузки операции вставки:
 ```
