@@ -589,14 +589,11 @@ show variables like 'rpl_semi_sync_slave_enabled';
 ```shell script
 cd ../../tools/inserter/
 mkdir snapshot
-tar -xzf ../generator/snapshot/data_set_3.tar.gz -C ./snapshot
+tar -xzf ../generator/snapshot/data_set_1.tar.gz -C ./snapshot
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
-python main.py -cfg=./config.yaml -path=./snapshot -size=1
-deactivate
-rm -rf ./snapshot ./venv
-cd ../../replication/only_mysql
+python main.py -cfg=./config.yaml -path=./snapshot -size=1 2>> insertion_log.txt
 ```
 
 Убиваем master-узел командой:
@@ -604,22 +601,41 @@ cd ../../replication/only_mysql
 docker rm -f storage_master
 ```
 
-Заканчиваем операцию записи и смотрим, сколько удалось записать срок пользователей в БД.
+Заканчиваем операцию записи и смотрим, сколько удалось записать срок пользователей в БД:
+```shell script
+grep -o -i "Insert is completed" insertion_log.txt | wc -l
+```
 
-При этом смотрим, сколько транзакций удалось получить и сколько применить. Выполняем команду:
+Получилось число **286**, однако ваши результаты могут отличаться от моих. 
+Детальный лог, на основе которого получился такой результат располагается [тут](https://github.com/teploff/otus-highload/tree/main/replication/only_mysql/metrics/insertion_log.txt).
+
+Подчищаем временные файлы и python-окружение, которое использовалось для нагрузки операции вставки:
+```
+deactivate
+rm -rf ./snapshot ./venv insertion_log.txt
+cd ../../replication/only_mysql
+```
+
+При этом смотрим, сколько транзакций удалось получить и сколько применить на каждом из slave-узле. На каждом slave-е 
+выполняем команду:
 ```mysql based
 show slave status\G
 ```
+
 и смотрим на переменные, такие как:
 ```shell script
-Retrieved_Gtid_Set: 2cd47c18-2755-11eb-8446-0242ac160003:1-1369
-Executed_Gtid_Set: 2cd47c18-2755-11eb-8446-0242ac160003:1-1369
+Retrieved_Gtid_Set: ac1c0dda-2ef0-11eb-9e9b-0242ac130002:1-286
+Executed_Gtid_Set: ac1c0dda-2ef0-11eb-9e9b-0242ac130002:1-286
 ```
 
-Так же можем явно запросить, например, переменную **gtid_executed** и получим следующее:
+Так же можем явно запросить, например, переменную **gtid_executed**:
+```mysql based
+show variables like 'gtid_executed';
+```
+и получим следующее:
 <br/>
 <p align="center">
-<img src="static/show_gtid_executed_slave.png">
+<img src="static/show_gtid_executed_slave.jpeg">
 </p>
 
 Переходим в каждый из slave-узлов и удостоверяемся в отсутствии подключения к master-узлу:
@@ -631,6 +647,20 @@ show slave status\G
 <p align="center">
 <img src="static/show_replication_failed_connect.png">
 </p>
+
+Так же на slave-ах проверим количество записей, которое удалось записать.
+```mysql based
+use socail-network;
+select count(*) from user;
+```
+И на **КАЖДОМ** из slave-ах получаем одно и то же число:
+<br/>
+<p align="center">
+<img src="static/show_count_rows_in_slaves.jpg">
+</p>
+
+Если подвести итог, то при включении GTID все транзакции, которые были отвечены клиенту как успешно выполненные так же
+были успешно реплицированы на ВСЕ slave-узлы, участвующие с данным master-ом в асинхронной репликации.
 
 <a name="master-promoting"></a>
 ## Назначение нового master-узла 
