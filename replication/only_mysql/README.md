@@ -653,7 +653,7 @@ show slave status\G
 
 Так же на slave-ах проверим количество записей, которое удалось записать.
 ```mysql based
-use socail-network;
+use social-network;
 select count(*) from user;
 ```
 И на **КАЖДОМ** из slave-ах получаем одно и то же число:
