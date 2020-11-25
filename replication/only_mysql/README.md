@@ -578,7 +578,7 @@ show variables like 'rpl_semi_sync_slave_enabled';
 </p>
 
 <a name="write-stress-testing"></a>
-## Создать нагрузку на запись
+## Нагрузочное тестирование на запись
 <a name="write-stress-testing-preparation"></a>
 ### Подготовка 
 Повторим сборку кластера для репликации, пропуская при этом шаг 
