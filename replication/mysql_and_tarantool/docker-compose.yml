@@ -2,7 +2,7 @@ version: '3.7'
 
 services:
   storage_mysql:
-    image: mysql
+    image: mysql:5.7
     container_name: storage_mysql
     command: --default-authentication-plugin=mysql_native_password
     ports:
@@ -32,6 +32,7 @@ services:
       dockerfile: Dockerfile
     image: replicator
     container_name: replicator
+    privileged: true
     networks:
       - stage_network
 

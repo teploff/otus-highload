@@ -4,12 +4,8 @@ init:
 	docker-compose up -d storage_mysql storage_tarantool replicator ;\
 
 migrate:
-	cd ../server/tools/migrator && \
-		go build main.go && \
-		mv main ../../../cluster && \
-		cd - ;\
-	./main --dir="../server/migrations" --dsn="user:password@tcp(localhost:3306)/social-network" "up" ;\
-	rm main ;\
+	docker-compose -f docker-compose.yml up --build migrator  ;\
+	docker rm -f mysql_migrator_replica ;\
 
 down:
 	docker-compose down ;\
