@@ -1,9 +1,9 @@
 version: '3.7'
 
 services:
-  storage_mysql:
+  storage_master:
     image: mysql:8.0
-    container_name: storage_mysql
+    container_name: storage_master
     command: --default-authentication-plugin=mysql_native_password
     ports:
       - '3306:3306'
@@ -15,6 +15,17 @@ services:
     networks:
       - stage_network
 
+  migrator:
+    build:
+      context: ../../server
+      dockerfile: migratorreplica.Dockerfile
+    image: mysql_migrator:replica
+    container_name: mysql_migrator_replica
+    networks:
+      - stage_network
+    depends_on:
+      - storage_master
+
   storage_tarantool:
     image: tarantool/tarantool:2.3.1
     container_name: storage_tarantool
@@ -25,6 +36,30 @@ services:
       TARANTOOL_USER_PASSWORD: password
     networks:
       - stage_network
+
+  replicator:
+    build:
+      context: ../../tools/replicator
+      dockerfile: Dockerfile
+      image: replicator:replica
+      container_name: replicator_replica
+      environment:
+        - MYSQL_HOST=storage_master
+        - MYSQL_PORT=3306
+        - MYSQL_USER=replica
+        - MYSQL_PASSWORD=oTUSlave#2020
+        - SLAVE_ID=2
+        - BINLOG_FILE=mysql-bin.000001
+        - BINLOG_POS=889
+        - TARANTOOL_HOST=storage_tarantool
+        - TARANTOOL_PORT=3301
+        - TARANTOOL_USER=user
+        - TARANTOOL_PASSWORD=password
+      networks:
+        - stage_network
+      depends_on:
+        - storage_master
+        - storage_tarantool
 
   backend:
     build:
@@ -42,10 +77,9 @@ services:
       - JWT_REFRESH_TOKEN_TIME_EXPIRE=24h
     networks:
       - stage_network
-#    depends_on:
-#      - storage_master
-#      - storage_slave_1
-#      - storage_slave_2
+    depends_on:
+      - storage_master
+      - storage_tarantool
 
 networks:
   stage_network:

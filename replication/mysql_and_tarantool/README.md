@@ -11,9 +11,16 @@
 2. [ Сведения ](#information)
     - [ Используемые инструменты ](#information-tools)
     - [ Характеристики железа ](#information-computer)
+    - [ Причина отказа от утилиты mysql-tarantool-replication ](#task-cause)
 3. [ Настройка репликации ](#replication)
-    - [ Настройка на стороне MySQL ](#replication-mysql)
-    - [ Настройка на стороне Tarantool ](#replication-tarantool)
+    - [ Настройка master-узла MySQL ](#replication-mysql)
+    - [ Настройка replicator-а ](#replication-replicator)
+    - [ Настройка slave-узла tarantool ](#replication-tarantool)
+4. [ Нагрузочное тестирование на чтение ](#stress-testing)
+    - [ Подготовка ](#stress-testing-preparation)
+    - [ Выполнение ](#stress-testing-implementation)
+    - [ Результаты ](#stress-testing-results)
+5. [ Итоги ](#results)
 
 <a name="task"></a>
 ## Задание
@@ -46,7 +53,6 @@
 ### Используемые инструменты
 Для выполнения дз понадобятся следующие инструменты: 
 - [docker](https://docs.docker.com/get-docker/) (>= version 19.03.8) & [docker compose](https://docs.docker.com/compose/install/) (>= version 1.25.5);
-- [golang](https://golang.org/doc/install) (>= version 1.15)
 - [jq](https://stedolan.github.io/jq/download/) (>= version 1.5)
 
 <a name="information-computer"></a>
@@ -56,22 +62,49 @@
 - RAM - 2xHyperX Fury Black: DDR4 DIMM 3000MHz 8GB;
 - SSD - Intel® SSD 540s Series: 480GB, 2.5in SATA 6Gb/s, 16nm, TLC
 
+<a name="task-cause"></a>
+### Причина отказа от утилиты mysql-tarantool-replication
+Тема довольно болезненная, однако важная для ее освещения. Постараюсь конструктивно изложить суть проблемы.
+Потратив неделю безнадежного поиска причин и устранения проблем на стороне утилиты [replacator](https://github.com/tarantool/mysql-tarantool-replication),
+пришел к выводу, что данная утилита полностью не актуальна и не рабочая. По следующему ряду причин:
+- репозиторий попросту протухший, последний core-commit совершался более 4-х лет назад;
+- были перепробованы все доступные версии MySQL на момент времени 26.11.20 и ни с одной версией [replacator](https://github.com/tarantool/mysql-tarantool-replication)
+не заработал;
+- [replacator](https://github.com/tarantool/mysql-tarantool-replication) собирается ТОЛЬКО на centos версии 7 и ни как
+иначе. В противном случае (если вы попытаетесь собрать на другой версии CentOS или на той же Ubuntu) необходимо лезть в 
+сурсы и править код;
+- отсутствие Docker-а (авторы прямым текстом говорят о том, что его нет и не будет - [proov](https://github.com/tarantool/mysql-tarantool-replication/pull/21));
+- tutorial, который приведен [тут](https://www.tarantool.io/ru/learn/improving-mysql/), полностью противоречит тому,
+что происходит в действительности (многие приведенные команды попросту не работают, а инструкции, которые приведены, как
+в репозитории, так и в этой статье, сбивают с толку, потому что полностью противоположны);
+- в конце концов уперся в ошибки репликтора, которые поднимались другими ребятами в issue на github'е. Проблемы не были
+услышаны и maintainer'ами и никакого продвижения по их решению до сих пор нет. Авторы пометили, что это баг и казалось
+бы на этом все;
+- Mail в очередной раз показывает себя с ***прекрасной*** стороны и я бы все такие так же посомневался в использовании
+ самого tarantool-а, не зря люди смотрят в сторону redis, думаю, по понятной причине.
+
+Исходя из вышеописанной мной проблемы было принято решение - написать простую утилиту, которая бы позволила самым 
+простым образом подписаться на event'ы из binlog'а MySQL-master-а и записать insert-инструкции в tarantool. Краткое
+изложение утилиты представлено [тут](https://github.com/teploff/otus-highload/tree/main/tools/replicator).
+
 <a name="replication"></a>
 ## Настройка репликации
 Перед тем как перейти к настройке репликации на стороне MySQL и Tarantool необходимо поднять инфраструктуру, состоящую
-из трех docker-контейнеров, а именно экземпляра MySQL, экземпляра Tarantool и экземпляра репликатора:
+из двух docker-контейнеров, а именно экземпляра MySQL и экземпляра Tarantool:
 ```shell script
 make init
 ```
 
-В большинстве своем случае настройка, будет происходить согласно [статье](https://www.tarantool.io/ru/learn/improving-mysql/), 
-однако статья не рассчитана на docker-container'ы и в ней есть ряд моментов, которые не работают.
-Ниже приводится подробное описание настройки каждого из container-ов:
-
-### MySQL
+<a name="replication-mysql"></a>
+### Настройка master-узла MySQL
 Заходим в mysql-container:
 ```shell script
-docker exec -it storage_mysql bash
+docker exec -it storage_master bash
+```
+
+Создаем папку mysql в директории /var/log/ папку mysql и даем права доступа к ней пользователю mysql:
+```shell script
+mkdir /var/log/mysql && chown mysql:mysql /var/log/mysql
 ```
 
 Устанавливаем текстовый редактор для конфигурирования, по умолчанию редактор не идет в комплектации container-а:
@@ -87,100 +120,73 @@ nano /etc/mysql/conf.d/mysql.cnf
 Дописываем в секцию **[mysqld]** следующие строки:
 ```textmate
 [mysqld]
-bind-address = storage_mysql
+bind-address = storage_master
 server_id = 1
-log-bin=mysql-bin
+log-bin = /var/log/mysql/mysql-bin.log
 binlog_format = ROW
+max_binlog_size = 500M
+tmpdir = /tmp
 interactive_timeout=3600
 wait_timeout=3600
 max_allowed_packet=32M
 ```
 
-
-Выходим из контейнера и рестартуем его:
+Выходим из контейнера и перезапускаем его:
 ```shell script
 exit
-docker restart storage_mysql
+docker restart storage_master
 ```
 
+Заходим опять в контейнер
 ```shell script
-docker exec -it storage_mysql bash
+docker exec -it storage_master bash
 ```
 
+Переходим в оболочку mysql и вводим password пароль:
 ```shell script
 mysql -u root -p
 ```
 
+Создаем пользователя для репликации и наделяем его полномочиями:
 ```shell script
 create user 'replica'@'%' IDENTIFIED BY 'oTUSlave#2020';
-GRANT REPLICATION CLIENT ON *.* TO 'replica'@'%';
 GRANT REPLICATION SLAVE ON *.* TO 'replica'@'%';
-GRANT SELECT ON *.* TO 'replica'@'%';
-FLUSH PRIVILEGES;
 ```
 
+Выходим из оболочки MySQL
+```mysql based
+exit
+```
+и самого docker-container'а:
+```shell script
+exit
+```
+
+Вызываем команду show master для того, чтобы определить MASTER_LOG_FILE и MASTER_LOG_POS, которые понадобятся нам в 
+дальнейшем для запуска [replicator](https://github.com/teploff/otus-highload/tree/main/tools/replicator) утилиты:
 ```mysql based
 show master status;
 ```
 
-```mysql based
-CREATE DATABASE menagerie;
-use menagerie;
-DROP TABLE IF EXISTS pet;
+Результат может отличаться, но формат будет таким:</br>
+<p align="center">
+    <img src="static/show_master_status.png">
+</p>
 
-CREATE TABLE pet (
-  id INT PRIMARY KEY AUTO_INCREMENT,
-  name2   VARCHAR(20),
-  owner   VARCHAR(20),
-  species VARCHAR(20)
-);
-
-```
-
-Выходим из container-а:
+<a name="replication-replicator"></a>
+### Настройка replicator-а
+Перед тем, как запустить replicator, необходимо удостовериться, что переменные окружения для credentials MySQL, Tarantool
+и значения BINLOG_FILE, BINLOG_POS соответствуют действительности. Для того, чтобы ознакомиться со значениями по
+умолчанию, необходимо перейти в [docker-compose.yml](https://github.com/teploff/otus-highload/blob/main/replication/mysql_and_tarantool/docker-compose.yml)
+и в секции **environment** сервиса **replicator** соотнести с действительностью.
+Если все верно, то запускаем наш replicator следующей командой:
 ```shell script
-exit
-exit
+make 
 ```
+После чего пойдет непромедлительное реплицирование данных из MySQL в Tarantool.
 
-### Replicator
-Заходим в replicator-container:
-```shell script
-docker exec -it replicator bash
-```
-
-Репликатор будет работать в виде демона systemd под названием replicatord, поэтому давайте отредактируем его служебный 
-файл systemd, а именно replicatord.service, в репозитории:
-```shell script
-cd mysql-tarantool-replication && nano replicatord.service
-```
-
-Измените следующую строку:
-```text
-...
-ExecStart=/usr/local/sbin/replicatord -c /usr/local/etc/replicatord.cfg
-...
-```
-
-Замените расширение .cfg на .yml:
-```text
-...
-ExecStart=/usr/local/sbin/replicatord -c /usr/local/etc/replicatord.yml
-...
-```
-
-Затем скопируем некоторые файлы из репозитория replicatord в другие места locations:
-```text
-cp replicatord /usr/local/sbin/replicatord
-cp replicatord.service /etc/systemd/system
-```
-
-Выходим из container-а:
-```shell script
-exit 
-```
-
-### Tarantool
+<a name="replication-tarantool"></a>
+### Настройка slave-узла tarantool
 Заходим в tarantool-container:
 ```shell script
 docker exec -it storage_tarantool sh
@@ -196,37 +202,26 @@ mkdir /var/log/tarantool && chown tarantool:tarantool /var/log/tarantool
 apk update && apk add nano
 ```
 
-Переходим в console:
+Выходим из docker-container:
 ```shell script
-console
+exit
 ```
 
-Выполним следующие команды:
-``` shell script
- box.schema.user.grant('guest','read,write,execute','universe')
-
- function bootstrap()   
-     if not box.space.mysqldaemon then
-         s = box.schema.space.create('mysqldaemon')
-         s:create_index('primary',
-         {type = 'tree', parts = {1, 'unsigned'}})
-     end
- 
-     if not box.space.mysqldata then
-         t = box.schema.space.create('mysqldata')
-         t:create_index('primary',
-         {type = 'tree', parts = {1, 'unsigned'}})
-     end
- 
- end
- 
- bootstrap()
+Применим уже известную нам операцию накатки миграций командой:
+```shell script
+make migrate
 ```
 
-Проверим, создались ли два space-а(mysqldaemon и mysqldata):
+Зайдем в tarntool и проверим, что репликация завершилась успешно и появился новый space:
 ```shell script
+docker exec -it storage_tarantool console
 box.space._space:select()
 ```
+
+Должны увидеть нечто следующее:</br>
+<p align="center">
+    <img src="static/show_tarantool_spaces.png">
+</p>
 
 Для того, чтобы выйти из консоли, необходимо нажать **Ctrl + C**.
 
@@ -235,69 +230,27 @@ box.space._space:select()
 exit
 ```
 
-### Следующие шаги
-Заходим в replicator-container:
+Если по каким-то причинам не удалось увидеть созданный space, необходимо глянуть логи replicator'а:
 ```shell script
-docker exec -it replicator bash
+docker logs replicator
 ```
 
-Переходим к конфигурации репликатора:
-```shell script
-cd mysql-tarantool-replication
-nano replicatord.yml
-```
+<a name="stress-testing"></a>
+## Нагрузочное тестирование на чтение
+TODO
 
-Заменяем ее полностью на:
-```yaml
-mysql:
-    host: storage_mysql
-    port: 3306
-    user: replica
-    password: oTUSlave#2020
-    connect_retry: 15 # seconds
+<a name="stress-testing-preparation"></a>
+### Подготовка
+TODO
 
-tarantool:
-    host: storage_tarantool:3301
-    binlog_pos_space: 512
-    binlog_pos_key: 0
-    connect_retry: 15 # seconds
-    sync_retry: 1000 # milliseconds
+<a name="stress-testing-implementation"></a>
+### Выполнение
+TODO
 
-mappings:
-    - database: menagerie
-      table: pet
-      columns: [ id, name2, owner, species ]
-      space: 513
-      key_fields: [ 0 ]
+<a name="stress-testing-results"></a>
+### Результаты
+TODO
 
-spaces:
-    513:
-        replace_null:
-            1: { string: "" }
-            2: { string: "" }
-```
-
-Далее необходимо скопировать replicatord.yml туда, где systemd будет искать его:
-```shell script
-cp replicatord.yml /usr/local/etc/replicatord.yml
-systemctl start replicatord
-```
-
-Смотрим логги:
-```shell script
-tail -f /var/log/replicatord.log
-```
-
-В отдельном terminal-е заходим в MySQL-container и сделаем запись:
-```mysql based
-docker exec -it storage_mysql bash
-mysql -u root -p
-use menagerie;
-INSERT INTO pet(name2, owner, species) VALUES ('Spot', 'Brad', 'dog');
-```
-
-В отдельном terminal-е заходим в Tarantool-console и проверим, среплицировалась ли запись:
-```shell script
-docker exec -it storage_tarantool console
-box.space._space:select()
-```
+<a name="results"></a>
+## Итоги
+TODO
