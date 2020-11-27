@@ -1,0 +1,15 @@
+slave_id: 2
+binlog_file: "mysql-bin.000001"
+binlog_pos: 665
+
+mysql:
+  host: "storage_master"
+  port: 3306
+  user: "replica"
+  password: "oTUSlave#2020"
+
+tarantool:
+  host: "storage_tarantool"
+  port: 3301
+  user: "user"
+  password: "password"
