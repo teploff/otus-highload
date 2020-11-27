@@ -153,15 +153,6 @@ create user 'replica'@'%' IDENTIFIED BY 'oTUSlave#2020';
 GRANT REPLICATION SLAVE ON *.* TO 'replica'@'%';
 ```
 
-Выходим из оболочки MySQL
-```mysql based
-exit
-```
-и самого docker-container'а:
-```shell script
-exit
-```
-
 Вызываем команду show master для того, чтобы определить MASTER_LOG_FILE и MASTER_LOG_POS, которые понадобятся нам в 
 дальнейшем для запуска [replicator](https://github.com/teploff/otus-highload/tree/main/tools/replicator) утилиты:
 ```mysql based
@@ -172,6 +163,15 @@ show master status;
 <p align="center">
     <img src="static/show_master_status.png">
 </p>
+
+Выходим из оболочки MySQL
+```mysql based
+exit
+```
+и самого docker-container'а:
+```shell script
+exit
+```
 
 <a name="replication-replicator"></a>
 ### Настройка replicator-а
