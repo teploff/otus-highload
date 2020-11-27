@@ -70,7 +70,7 @@
 - репозиторий попросту протухший, последний core-commit совершался более 4-х лет назад;
 - были перепробованы все доступные версии MySQL на момент времени 26.11.20 и ни с одной версией [replacator](https://github.com/tarantool/mysql-tarantool-replication)
 не заработал;
-- [replacator](https://github.com/tarantool/mysql-tarantool-replication) собирается ТОЛЬКО на centos версии 7 и ни как
+- [replacator](https://github.com/tarantool/mysql-tarantool-replication) собирается ТОЛЬКО на centos версии 7 и никак
 иначе. В противном случае (если вы попытаетесь собрать на другой версии CentOS или на той же Ubuntu) необходимо лезть в 
 сурсы и править код;
 - отсутствие Docker-а (авторы прямым текстом говорят о том, что его нет и не будет - [proov](https://github.com/tarantool/mysql-tarantool-replication/pull/21));
