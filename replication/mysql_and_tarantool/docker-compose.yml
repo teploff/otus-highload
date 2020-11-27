@@ -50,7 +50,7 @@ services:
       - MYSQL_PASSWORD=oTUSlave#2020
       - SLAVE_ID=2
       - BINLOG_FILE=mysql-bin.000001
-      - BINLOG_POS=889
+      - BINLOG_POS=665
       - TARANTOOL_HOST=storage_tarantool
       - TARANTOOL_PORT=3301
       - TARANTOOL_USER=user
