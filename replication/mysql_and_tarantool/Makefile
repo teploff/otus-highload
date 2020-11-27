@@ -8,7 +8,7 @@ migrate:
 	docker rm -f mysql_migrator_replica ;\
 
 replicator:
-	docker-compose -f docker-compose.yml up --build replicator  ;\
+	docker-compose -f docker-compose.yml up --build -d replicator  ;\
 
 down:
 	docker-compose down ;\
