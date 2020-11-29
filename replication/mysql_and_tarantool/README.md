@@ -14,8 +14,8 @@
     - [ Причина отказа от утилиты mysql-tarantool-replication ](#task-cause)
 3. [ Настройка репликации ](#replication)
     - [ Настройка master-узла MySQL ](#replication-mysql)
-    - [ Настройка replicator-а ](#replication-replicator)
     - [ Настройка slave-узла tarantool ](#replication-tarantool)
+    - [ Настройка replicator-а ](#replication-replicator)
 4. [ Нагрузочное тестирование на чтение ](#stress-testing)
     - [ Подготовка ](#stress-testing-preparation)
     - [ Выполнение ](#stress-testing-implementation)
@@ -177,6 +177,46 @@ exit
 exit
 ```
 
+<a name="replication-tarantool"></a>
+### Настройка slave-узла tarantool
+Заходим в tarantool-container:
+```shell script
+docker exec -it storage_tarantool sh
+```
+
+Создаем папку tarantool в директории */var/log/* и даем права доступа к ней пользователю *tarantool*:
+```shell script
+mkdir /var/log/tarantool && chown tarantool:tarantool /var/log/tarantool
+```
+
+Устанавливаем текстовый редактор для конфигурирования, по умолчанию редактор не идет в комплектации container-а:
+```shell script
+apk update && apk add nano
+```
+
+Перейдем в console и создадим space *user*:
+```shell script
+console
+box.schema.space.create('user')
+```
+
+Проверим, что space успешно создался командой:
+```shell script
+box.space._space:select()
+```
+
+Должны увидеть нечто следующее:</br>
+<p align="center">
+    <img src="static/show_created_space.png">
+</p>
+
+Для того, чтобы выйти из консоли, необходимо нажать **Ctrl + C** или **Ctrl + D**.
+
+Выходим из container-а:
+```shell script
+exit
+```
+
 <a name="replication-replicator"></a>
 ### Настройка replicator-а
 Перед тем, как запустить replicator, необходимо удостовериться, что переменные окружения для credentials MySQL, Tarantool
@@ -197,56 +237,6 @@ docker logs -f replicator_replica
 <p align="center">
     <img src="static/show_replicator_launching.png">
 </p>
-
-<a name="replication-tarantool"></a>
-### Настройка slave-узла tarantool
-Заходим в tarantool-container:
-```shell script
-docker exec -it storage_tarantool sh
-```
-
-Создаем папку tarantool в директории */var/log/* и даем права доступа к ней пользователю *tarantool*:
-```shell script
-mkdir /var/log/tarantool && chown tarantool:tarantool /var/log/tarantool
-```
-
-Устанавливаем текстовый редактор для конфигурирования, по умолчанию редактор не идет в комплектации container-а:
-```shell script
-apk update && apk add nano
-```
-
-Выходим из docker-container:
-```shell script
-exit
-```
-
-Применим уже известную нам операцию накатки миграций командой:
-```shell script
-make migrate
-```
-
-Зайдем в tarantool и проверим, что репликация завершилась успешно и появился новый space:
-```shell script
-docker exec -it storage_tarantool console
-box.space._space:select()
-```
-
-Должны увидеть нечто следующее:</br>
-<p align="center">
-    <img src="static/show_tarantool_spaces.png">
-</p>
-
-Для того, чтобы выйти из консоли, необходимо нажать **Ctrl + C**.
-
-Выходим из container-а:
-```shell script
-exit
-```
-
-Если по каким-то причинам не удалось увидеть созданный space, необходимо глянуть логи replicator'а:
-```shell script
-docker logs replicator
-```
 
 <a name="stress-testing"></a>
 ## Нагрузочное тестирование на чтение
