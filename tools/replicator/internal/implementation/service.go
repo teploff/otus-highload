@@ -7,19 +7,23 @@ import (
 	"github.com/siddontang/go-mysql/replication"
 	"go.uber.org/zap"
 	"replicator/internal/config"
+	"replicator/internal/infrastructure/tarantool"
 )
 
 type mySQLSyncer struct {
 	syncer   *replication.BinlogSyncer
 	streamer *replication.BinlogStreamer
 
+	tableID uint64
+
 	cancelFunc context.CancelFunc
 	doneCh     chan struct{}
 
-	logger *zap.Logger
+	tarantoolConn *tarantool.Conn
+	logger        *zap.Logger
 }
 
-func NewMySQLSyncer(config *config.Config, logger *zap.Logger) (*mySQLSyncer, error) {
+func NewMySQLSyncer(config *config.Config, tarantoolConn *tarantool.Conn, logger *zap.Logger) (*mySQLSyncer, error) {
 	cfg := replication.BinlogSyncerConfig{
 		ServerID: config.SlaveID,
 		Flavor:   "mysql",
@@ -37,10 +41,11 @@ func NewMySQLSyncer(config *config.Config, logger *zap.Logger) (*mySQLSyncer, er
 	}
 
 	return &mySQLSyncer{
-		syncer:   syncer,
-		streamer: streamer,
-		doneCh:   make(chan struct{}),
-		logger:   logger,
+		syncer:        syncer,
+		streamer:      streamer,
+		doneCh:        make(chan struct{}),
+		tarantoolConn: tarantoolConn,
+		logger:        logger,
 	}, nil
 }
 
@@ -62,11 +67,9 @@ func (s *mySQLSyncer) Run() {
 
 			return
 		default:
-			parse(ev, s.logger)
-			////logger.Info(fmt.Sprintf("event type = %s", ev.Header.EventType))
-			////ev.Header.Dump(os.Stdout)
-			////ev.Event.Dump(os.Stdout)
-			//ev.Dump(os.Stdout)
+			if err := s.parse(ev); err != nil {
+				s.logger.Error("failed parsing event", zap.Error(err))
+			}
 		}
 	}
 }
@@ -78,29 +81,46 @@ func (s *mySQLSyncer) Stop() {
 	s.syncer.Close()
 }
 
-func parse(event *replication.BinlogEvent, logger *zap.Logger) error {
+func (s *mySQLSyncer) parse(event *replication.BinlogEvent) error {
 	switch event.Header.EventType {
 	case replication.QUERY_EVENT:
-		v, ok := event.Event.(*replication.QueryEvent)
+		_, ok := event.Event.(*replication.QueryEvent)
 		if !ok {
 			return fmt.Errorf("unknow row event")
 		}
 
-		logger.Info(fmt.Sprintf("EventType[%s], Schema[%s], Query[%s]", event.Header.EventType, v.Schema, v.Query))
+		//s.logger.Info(fmt.Sprintf("EventType[%s], Schema[%s], Query[%s]", event.Header.EventType, v.Schema,
+		//	v.Query))
 	case replication.TABLE_MAP_EVENT:
 		v, ok := event.Event.(*replication.TableMapEvent)
 		if !ok {
 			return fmt.Errorf("unknow table map event")
 		}
 
-		logger.Info(fmt.Sprintf("EventType[%s], Schema[%s], TableID[%d], Table[%s]", event.Header.EventType, v.Schema, v.TableID, v.Table))
+		//s.logger.Info(fmt.Sprintf("EventType[%s], Schema[%s], TableID[%d], Table[%s]", event.Header.EventType,
+		//	v.Schema, v.TableID, v.Table))
+		if string(v.Table) == "user" {
+			s.tableID = v.TableID
+		}
 	case replication.WRITE_ROWS_EVENTv2:
 		v, ok := event.Event.(*replication.RowsEvent)
 		if !ok {
 			return fmt.Errorf("unknow rows event")
 		}
+		//s.logger.Info(fmt.Sprintf("EventType[%s], TableID[%d], Rows[%v]", event.Header.EventType, v.TableID,
+		//	v.Rows))
 
-		logger.Info(fmt.Sprintf("EventType[%s], TableID[%d], Rows[%v]", event.Header.EventType, v.TableID, v.Rows))
+		if v.TableID == s.tableID {
+			v1, _ := v.Rows[0][2].([]byte)
+			v2, _ := v.Rows[0][8].([]byte)
+
+			err := s.tarantoolConn.Insert(v.Rows[0][0], v.Rows[0][1], string(v1), v.Rows[0][3],
+				v.Rows[0][4], v.Rows[0][5], v.Rows[0][6], v.Rows[0][7], string(v2), v.Rows[0][11])
+			if err != nil {
+				return err
+			}
+		}
 	}
+
 	return nil
 }

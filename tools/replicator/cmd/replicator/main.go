@@ -8,6 +8,7 @@ import (
 	"os/signal"
 	"replicator/internal/config"
 	"replicator/internal/implementation"
+	"replicator/internal/infrastructure/tarantool"
 	"syscall"
 )
 
@@ -25,7 +26,13 @@ func main() {
 		logger.Fatal("error reading config file", zap.Error(err))
 	}
 
-	syncer, err := implementation.NewMySQLSyncer(cfg, logger)
+	conn, err := tarantool.NewConn(cfg.Tarantool)
+	if err != nil {
+		logger.Fatal("Failed connect to tarantool", zap.Error(err))
+	}
+	defer conn.Close()
+
+	syncer, err := implementation.NewMySQLSyncer(cfg, conn, logger)
 	if err != nil {
 		log.Fatal("failed syncer launch", zap.Error(err))
 	}
