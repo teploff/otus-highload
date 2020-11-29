@@ -27,6 +27,7 @@ type TarantoolConfig struct {
 	Port     int    `mapstructure:"port"`
 	User     string `mapstructure:"user"`
 	Password string `mapstructure:"password"`
+	Space    string `mapstructure:"space"`
 }
 
 // Load create configuration from file & environments.

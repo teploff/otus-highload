@@ -55,6 +55,7 @@ services:
       - TARANTOOL_PORT=3301
       - TARANTOOL_USER=user
       - TARANTOOL_PASSWORD=password
+      - TARANTOOL_SPACE=user
     networks:
       - stage_network
     depends_on:
