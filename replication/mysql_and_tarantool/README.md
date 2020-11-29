@@ -197,7 +197,23 @@ apk update && apk add nano
 Перейдем в console и создадим space *user*:
 ```shell script
 console
-box.schema.space.create('user')
+s = box.schema.space.create('user')
+s:format({
+  {name = 'id', type = 'string'},
+  {name = 'email', type = 'string'},
+  {name = 'password', type = 'string'},
+  {name = 'name', type = 'string'},
+  {name = 'surname', type = 'string'},
+  {name = 'sex', type = 'string'},
+  {name = 'birthday', type = 'string'},
+  {name = 'city', type = 'string'},
+  {name = 'interests', type = 'string'},
+})
+s:create_index('primary', {
+  type = 'tree',
+  parts = {'id'}
+})
+
 ```
 
 Проверим, что space успешно создался командой:
@@ -240,11 +256,48 @@ docker logs -f replicator_replica
 
 <a name="stress-testing"></a>
 ## Нагрузочное тестирование на чтение
-TODO
 
 <a name="stress-testing-preparation"></a>
 ### Подготовка
-TODO
+Прежде чем приступить к выполнению нагрузочного тестирования, необходимо произвести:
+- миграции;
+- наполнить БД данными с помощью утилиты [inserter](https://github.com/teploff/otus-highload/tree/main/tools/inserter)
+
+Для того, чтобы накатить миграции выполним команду:
+```shell script
+make make migrate
+```
+
+Теперь произведем вставку 1м записей пользователей с помощью утилиты [inserter](https://github.com/teploff/otus-highload/tree/main/tools/inserter):
+```shell script
+cd ../../tools/inserter/
+mkdir snapshot
+tar -xzf ../generator/snapshot/data_set_1.tar.gz -C ./snapshot
+tar -xzf ../generator/snapshot/data_set_2.tar.gz -C ./snapshot
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+python main.py -cfg=./config.yaml -path=./snapshot -size=1
+deactivate
+rm -rf ./snapshot ./venv
+cd ../../replication/mysql_and_tarantool
+```
+
+Убедимся в том, что все записи среплицировались. Для этого перейдем в container tarantool-узла:
+```shell script
+docker exec -it storage_tarantool
+```
+и в оболочке вызовем команду:
+```shell script
+box.space.user:len()
+```
+
+Если все прошло успешно, должны увидеть следующее: </br>
+<p align="center">
+    <img src="static/show_rows_in_tarantool.png">
+</p>
+
+Для того, чтобы выйти из консоли, по-прежнему необходимо нажать **Ctrl + C** или **Ctrl + D**.
 
 <a name="stress-testing-implementation"></a>
 ### Выполнение
@@ -257,3 +310,5 @@ TODO
 <a name="results"></a>
 ## Итоги
 TODO
+
+box.schema.space.drop(514)
