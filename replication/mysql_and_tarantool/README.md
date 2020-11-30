@@ -271,7 +271,7 @@ docker logs -f replicator_replica
 
 Для того, чтобы накатить миграции выполним команду:
 ```shell script
-make make migrate
+make migrate
 ```
 
 Теперь произведем вставку 1м записей пользователей с помощью утилиты [inserter](https://github.com/teploff/otus-highload/tree/main/tools/inserter):
@@ -291,7 +291,7 @@ cd ../../replication/mysql_and_tarantool
 
 Убедимся в том, что все записи среплицировались. Для этого перейдем в container tarantool-узла:
 ```shell script
-docker exec -it storage_tarantool
+docker exec -it storage_tarantool console
 ```
 и в оболочке вызовем команду:
 ```shell script
