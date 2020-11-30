@@ -194,7 +194,7 @@ mkdir /var/log/tarantool && chown tarantool:tarantool /var/log/tarantool
 apk update && apk add nano
 ```
 
-Перейдем в console и создадим space *user*:
+Перейдем в console, создадим space *user* и индексы:
 ```shell script
 console
 s = box.schema.space.create('user')
@@ -210,10 +210,16 @@ s:format({
   {name = 'interests', type = 'string'},
 })
 s:create_index('primary', {
-  type = 'tree',
+  type = 'hash',
   parts = {'id'}
 })
-
+s:create_index('secondary', {
+  type = 'tree',
+  parts = {
+    {field = 4, type = 'string'},
+    {field=5, type='string'}
+  }
+})
 ```
 
 Проверим, что space успешно создался командой:
