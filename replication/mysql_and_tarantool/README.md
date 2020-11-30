@@ -221,8 +221,8 @@ s:create_index('idx_name_surname', {
     { field = 5, type = 'string', collation = 'unicode_ci' }
   }
 })
-```
 
+```
 Проверим, что space успешно создался командой:
 ```shell script
 box.space._space:select()
@@ -235,7 +235,56 @@ box.space._space:select()
 
 Для того, чтобы выйти из консоли, необходимо нажать **Ctrl + C** или **Ctrl + D**.
 
-Выходим из container-а:
+Теперь необходимо создать хранимые процедуры, которые будут нам необходимы при фильтрации пользователей по имени и 
+фамилии соответственно. Для этого, находясь в container'е перейдем в директорию */opt/tarantool* и создадим файл 
+*search.lua*:
+```shell script
+cd /opt/tarantool
+nano search.lua
+```
+
+В открытый файл *search.lua* текстовым редактором nano помещаем следующие хранимые процедуры:
+```shell script
+function tuple_sort(a,b)
+    if  a[1] < b[1] then
+        return true
+    end
+
+    return false
+end
+
+function find_users_by_name_and_surname(prefix)
+    local rows = box.space.user.index.idx_name_surname:select({prefix, prefix}, {iterator = 'GE'})
+    result = {}
+
+    for i=1, #rows do
+        if string.startswith(string.lower(rows[i][4]), prefix) and string.startswith(string.lower(rows[i][5]), prefix) then
+            table.insert(result, rows[i])
+        end
+    end
+    table.sort(result, tuple_sort)
+
+    return result
+end
+```
+
+Сохраняем *search.lua* командой **Ctrl + O** и выходим из текстового редактора - **Ctrl + X**.
+Теперь необходимо применить хранимую процедуру. Для этого снова переходим в оболочку tarantool:
+```shell script
+console
+```
+и применяем созданный нами файл *search.lua*:
+```shell script
+dofile('search.lua')
+```
+
+Выше представлена хранимая процедура *find_users_by_name_and_surname*, которая по заданному префиксу ищет пользователей,
+чьи имена и фамилии начинаются на заданную подстроку. Естественно, чтоб не халтурить была написана простая функция 
+*tuple_sort*, которая позволяла сортировать пользователей по их id, как и говорилось в задании ранее.
+
+Для того, чтобы выйти из консоли, необходимо нажать **Ctrl + C** или **Ctrl + D**.
+
+Для того, чтобы выйти из container-а, введем:
 ```shell script
 exit
 ```
@@ -321,3 +370,9 @@ TODO
 box.schema.space.drop(514)
 
 box.space.user.index.idx_name_surname:select(ma, ma, {{iterator = box.index.GE}, {iterator = box.index.GE}})
+
+items = box.space.user.index.idx_name_surname:select({'ma', 'ma'}, {iterator='GE'})
+
+not(string.startswith(string.lower(a[1][4]), 'ma') and string.startswith(string.lower(a[1][4]), 'ma'))
+
+
