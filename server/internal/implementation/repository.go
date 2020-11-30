@@ -3,7 +3,6 @@ package implementation
 import (
 	"context"
 	"database/sql"
-	"fmt"
 	uuid "github.com/satori/go.uuid"
 	"net"
 	"social-network/internal/domain"
@@ -663,8 +662,6 @@ func (t *tarUserRepository) GetByPrefixOfNameAndSurname(_ *sql.Tx, prefix string
 				City:      city,
 				Interests: interests,
 			})
-			fmt.Printf("%v\n", v)
-			fmt.Printf("%T", v)
 		}
 
 	}
