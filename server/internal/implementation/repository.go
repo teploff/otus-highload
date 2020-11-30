@@ -26,6 +26,10 @@ func (p *userRepository) GetTx(ctx context.Context) (*sql.Tx, error) {
 	return p.conn.BeginTx(ctx, nil)
 }
 
+func (p *userRepository) CommitTx(tx *sql.Tx) error {
+	return tx.Commit()
+}
+
 func (p *userRepository) Persist(tx *sql.Tx, user *domain.User) error {
 	_, err := tx.Exec(`
 		INSERT 
@@ -243,6 +247,10 @@ func NewMessengerRepository(conn *sql.DB) *messengerRepository {
 
 func (m *messengerRepository) GetTx(ctx context.Context) (*sql.Tx, error) {
 	return m.conn.BeginTx(ctx, nil)
+}
+
+func (m *messengerRepository) CommitTx(tx *sql.Tx) error {
+	return tx.Commit()
 }
 
 func (m *messengerRepository) CreateChat(tx *sql.Tx, masterID, slaveID string) (string, error) {
@@ -580,16 +588,19 @@ func (w *wsPoolRepository) RemoveConnection(userID string, conn net.Conn) {
 }
 
 type tarUserRepository struct {
-	conn     *tarantool.Conn
-	connStub *sql.DB
+	conn *tarantool.Conn
 }
 
-func NewTarantoolRepository(conn *tarantool.Conn, stub *sql.DB) *tarUserRepository {
-	return &tarUserRepository{conn: conn, connStub: stub}
+func NewTarantoolRepository(conn *tarantool.Conn) *tarUserRepository {
+	return &tarUserRepository{conn: conn}
 }
 
 func (t *tarUserRepository) GetTx(ctx context.Context) (*sql.Tx, error) {
-	return t.connStub.BeginTx(ctx, nil)
+	return nil, nil
+}
+
+func (t *tarUserRepository) CommitTx(tx *sql.Tx) error {
+	return nil
 }
 
 func (t *tarUserRepository) Persist(tx *sql.Tx, user *domain.User) error {

@@ -48,7 +48,7 @@ func (a *authService) SignUp(ctx context.Context, profile *domain.User) error {
 		return err
 	}
 
-	return tx.Commit()
+	return a.repository.CommitTx(tx)
 }
 
 func (a *authService) SignIn(ctx context.Context, credentials *domain.Credentials) (*domain.TokenPair, error) {
@@ -85,7 +85,7 @@ func (a *authService) SignIn(ctx context.Context, credentials *domain.Credential
 		return nil, err
 	}
 
-	return &tokenPair, tx.Commit()
+	return &tokenPair, a.repository.CommitTx(tx)
 }
 
 func (a *authService) createTokenPair(user *domain.User) (domain.TokenPair, error) {
@@ -169,7 +169,7 @@ func (a *authService) RefreshToken(ctx context.Context, token string) (*domain.T
 		return nil, err
 	}
 
-	return &newTokenPair, tx.Commit()
+	return &newTokenPair, a.repository.CommitTx(tx)
 }
 
 func (a *authService) Authenticate(ctx context.Context, token string) (string, error) {
@@ -189,7 +189,7 @@ func (a *authService) Authenticate(ctx context.Context, token string) (string, e
 		return "", fmt.Errorf("invalid token")
 	}
 
-	return userID, tx.Commit()
+	return userID, a.repository.CommitTx(tx)
 }
 
 type socialService struct {
@@ -232,7 +232,7 @@ func (s *socialService) GetQuestionnaires(ctx context.Context, userID string, li
 	}
 
 	// count - 1: without myself
-	return questionnaires, count - 1, tx.Commit()
+	return questionnaires, count - 1, s.repository.CommitTx(tx)
 }
 
 func (s *socialService) GetQuestionnairesByNameAndSurname(ctx context.Context, prefix string) ([]*domain.Questionnaire, error) {
@@ -259,7 +259,7 @@ func (s *socialService) GetQuestionnairesByNameAndSurname(ctx context.Context, p
 		})
 	}
 
-	return questionnaires, tx.Commit()
+	return questionnaires, s.repository.CommitTx(tx)
 }
 
 type messengerService struct {
@@ -294,7 +294,7 @@ func (m *messengerService) CreateChat(ctx context.Context, masterID, slaveID str
 		return "", err
 	}
 
-	return chatID, tx.Commit()
+	return chatID, m.messRep.CommitTx(tx)
 }
 
 func (m *messengerService) GetChat(ctx context.Context, masterID, slaveID string) (*domain.Chat, error) {
@@ -308,7 +308,7 @@ func (m *messengerService) GetChat(ctx context.Context, masterID, slaveID string
 		return nil, err
 	}
 
-	return chat, tx.Commit()
+	return chat, m.messRep.CommitTx(tx)
 }
 
 func (m *messengerService) GetChats(ctx context.Context, userID string, limit, offset int) ([]*domain.Chat, int, error) {
@@ -327,7 +327,7 @@ func (m *messengerService) GetChats(ctx context.Context, userID string, limit, o
 		return nil, 0, err
 	}
 
-	return chats, total, tx.Commit()
+	return chats, total, m.messRep.CommitTx(tx)
 }
 
 func (m *messengerService) SendMessages(ctx context.Context, userID, chatID string, messages []*domain.ShortMessage) error {
@@ -341,7 +341,7 @@ func (m *messengerService) SendMessages(ctx context.Context, userID, chatID stri
 		return err
 	}
 
-	return tx.Commit()
+	return m.messRep.CommitTx(tx)
 }
 
 func (m *messengerService) GetMessages(ctx context.Context, userID, chatID string, limit, offset int) ([]*domain.Message, int, error) {
@@ -365,5 +365,5 @@ func (m *messengerService) GetMessages(ctx context.Context, userID, chatID strin
 		return nil, 0, err
 	}
 
-	return messages, total, tx.Commit()
+	return messages, total, m.messRep.CommitTx(tx)
 }

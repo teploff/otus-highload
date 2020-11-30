@@ -10,6 +10,7 @@ const DuplicateKeyErrNumber = 1062
 
 type UserRepository interface {
 	GetTx(ctx context.Context) (*sql.Tx, error)
+	CommitTx(tx *sql.Tx) error
 	Persist(tx *sql.Tx, user *User) error
 	GetByID(tx *sql.Tx, id string) (*User, error)
 	GetByEmail(tx *sql.Tx, email string) (*User, error)
@@ -24,6 +25,7 @@ type UserRepository interface {
 
 type MessengerRepository interface {
 	GetTx(ctx context.Context) (*sql.Tx, error)
+	CommitTx(tx *sql.Tx) error
 	CreateChat(tx *sql.Tx, masterID, slaveID string) (string, error)
 	GetCountChats(tx *sql.Tx, userID string) (int, error)
 	GetChatWithCompanion(tx *sql.Tx, masterID, slaveID string) (*Chat, error)
