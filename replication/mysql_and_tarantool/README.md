@@ -217,8 +217,8 @@ s:create_index('idx_name_surname', {
   type = 'tree',
   unique = false,
   parts = {
-    3, 'string',
-    4, 'string'
+    { field = 4, type = 'string', collation = 'unicode_ci' },
+    { field = 5, type = 'string', collation = 'unicode_ci' }
   }
 })
 ```
@@ -319,3 +319,5 @@ TODO
 TODO
 
 box.schema.space.drop(514)
+
+box.space.user.index.idx_name_surname:select(ma, ma, {{iterator = box.index.GE}, {iterator = box.index.GE}})
