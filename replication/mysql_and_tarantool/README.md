@@ -1,6 +1,6 @@
 # Отчет о домашнем задании №6
-<p align="right">
-<img src="static/tarantool.png">
+<p align="center">
+<img src="static/logo.png">
 </p>
 
 ## Содержание
@@ -355,9 +355,35 @@ box.space.user:len()
 
 Для того, чтобы выйти из консоли, по-прежнему необходимо нажать **Ctrl + C** или **Ctrl + D**.
 
+Поднимем backend, который привязан к хранилищу MySQL:
+```shell script
+make backend
+```
+
+Регистрируем тестового пользователя и получаем его access_token, который понадобится для осуществления нагрузочного 
+тестирования:
+```shell script
+curl -X POST -H "Content-Type: application/json" \
+    -d '{"email": "user@user.ru", "password": "1234567890", "name": "Test", "surname": "Test", "birthday": "1994-04-10T20:21:25+00:00", "sex": "male", "city": "Moscow", "interests": "programming"}' \
+    http://localhost:9999/auth/sign-up
+export ACCESS_TOKEN=$(curl -X POST -H "Content-Type: application/json" \
+    -d '{"email": "user@user.ru", "password": "1234567890"}' \
+    http://localhost:9999/auth/sign-in | jq '.access_token')
+```
+
 <a name="stress-testing-implementation"></a>
 ### Выполнение
-TODO
+Запускаем нагрузочное тестирование на backend, который в качестве хранилища использует MySQL.
+Тестирование представляет собой поиск пользователей, у которых name и surname начинаются на **ma** одновременно:
+```shell script
+make wrk
+```
+
+Результат получился следующим:</br>
+<p align="center">
+  <img src="static/mysql_stress_test.png">
+</p>
+
 
 <a name="stress-testing-results"></a>
 ### Результаты
@@ -366,13 +392,3 @@ TODO
 <a name="results"></a>
 ## Итоги
 TODO
-
-box.schema.space.drop(514)
-
-box.space.user.index.idx_name_surname:select(ma, ma, {{iterator = box.index.GE}, {iterator = box.index.GE}})
-
-items = box.space.user.index.idx_name_surname:select({'ma', 'ma'}, {iterator='GE'})
-
-not(string.startswith(string.lower(a[1][4]), 'ma') and string.startswith(string.lower(a[1][4]), 'ma'))
-
-
