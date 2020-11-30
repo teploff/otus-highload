@@ -406,11 +406,43 @@ make wrk
   <img src="static/mysql_stress_test.png">
 </p>
 
+Теперь необходимо произвести нагрузочное тестирование на backend, но уже в качестве хранилища использовать не MySQL, а
+Tarantool. Для этого, необходимо перейти в [код](https://github.com/teploff/otus-highload/blob/main/server/internal/app/app.go)
+и закомментировать строку **53** и раскомментировать строку **54**.
+
+Теперь пересобираем наш backend:
+```shell script
+make backend
+```
+
+И производим нагрузочное тестирование:
+```shell script
+make wrk
+```
+
+Результат получился следующим:</br>
+<p align="center">
+  <img src="static/tarantool_stress_test.png">
+</p>
+
+Если перейти в лог backend'а, то можно увидеть нескончаемую череду ошибок вида:
+```shell script
+client connection is not ready tarantool
+tarantool: reconnect (0/3) to storage_tarantool:3301 failed: read tcp 172.18.0.5:35484->172.18.0.3:3301: i/o timeout
+```
+
+Думал, Mutex что ли вешать на каждый conn, но даже он не помог.
 
 <a name="stress-testing-results"></a>
 ### Результаты
-TODO
+Если результаты представить в виде графиков, то будут они выглядеть следующим образом:</br>
+<p align="center">
+<img src="static/tarantool_stress_test.png">
+</p>
+
 
 <a name="results"></a>
 ## Итоги
-TODO
+Как уже было сказано выше, очень сырой и не опробованный продукт. В очередной раз убеждаюсь в том, почему люди смотрят в
+сторону Redis-а, нежели в сторону Tarantool'а, хотя немного недоумеваю откуда у этого продукта 2.5к звезд. Допускаю, что
+на протяжении все работы делал, что-то не так, тогда исчерпывающая документация и понятные ошибки.
