@@ -213,11 +213,12 @@ s:create_index('primary', {
   type = 'hash',
   parts = {'id'}
 })
-s:create_index('secondary', {
+s:create_index('idx_name_surname', {
   type = 'tree',
+  unique = false,
   parts = {
-    {field = 4, type = 'string'},
-    {field = 5, type = 'string'}
+    3, 'string',
+    4, 'string'
   }
 })
 ```
