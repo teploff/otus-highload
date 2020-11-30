@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"social-network/internal/config"
 	"social-network/internal/implementation"
+	"social-network/internal/infrastructure/tarantool"
 	httptransport "social-network/internal/transport/http"
 	wstransport "social-network/internal/transport/ws"
 	"time"
@@ -24,10 +25,18 @@ func WithLogger(l *zap.Logger) Option {
 	}
 }
 
+// WithTarantool adding tarantool option.
+func WithTarantool(conn *tarantool.Conn) Option {
+	return func(a *App) {
+		a.tConn = conn
+	}
+}
+
 // App is main application instance.
 type App struct {
 	cfg     *config.Config
 	httpSrv *http.Server
+	tConn   *tarantool.Conn
 	wsConns *wstransport.Conns
 	logger  *zap.Logger
 }
@@ -50,7 +59,8 @@ func NewApp(cfg *config.Config, opts ...Option) *App {
 // Run lunch application.
 func (a *App) Run(mysqlConn *sql.DB) {
 	authSvc := implementation.NewAuthService(implementation.NewUserRepository(mysqlConn), a.cfg.JWT)
-	socialSvc := implementation.NewSocialService(implementation.NewUserRepository(mysqlConn))
+	socialSvc := implementation.NewSocialService(implementation.NewTarantoolRepository(a.tConn, mysqlConn))
+	//socialSvc := implementation.NewSocialService(implementation.NewTarantoolRepository(a.tConn, mysqlConn))
 	messengerSvc := implementation.NewMessengerService(
 		implementation.NewUserRepository(mysqlConn),
 		implementation.NewMessengerRepository(mysqlConn))

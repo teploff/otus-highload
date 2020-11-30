@@ -66,13 +66,18 @@ services:
     build:
       context: ../../server
       dockerfile: Dockerfile
-    image: social_network_backend:stage
-    container_name: backend_with_master_node
+    image: backend:stage
+    container_name: backend
     ports:
       - '9999:9999'
     environment:
       - ADDR=0.0.0.0:9999
       - STORAGE_DSN=user:password@tcp(storage_master:3306)/social-network?parseTime=true
+      - TARANTOOL_HOST=storage_tarantool
+      - TARANTOOL_PORT=3301
+      - TARANTOOL_USER=user
+      - TARANTOOL_PASSWORD=password
+      - TARANTOOL_SPACE=user
       - JWT_SECRET=secret
       - JWT_ACCESS_TOKEN_TIME_EXPIRE=1h
       - JWT_REFRESH_TOKEN_TIME_EXPIRE=24h

@@ -6,6 +6,13 @@ storage:
   max_open_conns: 10
   max_idle_conns: 10
 
+tarantool:
+  host: "localhost"
+  port: 3301
+  user: "user"
+  password: "password"
+  space: "user"
+
 jwt:
   secret: "some_secret"
   access_token_time_expire: "1h"

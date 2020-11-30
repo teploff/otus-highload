@@ -317,11 +317,33 @@ docker logs -f replicator_replica
 ### Подготовка
 Прежде чем приступить к выполнению нагрузочного тестирования, необходимо произвести:
 - миграции;
-- наполнить БД данными с помощью утилиты [inserter](https://github.com/teploff/otus-highload/tree/main/tools/inserter)
+- создать индекс в MySQL;
+- наполнить БД данными с помощью утилиты [inserter](https://github.com/teploff/otus-highload/tree/main/tools/inserter).
 
 Для того, чтобы накатить миграции выполним команду:
 ```shell script
 make migrate
+```
+
+Для того, чтобы создать индекс для дальнейшего поиска, перейдем в container MySQL и его оболочку соответственно:
+```shell script
+docker exec -it storage_master bash
+mysql -u root -p
+```
+
+и создадим индексы:
+```mysql based
+use social-network;
+create index name_surname_idx on user(name, surname);
+```
+
+Выходим из оболочки mysql
+```mysql based
+exit
+```
+и docker-contaner'а:
+```shell script
+exit 
 ```
 
 Теперь произведем вставку 1м записей пользователей с помощью утилиты [inserter](https://github.com/teploff/otus-highload/tree/main/tools/inserter):

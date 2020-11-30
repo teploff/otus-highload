@@ -7,6 +7,7 @@ import (
 	"os/signal"
 	"social-network/internal/app"
 	"social-network/internal/config"
+	"social-network/internal/infrastructure/tarantool"
 	"syscall"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -42,8 +43,15 @@ func main() {
 		logger.Fatal("mysql ping fail, ", zap.Error(err))
 	}
 
+	tConn, err := tarantool.NewConn(cfg.Tarantool)
+	if err != nil {
+		logger.Fatal("Failed connect to tarantool", zap.Error(err))
+	}
+	defer tConn.Close()
+
 	application := app.NewApp(cfg,
 		app.WithLogger(logger),
+		app.WithTarantool(tConn),
 	)
 	go application.Run(mysqlConn)
 
