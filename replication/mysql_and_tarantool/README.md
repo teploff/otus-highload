@@ -217,7 +217,7 @@ s:create_index('secondary', {
   type = 'tree',
   parts = {
     {field = 4, type = 'string'},
-    {field=5, type='string'}
+    {field = 5, type = 'string'}
   }
 })
 ```
