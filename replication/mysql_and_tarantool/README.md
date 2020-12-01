@@ -453,6 +453,6 @@ tarantool: reconnect (0/3) to storage_tarantool:3301 failed: read tcp 172.18.0.5
 - не рабочая, протухшая и не использующаяся в обиходе [тулза](https://github.com/tarantool/mysql-tarantool-replication);
 - сырой, не production-ready, не справляющийся с нагрузкой Tarantool(слабое community, очень странные и не очевидные 
 ошибки, вытекающее из первого - возможно слабая go-библиотека);
-- однако получились написать простенький repliacator, познакомится с [библиотекой](#https://github.com/siddontang/go-mysql)
+- однако получилось написать простенький repliacator, познакомится с [библиотекой](#https://github.com/siddontang/go-mysql)
 и глянуть на API на стороне того же slave-а;
 - предпочел бы выбор Redis'у.
