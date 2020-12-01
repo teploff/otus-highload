@@ -356,6 +356,9 @@ python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
 python main.py -cfg=./config.yaml -path=./snapshot -size=1
+```
+Потребуется достаточно времени, чтобы данные были среплецированы. После того, как последняя запись была записана:
+```shell script
 deactivate
 rm -rf ./snapshot ./venv
 cd ../../replication/mysql_and_tarantool
