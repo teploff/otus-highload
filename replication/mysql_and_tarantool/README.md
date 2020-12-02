@@ -53,6 +53,7 @@
 ### Используемые инструменты
 Для выполнения дз понадобятся следующие инструменты: 
 - [docker](https://docs.docker.com/get-docker/) (>= version 19.03.8) & [docker compose](https://docs.docker.com/compose/install/) (>= version 1.25.5);
+- [python](https://www.python.org/downloads/) (>= version 3.6)
 - [jq](https://stedolan.github.io/jq/download/) (>= version 1.5)
 
 <a name="information-computer"></a>
