@@ -1,0 +1,3 @@
+migrations_path: "./migrations"
+dsn: "user:password@tcp(storage_master:3306)/social-network"
+operation: "up"
