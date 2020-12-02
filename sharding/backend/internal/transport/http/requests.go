@@ -25,6 +25,10 @@ type RefreshTokenRequest struct {
 	RefreshToken string `json:"refresh_token" binding:"required"`
 }
 
+type GetUserIDByEmailRequest struct {
+	Email string `json:"email" form:"email" binding:"required"`
+}
+
 type GetAllQuestionnairesRequest struct {
 	Limit  *int `json:"limit" binding:"required"`
 	Offset int  `json:"offset"`

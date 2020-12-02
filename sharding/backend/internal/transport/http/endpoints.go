@@ -22,9 +22,10 @@ type Endpoints struct {
 func MakeEndpoints(auth domain.AuthService, social domain.SocialService, messenger domain.MessengerService) *Endpoints {
 	return &Endpoints{
 		Auth: &AuthEndpoints{
-			SignUp:       makeSignUpEndpoint(auth),
-			SignIn:       makeSignInEndpoint(auth),
-			RefreshToken: makeRefreshTokenEndpoint(auth),
+			SignUp:           makeSignUpEndpoint(auth),
+			SignIn:           makeSignInEndpoint(auth),
+			RefreshToken:     makeRefreshTokenEndpoint(auth),
+			GetUserIDByEmail: makeGetUserIDByEmail(auth),
 		},
 		Social: &SocialEndpoints{
 			GetAllQuestionnaires:              makeGetAllQuestionnairesEndpoint(auth, social),
@@ -45,9 +46,10 @@ func MakeEndpoints(auth domain.AuthService, social domain.SocialService, messeng
 }
 
 type AuthEndpoints struct {
-	SignUp       gin.HandlerFunc
-	SignIn       gin.HandlerFunc
-	RefreshToken gin.HandlerFunc
+	SignUp           gin.HandlerFunc
+	SignIn           gin.HandlerFunc
+	RefreshToken     gin.HandlerFunc
+	GetUserIDByEmail gin.HandlerFunc
 }
 
 func makeSignUpEndpoint(svc domain.AuthService) gin.HandlerFunc {
@@ -148,6 +150,50 @@ func makeRefreshTokenEndpoint(svc domain.AuthService) gin.HandlerFunc {
 				Message: err.Error(),
 			})
 		}
+	}
+}
+
+func makeGetUserIDByEmail(svc domain.AuthService) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var header AuthorizationHeader
+		if err := c.ShouldBindHeader(&header); err != nil {
+			c.JSON(http.StatusUnauthorized, ErrorResponse{
+				Message: err.Error(),
+			})
+
+			return
+		}
+
+		_, err := svc.Authenticate(c, header.AccessToken)
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, ErrorResponse{
+				Message: err.Error(),
+			})
+
+			return
+		}
+
+		var request GetUserIDByEmailRequest
+		if err = c.Bind(&request); err != nil {
+			c.JSON(http.StatusBadRequest, ErrorResponse{
+				Message: err.Error(),
+			})
+
+			return
+		}
+
+		userID, err := svc.GetUserIDByEmail(c, request.Email)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, ErrorResponse{
+				Message: err.Error(),
+			})
+
+			return
+		}
+
+		c.JSON(http.StatusOK, GetUserIDByEmailResponse{
+			UserID: userID,
+		})
 	}
 }
 

@@ -9,6 +9,7 @@ type AuthService interface {
 	SignIn(ctx context.Context, credentials *Credentials) (*TokenPair, error)
 	RefreshToken(ctx context.Context, token string) (*TokenPair, error)
 	Authenticate(ctx context.Context, token string) (string, error)
+	GetUserIDByEmail(ctx context.Context, email string) (string, error)
 }
 
 type SocialService interface {

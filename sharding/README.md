@@ -149,22 +149,73 @@ curl -X POST -H "Content-Type: application/json" \
     http://localhost:9999/auth/sign-up
 export BOB_ACCESS_TOKEN=$(curl -X POST -H "Content-Type: application/json" \
     -d '{"email": "bob@email.com", "password": "1234567890"}' \
-    http://localhost:9999/auth/sign-in | jq '.access_token')
+    http://localhost:9999/auth/sign-in | jq -r '.access_token')
 export ALICE_ACCESS_TOKEN=$(curl -X POST -H "Content-Type: application/json" \
     -d '{"email": "alice@email.com", "password": "1234567890"}' \
-    http://localhost:9999/auth/sign-in | jq '.access_token')
+    http://localhost:9999/auth/sign-in | jq -r '.access_token')
 ```
 
+Проверим наличие access token-ов Боба
+```shell script
+echo $BOB_ACCESS_TOKEN
+```
+и Алисы:
+```shell script
+echo $ALICE_ACCESS_TOKEN
+```
+
+Для того, чтобы от лица Боба создать чат с Алисой необходимо получить ее ID. Воспользуемся URL-ом на получения ID 
+пользователя, зная его email:
+```shell script
+export ALICE_ID=$(curl -X GET -H "Content-Type: application/json" -H "Authorization: ${BOB_ACCESS_TOKEN}" \
+    http://localhost:9999/auth/user?email=alice@email.com | jq -r '.user_id')
+```
+
+Проверим, что запрос успешно выполнился, применив команду:
+```shell script
+echo $ALICE_ID
+```
 
 Создадим чат от лица Боба с Алисой:
 ```shell script
 export CHAT_ID=$(curl -X POST -H "Content-Type: application/json" -H "Authorization: ${BOB_ACCESS_TOKEN}" \
-    -d '{"companion_id": "443cba1f-34cf-11eb-94c7-0242ac1a0005"}' \
-    http://localhost:9999/messenger/chat | jq '.chat_id')
+    -d '{"companion_id": "'"$ALICE_ID"'"}' \
+    http://localhost:9999/messenger/chat | jq -r '.chat_id')
 ```
 
+Проверим, что в переменной окружения находится UUID созданного чата:
+```shell script
+echo $CHAT_ID
+```
 
+И отправим Алисе несколько сообщений:
+```shell script
+curl -X POST -H "Content-Type: application/json" -H "Authorization: ${BOB_ACCESS_TOKEN}" \
+    -d '{
+         "chat_id": "'"$CHAT_ID"'",
+         "messages": [
+          {
+            "text": "Hello, Alice!",
+            "status": 0
+          },
+          {
+            "text": "What is up?",
+            "status": 0
+          },
+          {
+           "text": "I miss you!",
+           "status": 0
+          }
+          ]
+        }' \
+    http://localhost:9999/messenger/messages
+```
 
+Получим со стороны Алисы, зная CHAT_ID, сообщения, которые ей отослал Боб:
+```shell script
+curl -X GET -H "Content-Type: application/json" -H "Authorization: ${ALICE_ACCESS_TOKEN}" \
+    http://localhost:9999/messenger/messages?chat_id=$CHAT_ID
+```
 
 <a name="results"></a>
 ## Итоги

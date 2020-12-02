@@ -193,6 +193,20 @@ func (a *authService) Authenticate(ctx context.Context, token string) (string, e
 	return userID, a.repository.CommitTx(tx)
 }
 
+func (a *authService) GetUserIDByEmail(ctx context.Context, email string) (string, error) {
+	tx, err := a.repository.GetTx(ctx)
+	if err != nil {
+		return "", err
+	}
+
+	user, err := a.repository.GetByEmail(tx, email)
+	if err != nil {
+		return "", err
+	}
+
+	return user.ID, a.repository.CommitTx(tx)
+}
+
 type socialService struct {
 	repository domain.UserRepository
 }
