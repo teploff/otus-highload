@@ -1,7 +1,8 @@
 .PHONY: init migrate down
 
 init:
-	docker-compose up -d db-node-1 db-node-2 db-node-3 proxysql;\
+	docker-compose up -d db-node-1 db-node-2 db-node-3 proxysql ;\
+	docker-compose up -d --build backend ;\
 
 migrate:
 	docker-compose -f docker-compose.yml up --build migrator-1 ;\

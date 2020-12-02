@@ -124,10 +124,10 @@ services:
 
   backend:
     build:
-      context: ../server
+      context: backend
       dockerfile: Dockerfile
-    image: backend:stage
-    container_name: backend
+    image: backend:sharding
+    container_name: backend_sharding
     ports:
       - '9999:9999'
     environment:
