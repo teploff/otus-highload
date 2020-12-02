@@ -42,7 +42,6 @@ func main() {
 		logger.Fatal("mysql ping fail, ", zap.Error(err))
 	}
 
-
 	application := app.NewApp(cfg,
 		app.WithLogger(logger),
 	)
