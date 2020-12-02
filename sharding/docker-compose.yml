@@ -66,6 +66,10 @@ services:
       - "6033:6033"
       # Mysql Admin Port
       - "6032:6032"
+    depends_on:
+      - db-node-1
+      - db-node-2
+      - db-node-3
 
   migrator-1:
     build:
@@ -78,7 +82,7 @@ services:
       DSN: "user:password@tcp(db-node-1:3306)/social-network"
       OPERATION: "up"
     volumes:
-      - ../server/migrations:/app/migrations
+      - ./backend/migrations:/app/migrations
     networks:
       - stage_network
     depends_on:
@@ -95,7 +99,7 @@ services:
       DSN: "user:password@tcp(db-node-2:3306)/social-network"
       OPERATION: "up"
     volumes:
-      - ../server/migrations:/app/migrations
+      - ./backend/migrations:/app/migrations
     networks:
       - stage_network
     depends_on:
@@ -112,11 +116,30 @@ services:
       DSN: "user:password@tcp(db-node-3:3306)/social-network"
       OPERATION: "up"
     volumes:
-      - ../server/migrations:/app/migrations
+      - ./backend/migrations:/app/migrations
     networks:
       - stage_network
     depends_on:
       - db-node-3
+
+  backend:
+    build:
+      context: ../server
+      dockerfile: Dockerfile
+    image: backend:stage
+    container_name: backend
+    ports:
+      - '9999:9999'
+    environment:
+      - ADDR=0.0.0.0:9999
+      - STORAGE_DSN=user:password@tcp(proxysql:6033)/social-network?parseTime=true
+      - JWT_SECRET=secret
+      - JWT_ACCESS_TOKEN_TIME_EXPIRE=1h
+      - JWT_REFRESH_TOKEN_TIME_EXPIRE=24h
+    networks:
+      - stage_network
+    depends_on:
+      - proxysql
 
 volumes:
   db-node-1-data:
