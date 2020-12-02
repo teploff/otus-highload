@@ -264,14 +264,17 @@ func (s *socialService) GetQuestionnairesByNameAndSurname(ctx context.Context, p
 }
 
 type messengerService struct {
-	userRep domain.UserRepository
-	messRep domain.MessengerRepository
+	userRep  domain.UserRepository
+	messRep  domain.MessengerRepository
+	cacheRep domain.CacheRepository
 }
 
-func NewMessengerService(userRep domain.UserRepository, messengerRep domain.MessengerRepository) *messengerService {
+func NewMessengerService(userRep domain.UserRepository, messengerRep domain.MessengerRepository,
+	cacheRep domain.CacheRepository) *messengerService {
 	return &messengerService{
-		userRep: userRep,
-		messRep: messengerRep,
+		userRep:  userRep,
+		messRep:  messengerRep,
+		cacheRep: cacheRep,
 	}
 }
 
@@ -337,7 +340,7 @@ func (m *messengerService) SendMessages(ctx context.Context, userID, chatID stri
 		return err
 	}
 
-	err = m.messRep.SendMessages(tx, userID, chatID, messages)
+	err = m.messRep.SendMessages(tx, 0, userID, chatID, messages)
 	if err != nil {
 		return err
 	}

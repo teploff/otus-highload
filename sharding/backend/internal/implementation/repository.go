@@ -5,6 +5,7 @@ import (
 	wstransport "backend/internal/transport/ws"
 	"context"
 	"database/sql"
+	"github.com/go-redis/redis/v8"
 	"net"
 	"time"
 
@@ -483,13 +484,13 @@ func (m *messengerRepository) GetChats(tx *sql.Tx, userID string, limit, offset 
 	return chats, nil
 }
 
-func (m *messengerRepository) SendMessages(tx *sql.Tx, userID, chatID string, messages []*domain.ShortMessage) error {
-	sqlStr := "INSERT INTO message (text, status, create_time, user_id, chat_id) VALUES "
+func (m *messengerRepository) SendMessages(tx *sql.Tx, shardID int, userID, chatID string, messages []*domain.ShortMessage) error {
+	sqlStr := "INSERT INTO message (shard_id, text, status, create_time, user_id, chat_id) VALUES "
 	vals := make([]interface{}, 0, len(messages)*6)
 
 	for _, msg := range messages {
-		sqlStr += "( ?, ?, ?, ?, ?),"
-		vals = append(vals, msg.Text, msg.Status, time.Now().UTC(), userID, chatID)
+		sqlStr += "( ?, ?, ?, ?, ?, ?),"
+		vals = append(vals, shardID, msg.Text, msg.Status, time.Now().UTC(), userID, chatID)
 	}
 
 	//trim the last ,
@@ -583,4 +584,20 @@ func (w *wsPoolRepository) AddConnection(userID string, conn net.Conn) {
 
 func (w *wsPoolRepository) RemoveConnection(userID string, conn net.Conn) {
 	w.conns.Remove(userID, conn)
+}
+
+type cacheRepository struct {
+	client *redis.Client
+}
+
+func NewCacheRepository(client *redis.Client) *cacheRepository {
+	return &cacheRepository{client: client}
+}
+
+func (c *cacheRepository) GetLadyGagaUsers(ctx context.Context) ([]string, error) {
+	return c.client.Keys(ctx, "*").Result()
+}
+
+func (c *cacheRepository) Persist(ctx context.Context, userID string) error {
+	return c.client.Set(ctx, userID, true, 0).Err()
 }

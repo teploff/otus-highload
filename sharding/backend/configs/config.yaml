@@ -6,6 +6,11 @@ storage:
   max_open_conns: 10
   max_idle_conns: 10
 
+cache:
+  addr: "localhost:6379"
+  password: "password"
+  db: 0
+
 jwt:
   secret: "some_secret"
   access_token_time_expire: "1h"

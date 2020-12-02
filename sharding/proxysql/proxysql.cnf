@@ -48,9 +48,15 @@ mysql_servers =
     {
         address="db-node-3"
         port=3306
-        hostgroup=1
+        hostgroup=2
         max_connections=200
-    }
+    },
+    {
+        address="db-node-4"
+        port=3306
+        hostgroup=3
+        max_connections=200
+    },
 )
 
 # Contains rows for the mysql_users table from the admin interface.
@@ -78,22 +84,29 @@ mysql_query_rules:
     {
         rule_id=1
         active=1
-        match_pattern="INSERT INTO message \(shard_key_id, text, status, create_time, user_id, chat_id\) VALUES \(0"
+        match_pattern="INSERT INTO message \(shard_id, text, status, create_time, user_id, chat_id\) VALUES \(0"
         destination_hostgroup=1
         apply=1
     },
     {
         rule_id=2
         active=1
-        match_pattern="INSERT INTO message \(shard_key_id, text, status, create_time, user_id, chat_id\) VALUES \(1"
-        destination_hostgroup=1
+        match_pattern="INSERT INTO message \(shard_id, text, status, create_time, user_id, chat_id\) VALUES \(1"
+        destination_hostgroup=2
         apply=1
     },
     {
         rule_id=3
         active=1
-        match_pattern="INSERT INTO message \(shard_key_id, text, status, create_time, user_id, chat_id\) VALUES \(2"
-        destination_hostgroup=1
+        match_pattern="INSERT INTO message \(shard_id, text, status, create_time, user_id, chat_id\) VALUES \(2"
+        destination_hostgroup=3
+        apply=1
+    },
+    {
+        rule_id=4
+        active=1
+        match_pattern="*"
+        destination_hostgroup=4
         apply=1
     },
 )

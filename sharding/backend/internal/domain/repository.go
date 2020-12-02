@@ -31,9 +31,14 @@ type MessengerRepository interface {
 	GetChatWithCompanion(tx *sql.Tx, masterID, slaveID string) (*Chat, error)
 	GetChatAsParticipant(tx *sql.Tx, userID string) (*Chat, error)
 	GetChats(tx *sql.Tx, userID string, limit, offset int) ([]*Chat, error)
-	SendMessages(tx *sql.Tx, userID, chatID string, messages []*ShortMessage) error
+	SendMessages(tx *sql.Tx, shardID int, userID, chatID string, messages []*ShortMessage) error
 	GetCountMessages(tx *sql.Tx, chatID string) (int, error)
 	GetMessages(tx *sql.Tx, chatID string, limit, offset int) ([]*Message, error)
+}
+
+type CacheRepository interface {
+	GetLadyGagaUsers(ctx context.Context) ([]string, error)
+	Persist(ctx context.Context, userID string) error
 }
 
 type WSPoolRepository interface {

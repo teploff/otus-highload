@@ -112,24 +112,24 @@
 ### Выполнение
 Для того, чтобы осуществить вышеописанную задумку нам понадобится следующее:
   - добавить новую колонку **shard_key_id** в таблицу, которую мы хотим шардировать. Данная колонка необходима для того,
-  чтоб ProxySQL мог понимать, на какой из доступных ему шародов согласно заданным ему правилам необходимо проксировать;
+  чтоб ProxySQL мог понимать, на какой из доступных ему шародов, согласно заданным ему правилам, необходимо проксировать;
   - экземпляр **ProxySQL** с заданными правилами проксирования;
   - экземпляр кеша(**Redis**-а) для того, чтобы персистентно отслеживать эффект *Lady Gaga'и* у пользователей;
   - шина данных **NATS** для горячей поставке уведомлений утилите, отвечающей за миграцию строк в шард для *Lady Gaga*
   пользователей;
   - утилита отвечающая за решардинг;
 
-Была добавлена миграция:
+Для того, чтобы добавить колонку в таблицу *Message*, была создана следующая миграция:
 ```mysql based
 ALTER TABLE message
     ADD COLUMN shard_key_id INT NOT NULL AFTER chat_id;
 ```
 
-Именно по ключу shard_key_id ProxySQL будет принимать решение на основе правил, в какой именно шард необходимо сделать
-запись.
-
-Поднимаем инфраструктуру, состоящую из трех экземпляров(шардов) MySQL, одного экземпляра ProxySQL и одного экземпляра 
-backend'а:
+Поднимаем инфраструктуру, состоящую из:
+- трех экземпляров(шардов) MySQL;
+- одного экземпляра ProxySQL;
+- одного экземпляра Redis;
+- одного экземпляра backend'а:
 ```shell script
 make init
 ```
@@ -138,6 +138,33 @@ make init
 ```shell script
 make migrate
 ```
+
+Создадим двух собеседников Боба и Алису и получим их access token-ы:
+```shell script
+curl -X POST -H "Content-Type: application/json" \
+    -d '{"email": "bob@email.com", "password": "1234567890", "name": "Bob", "surname": "Tallor", "birthday": "1994-04-10T20:21:25+00:00", "sex": "male", "city": "New Yourk", "interests": "programming"}' \
+    http://localhost:9999/auth/sign-up
+curl -X POST -H "Content-Type: application/json" \
+    -d '{"email": "alice@email.com", "password": "1234567890", "name": "Alice", "surname": "Swift", "birthday": "1995-10-10T20:21:25+00:00", "sex": "female", "city": "California", "interests": "running"}' \
+    http://localhost:9999/auth/sign-up
+export BOB_ACCESS_TOKEN=$(curl -X POST -H "Content-Type: application/json" \
+    -d '{"email": "bob@email.com", "password": "1234567890"}' \
+    http://localhost:9999/auth/sign-in | jq '.access_token')
+export ALICE_ACCESS_TOKEN=$(curl -X POST -H "Content-Type: application/json" \
+    -d '{"email": "alice@email.com", "password": "1234567890"}' \
+    http://localhost:9999/auth/sign-in | jq '.access_token')
+```
+
+
+Создадим чат от лица Боба с Алисой:
+```shell script
+export CHAT_ID=$(curl -X POST -H "Content-Type: application/json" -H "Authorization: ${BOB_ACCESS_TOKEN}" \
+    -d '{"companion_id": "443cba1f-34cf-11eb-94c7-0242ac1a0005"}' \
+    http://localhost:9999/messenger/chat | jq '.chat_id')
+```
+
+
+
 
 <a name="results"></a>
 ## Итоги

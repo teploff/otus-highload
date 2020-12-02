@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/go-redis/redis/v8"
 	"go.uber.org/zap"
 )
 
@@ -49,13 +50,14 @@ func NewApp(cfg *config.Config, opts ...Option) *App {
 }
 
 // Run lunch application.
-func (a *App) Run(mysqlConn *sql.DB) {
+func (a *App) Run(mysqlConn *sql.DB, redisConn *redis.Client) {
 	authSvc := implementation.NewAuthService(implementation.NewUserRepository(mysqlConn), a.cfg.JWT)
 	socialSvc := implementation.NewSocialService(implementation.NewUserRepository(mysqlConn))
 
 	messengerSvc := implementation.NewMessengerService(
 		implementation.NewUserRepository(mysqlConn),
-		implementation.NewMessengerRepository(mysqlConn))
+		implementation.NewMessengerRepository(mysqlConn),
+		implementation.NewCacheRepository(redisConn))
 
 	a.httpSrv = httptransport.NewHTTPServer(a.cfg.Addr, httptransport.MakeEndpoints(authSvc, socialSvc, messengerSvc))
 
