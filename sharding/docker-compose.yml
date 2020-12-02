@@ -10,11 +10,7 @@ services:
       MYSQL_USER: user
       MYSQL_PASSWORD: password
       MYSQL_DATABASE: social-network
-    command: >
-      --sql-mode='STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION'
-      --general-log=ON
-      --log-queries-not-using-indexes=ON
-      --default-authentication-plugin=mysql_native_password
+    command: --default-authentication-plugin=mysql_native_password
     networks:
       - stage_network
     ports:
@@ -31,17 +27,30 @@ services:
       MYSQL_USER: user
       MYSQL_PASSWORD: password
       MYSQL_DATABASE: social-network
-    command: >
-      --sql-mode='STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION'
-      --general-log=ON
-      --log-queries-not-using-indexes=ON
-      --default-authentication-plugin=mysql_native_password
+    command: --default-authentication-plugin=mysql_native_password
     networks:
       - stage_network
     ports:
       - 3361:3306
     volumes:
       - db-node-2-data:/var/lib/mysql
+
+  db-node-3:
+    image: mysql:8.0
+    container_name: db-node-3
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+      MYSQL_DATABASE: social-network
+    command: --default-authentication-plugin=mysql_native_password
+    networks:
+      - stage_network
+    ports:
+      - 3362:3306
+    volumes:
+      - db-node-3-data:/var/lib/mysql
 
   proxysql:
     build:
@@ -58,9 +67,61 @@ services:
       # Mysql Admin Port
       - "6032:6032"
 
+  migrator-1:
+    build:
+      context: ../tools/migrator
+      dockerfile: Dockerfile
+    image: mysql_migrator:sharding-1
+    container_name: mysql-migrator-sharding-1
+    environment:
+      MIGRATIONS_PATH: "./migrations"
+      DSN: "user:password@tcp(db-node-1:3306)/social-network"
+      OPERATION: "up"
+    volumes:
+      - ../server/migrations:/app/migrations
+    networks:
+      - stage_network
+    depends_on:
+      - db-node-1
+
+  migrator-2:
+    build:
+      context: ../tools/migrator
+      dockerfile: Dockerfile
+    image: mysql_migrator:sharding-2
+    container_name: mysql-migrator-sharding-2
+    environment:
+      MIGRATIONS_PATH: "./migrations"
+      DSN: "user:password@tcp(db-node-2:3306)/social-network"
+      OPERATION: "up"
+    volumes:
+      - ../server/migrations:/app/migrations
+    networks:
+      - stage_network
+    depends_on:
+      - db-node-2
+
+  migrator-3:
+    build:
+      context: ../tools/migrator
+      dockerfile: Dockerfile
+    image: mysql_migrator:sharding-3
+    container_name: mysql-migrator-sharding-3
+    environment:
+      MIGRATIONS_PATH: "./migrations"
+      DSN: "user:password@tcp(db-node-3:3306)/social-network"
+      OPERATION: "up"
+    volumes:
+      - ../server/migrations:/app/migrations
+    networks:
+      - stage_network
+    depends_on:
+      - db-node-3
+
 volumes:
   db-node-1-data:
   db-node-2-data:
+  db-node-3-data:
   proxysql-data:
 
 networks:
