@@ -254,7 +254,7 @@ function tuple_sort(a,b)
     return false
 end
 
-function find_users_by_name_and_surname(prefix)
+function find_users_by_name_and_surname(prefix, offset, limit)
     local rows = box.space.user.index.idx_name_surname:select({prefix, prefix}, {iterator = 'GE'})
     result = {}
 
@@ -265,7 +265,27 @@ function find_users_by_name_and_surname(prefix)
     end
     table.sort(result, tuple_sort)
 
-    return result
+    return make_table_slice(result, offset, limit, 1), table_length(result)
+end
+
+function make_table_slice(tbl, first, last, step)
+  local sliced = {}
+
+  for i = first or 1, last or #tbl, step or 1 do
+    sliced[#sliced+1] = tbl[i]
+  end
+
+  return sliced
+end
+
+function table_length(T)
+  local count = 0
+  
+  for _ in pairs(T) do
+    count = count + 1
+  end
+
+  return count
 end
 ```
 
