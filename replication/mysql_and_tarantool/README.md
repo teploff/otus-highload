@@ -431,8 +431,8 @@ make wrk
 </p>
 
 Теперь необходимо произвести нагрузочное тестирование на backend, но уже в качестве хранилища использовать не MySQL, а
-Tarantool. Для этого, необходимо перейти в [код](https://github.com/teploff/otus-highload/blob/main/server/internal/app/app.go)
-и закомментировать строку **62** и раскомментировать строку **63**.
+Tarantool. Для этого, необходимо перейти в [код](https://github.com/teploff/otus-highload/blob/main/replication/mysql_and_tarantool/backend/internal/app/app.go#L63)
+и закомментировать строку **63** и раскомментировать строку **64**.
 
 Теперь пересобираем наш backend:
 ```shell script
@@ -449,7 +449,7 @@ make wrk
   <img src="static/tarantool_stress_test.png">
 </p>
 
-Обратим внимание на такой пункт, как: **Non-2xx or 3xx responses: 689923**.
+Обратим внимание на такой пункт, как: **Non-2xx or 3xx responses: 230218**.
 Если перейти в лог backend'а, то можно увидеть нескончаемую череду статусов 500. Однако раз в какое-то время 200
 появляются. Если отлогировать проблему, то ошибки выходят следующие:
 ```shell script
