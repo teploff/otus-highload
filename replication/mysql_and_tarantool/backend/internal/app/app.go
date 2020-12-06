@@ -60,8 +60,8 @@ func NewApp(cfg *config.Config, opts ...Option) *App {
 // Run lunch application.
 func (a *App) Run(mysqlConn *sql.DB) {
 	authSvc := implementation.NewAuthService(implementation.NewUserRepository(mysqlConn), a.cfg.JWT)
-	//socialSvc := implementation.NewSocialService(implementation.NewUserRepository(mysqlConn))
-	socialSvc := implementation.NewSocialService(implementation.NewTarantoolRepository(a.tConn))
+	socialSvc := implementation.NewSocialService(implementation.NewUserRepository(mysqlConn))
+	//socialSvc := implementation.NewSocialService(implementation.NewTarantoolRepository(a.tConn))
 	messengerSvc := implementation.NewMessengerService(
 		implementation.NewUserRepository(mysqlConn),
 		implementation.NewMessengerRepository(mysqlConn))

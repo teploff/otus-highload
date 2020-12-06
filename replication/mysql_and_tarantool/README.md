@@ -414,7 +414,7 @@ curl -X POST -H "Content-Type: application/json" \
     http://localhost:9999/auth/sign-up
 export ACCESS_TOKEN=$(curl -X POST -H "Content-Type: application/json" \
     -d '{"email": "user@user.ru", "password": "1234567890"}' \
-    http://localhost:9999/auth/sign-in | jq '.access_token')
+    http://localhost:9999/auth/sign-in | jq -r '.access_token')
 ```
 
 <a name="stress-testing-implementation"></a>

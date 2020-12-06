@@ -21,9 +21,9 @@ wrk:
 		williamyeh/wrk  \
 		-H "Authorization: ${ACCESS_TOKEN}" \
 		-t 10 \
-		-c 10 \
-		-d 1m \
-		http://localhost:9999/questionnaires?prefix=ma ;\
+		-c 1000 \
+		-d 15s \
+		"http://localhost:9999/questionnaires?prefix=ma&offset=250&limit=350" ;\
 
 down:
 	docker-compose down ;\
