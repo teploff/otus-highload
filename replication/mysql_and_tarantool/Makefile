@@ -5,13 +5,16 @@ init:
 
 migrate:
 	docker-compose -f docker-compose.yml up --build migrator ;\
-	docker rm -f mysql_migrator_replica ;\
+	docker image prune -f ;\
+	docker rm -f mysql-migrator-tarantool ;\
 
 replicator:
 	docker-compose -f docker-compose.yml up --build -d replicator ;\
+	docker image prune -f ;\
 
 backend:
 	docker-compose -f docker-compose.yml up --build -d backend ;\
+	docker image prune -f ;\
 
 wrk:
 	docker run --rm --net=host \

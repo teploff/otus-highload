@@ -17,10 +17,16 @@ services:
 
   migrator:
     build:
-      context: ../../server
-      dockerfile: migratorreplica.Dockerfile
-    image: mysql_migrator:replica
-    container_name: mysql_migrator_replica
+      context: ../../tools/migrator
+      dockerfile: Dockerfile
+    image: mysql_migrator:tarantool
+    container_name: mysql-migrator-tarantool
+    environment:
+      MIGRATIONS_PATH: "./migrations"
+      DSN: "user:password@tcp(storage_master:3306)/social-network"
+      OPERATION: "up"
+    volumes:
+      - ./backend/migrations:/app/migrations
     networks:
       - stage_network
     depends_on:
@@ -41,8 +47,8 @@ services:
     build:
       context: ../../tools/replicator
       dockerfile: Dockerfile
-    image: replicator:replica
-    container_name: replicator_replica
+    image: replicator:tarantool
+    container_name: replicator
     environment:
       - MYSQL_HOST=storage_master
       - MYSQL_PORT=3306
@@ -64,10 +70,10 @@ services:
 
   backend:
     build:
-      context: ../../server
+      context: backend
       dockerfile: Dockerfile
-    image: backend:stage
-    container_name: backend
+    image: backend:tarantool
+    container_name: backend_tarantool
     ports:
       - '9999:9999'
     environment:
