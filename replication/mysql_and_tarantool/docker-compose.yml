@@ -33,7 +33,7 @@ services:
       - storage_master
 
   storage_tarantool:
-    image: tarantool/tarantool:2.3.1
+    image: tarantool/tarantool:2.6
     container_name: storage_tarantool
     ports:
       - '3301:3301'

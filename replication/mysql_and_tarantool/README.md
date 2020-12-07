@@ -324,7 +324,7 @@ make replicator
 
 Если запуск репликатора прошел успешно, то на команду:
 ```shell script
-docker logs -f replicator_replica
+docker logs -f replicator
 ```
 должны увидеть следующее: </br>
 <p align="center">
@@ -449,7 +449,7 @@ make wrk
   <img src="static/tarantool_stress_test.png">
 </p>
 
-Обратим внимание на такой пункт, как: **Non-2xx or 3xx responses: 230218**.
+Обратим внимание на такой пункт, как: **Non-2xx or 3xx responses: 229372**.
 Если перейти в лог backend'а, то можно увидеть нескончаемую череду статусов 500. Однако раз в какое-то время 200
 появляются. Если отлогировать проблему, то ошибки выходят следующие:
 ```shell script
