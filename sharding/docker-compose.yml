@@ -186,6 +186,7 @@ services:
       - JWT_SECRET=secret
       - JWT_ACCESS_TOKEN_TIME_EXPIRE=1h
       - JWT_REFRESH_TOKEN_TIME_EXPIRE=24h
+    restart: unless-stopped
     networks:
       - stage_network
     depends_on:

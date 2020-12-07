@@ -5,6 +5,7 @@ import (
 	wstransport "backend/internal/transport/ws"
 	"context"
 	"database/sql"
+	"fmt"
 	"github.com/go-redis/redis/v8"
 	"net"
 	"time"
@@ -489,8 +490,8 @@ func (m *messengerRepository) SendMessages(tx *sql.Tx, shardID int, userID, chat
 	vals := make([]interface{}, 0, len(messages)*6)
 
 	for _, msg := range messages {
-		sqlStr += "( ?, ?, ?, ?, ?, ?),"
-		vals = append(vals, shardID, msg.Text, msg.Status, time.Now().UTC(), userID, chatID)
+		sqlStr += fmt.Sprintf("(%d, ?, ?, ?, ?, ?),", shardID)
+		vals = append(vals, msg.Text, msg.Status, time.Now().UTC(), userID, chatID)
 	}
 
 	//trim the last ,

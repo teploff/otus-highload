@@ -84,29 +84,33 @@ mysql_query_rules:
     {
         rule_id=1
         active=1
-        match_pattern="^INSERT INTO message (shard_id, text, status, create_time, user_id, chat_id) VALUES (0"
-        destination_hostgroup=1
+        match_pattern="^INSERT INTO message \(shard_id, text, status, create_time, user_id, chat_id\) VALUES .*\(0.*"
+        destination_hostgroup=0
+        log=1
         apply=1
     },
     {
         rule_id=2
         active=1
-        match_pattern="^INSERT INTO message (shard_id, text, status, create_time, user_id, chat_id) VALUES (1"
-        destination_hostgroup=2
+        match_pattern="^INSERT INTO message \(shard_id, text, status, create_time, user_id, chat_id\) VALUES .*\(1.*"
+        destination_hostgroup=1
+        log=1
         apply=1
     },
     {
         rule_id=3
         active=1
-        match_pattern="^INSERT INTO message (shard_id, text, status, create_time, user_id, chat_id) VALUES (2"
-        destination_hostgroup=3
+        match_pattern="^INSERT INTO message \(shard_id, text, status, create_time, user_id, chat_id\) VALUES .*\(2.*"
+        destination_hostgroup=2
+        log=1
         apply=1
     },
     {
         rule_id=4
         active=1
-        match_pattern=".*"
-        destination_hostgroup=0
+        match_pattern="^(?!INSERT INTO message).*"
+        destination_hostgroup=3
+        log=1
         apply=1
     },
 )

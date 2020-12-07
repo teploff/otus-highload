@@ -139,6 +139,26 @@ make init
 make migrate
 ```
 
+Настроем логгирование для отладки на стороне proxySQL. Для этого перейдем в mysql оболочку docker-container'а proxysql:
+```shell script
+docker exec -it proxysql mysql -u radmin -p -h proxysql -P 6032
+```
+
+Зададим необходимые переменные и выйдем из container'а:
+```shell script
+SET mysql-eventslog_filename='queries.log';
+LOAD MYSQL QUERY RULES TO RUNTIME;
+SAVE MYSQL QUERY RULES TO DISK;
+INSERT INTO mysql_query_rules (rule_id, active, match_digest, log,apply) VALUES (5,1,'.',1,0);
+SET mysql-eventslog_default_log=1;
+LOAD MYSQL QUERY RULES TO RUNTIME;
+SAVE MYSQL QUERY RULES TO DISK;
+SET mysql-eventslog_format=2;
+LOAD MYSQL VARIABLES TO RUNTIME;
+SAVE MYSQL VARIABLES TO DISK;
+exit
+```
+
 Создадим двух собеседников Боба и Алису и получим их access token-ы:
 ```shell script
 curl -X POST -H "Content-Type: application/json" \
