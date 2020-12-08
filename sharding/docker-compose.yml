@@ -2,7 +2,9 @@ version: '3.7'
 
 services:
   db-node-1:
-    image: mysql:8.0
+    build:
+      context: mysql
+      dockerfile: Dockerfile
     container_name: db-node-1
     restart: unless-stopped
     environment:
@@ -10,7 +12,10 @@ services:
       MYSQL_USER: user
       MYSQL_PASSWORD: password
       MYSQL_DATABASE: social-network
-    command: --default-authentication-plugin=mysql_native_password
+    command: >
+      --general-log=ON
+      --log-queries-not-using-indexes=ON
+      --default-authentication-plugin=mysql_native_password
     networks:
       - stage_network
     ports:
@@ -20,7 +25,9 @@ services:
       - db-node-1-log:/var/log/mysql
 
   db-node-2:
-    image: mysql:8.0
+    build:
+      context: mysql
+      dockerfile: Dockerfile
     container_name: db-node-2
     restart: unless-stopped
     environment:
@@ -28,7 +35,10 @@ services:
       MYSQL_USER: user
       MYSQL_PASSWORD: password
       MYSQL_DATABASE: social-network
-    command: --default-authentication-plugin=mysql_native_password
+    command: >
+      --general-log=ON
+      --log-queries-not-using-indexes=ON
+      --default-authentication-plugin=mysql_native_password
     networks:
       - stage_network
     ports:
@@ -38,7 +48,9 @@ services:
       - db-node-2-log:/var/log/mysql
 
   db-node-3:
-    image: mysql:8.0
+    build:
+      context: mysql
+      dockerfile: Dockerfile
     container_name: db-node-3
     restart: unless-stopped
     environment:
@@ -46,7 +58,10 @@ services:
       MYSQL_USER: user
       MYSQL_PASSWORD: password
       MYSQL_DATABASE: social-network
-    command: --default-authentication-plugin=mysql_native_password
+    command: >
+      --general-log=ON
+      --log-queries-not-using-indexes=ON
+      --default-authentication-plugin=mysql_native_password
     networks:
       - stage_network
     ports:
@@ -56,7 +71,9 @@ services:
       - db-node-3-log:/var/log/mysql
 
   db-node-4:
-    image: mysql:8.0
+    build:
+      context: mysql
+      dockerfile: Dockerfile
     container_name: db-node-4
     restart: unless-stopped
     environment:
@@ -64,7 +81,10 @@ services:
       MYSQL_USER: user
       MYSQL_PASSWORD: password
       MYSQL_DATABASE: social-network
-    command: --default-authentication-plugin=mysql_native_password
+    command: >
+      --general-log=ON
+      --log-queries-not-using-indexes=ON
+      --default-authentication-plugin=mysql_native_password
     networks:
       - stage_network
     ports:
