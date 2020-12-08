@@ -134,12 +134,30 @@ ALTER TABLE message
 make init
 ```
 
+docker exec -it db-node-1 chown mysql:mysql /var/log/mysql
+docker exec -it db-node-2 chown mysql:mysql /var/log/mysql
+docker exec -it db-node-3 chown mysql:mysql /var/log/mysql
+docker exec -it db-node-4 chown mysql:mysql /var/log/mysql
+
+docker exec -it db-node-1 apt-get update && docker exec -it db-node-1 apt-get install nano
+docker exec -it db-node-2 apt-get update && docker exec -it db-node-2 apt-get install nano
+docker exec -it db-node-3 apt-get update && docker exec -it db-node-3 apt-get install nano
+docker exec -it db-node-4 apt-get update && docker exec -it db-node-4 apt-get install nano
+
+docker exec -it db-node-1 nano /etc/mysql/conf.d/mysql.cnf
+docker exec -it db-node-2 nano /etc/mysql/conf.d/mysql.cnf
+docker exec -it db-node-3 nano /etc/mysql/conf.d/mysql.cnf
+docker exec -it db-node-4 nano /etc/mysql/conf.d/mysql.cnf
+
+docker restart db-node-1 db-node-2 db-node-3 db-node-4
+
 Для того, чтобы накатить миграции на каждый shard выполним команду:
 ```shell script
 make migrate
 ```
 
-Настроем логгирование для отладки на стороне proxySQL. Для этого перейдем в mysql оболочку docker-container'а proxysql:
+Настроем логгирование для отладки на стороне proxySQL. Для этого перейдем в mysql оболочку docker-container'а proxysql.
+Пароль - *radmin*:
 ```shell script
 docker exec -it proxysql mysql -u radmin -p -h proxysql -P 6032
 ```

@@ -17,6 +17,7 @@ services:
       - 3360:3306
     volumes:
       - db-node-1-data:/var/lib/mysql
+      - db-node-1-log:/var/log/mysql
 
   db-node-2:
     image: mysql:8.0
@@ -34,6 +35,7 @@ services:
       - 3361:3306
     volumes:
       - db-node-2-data:/var/lib/mysql
+      - db-node-2-log:/var/log/mysql
 
   db-node-3:
     image: mysql:8.0
@@ -51,6 +53,7 @@ services:
       - 3362:3306
     volumes:
       - db-node-3-data:/var/lib/mysql
+      - db-node-3-log:/var/log/mysql
 
   db-node-4:
     image: mysql:8.0
@@ -68,6 +71,7 @@ services:
       - 3363:3306
     volumes:
       - db-node-4-data:/var/lib/mysql
+      - db-node-4-log:/var/log/mysql
 
   proxysql:
     build:
@@ -198,6 +202,10 @@ volumes:
   db-node-2-data:
   db-node-3-data:
   db-node-4-data:
+  db-node-1-log:
+  db-node-2-log:
+  db-node-3-log:
+  db-node-4-log:
   proxysql-data:
   redis-data:
 
