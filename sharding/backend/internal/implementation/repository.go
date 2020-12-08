@@ -30,26 +30,24 @@ func (p *userRepository) CommitTx(tx *sql.Tx) error {
 	return tx.Commit()
 }
 
-func (p *userRepository) Persist(tx *sql.Tx, user *domain.User) error {
-	_, err := tx.Exec(`
+func (p *userRepository) Persist(user *domain.User) error {
+	_, err := p.conn.Exec(`
 		INSERT 
 			INTO user (email, password, name, surname, birthday, sex, city, interests) 
 		VALUES
 			( ?, ?, ?, ?, ?, ?, ?, ?)`, user.Email, user.Password, user.Name, user.Surname, user.Birthday, user.Sex,
 		user.City, user.Interests)
 	if err != nil {
-		tx.Rollback()
-
 		return err
 	}
 
 	return nil
 }
 
-func (p *userRepository) GetByID(tx *sql.Tx, id string) (*domain.User, error) {
+func (p *userRepository) GetByID(id string) (*domain.User, error) {
 	var user domain.User
 
-	err := tx.QueryRow(`
+	err := p.conn.QueryRow(`
 		SELECT
 			id, email, password, name, surname, sex, birthday, city, interests, access_token, refresh_token
 		FROM
@@ -58,18 +56,16 @@ func (p *userRepository) GetByID(tx *sql.Tx, id string) (*domain.User, error) {
 			  id = ?`, id).Scan(&user.ID, &user.Email, &user.Password, &user.Name, &user.Surname,
 		&user.Sex, &user.Birthday, &user.City, &user.Interests, &user.AccessToken, &user.RefreshToken)
 	if err != nil {
-		tx.Rollback()
-
 		return nil, err
 	}
 
 	return &user, nil
 }
 
-func (p *userRepository) GetByEmail(tx *sql.Tx, email string) (*domain.User, error) {
+func (p *userRepository) GetByEmail(email string) (*domain.User, error) {
 	var user domain.User
 
-	err := tx.QueryRow(`
+	err := p.conn.QueryRow(`
 		SELECT
 			id, email, password, name, surname, sex, birthday, city, interests, access_token, refresh_token
 		FROM
@@ -78,18 +74,16 @@ func (p *userRepository) GetByEmail(tx *sql.Tx, email string) (*domain.User, err
 			  email = ?`, email).Scan(&user.ID, &user.Email, &user.Password, &user.Name, &user.Surname,
 		&user.Sex, &user.Birthday, &user.City, &user.Interests, &user.AccessToken, &user.RefreshToken)
 	if err != nil {
-		tx.Rollback()
-
 		return nil, err
 	}
 
 	return &user, nil
 }
 
-func (p *userRepository) GetByIDAndRefreshToken(tx *sql.Tx, id, token string) (*domain.User, error) {
+func (p *userRepository) GetByIDAndRefreshToken(id, token string) (*domain.User, error) {
 	var user domain.User
 
-	err := tx.QueryRow(`
+	err := p.conn.QueryRow(`
 		SELECT
 			id, email, password, name, surname, sex, birthday, city, interests, access_token, refresh_token
 		FROM
@@ -99,18 +93,16 @@ func (p *userRepository) GetByIDAndRefreshToken(tx *sql.Tx, id, token string) (*
 		&user.Surname, &user.Sex, &user.Birthday, &user.City, &user.Interests, &user.AccessToken,
 		&user.RefreshToken)
 	if err != nil {
-		tx.Rollback()
-
 		return nil, err
 	}
 
 	return &user, nil
 }
 
-func (p *userRepository) GetByIDAndAccessToken(tx *sql.Tx, id, token string) (*domain.User, error) {
+func (p *userRepository) GetByIDAndAccessToken(id, token string) (*domain.User, error) {
 	var user domain.User
 
-	err := tx.QueryRow(`
+	err := p.conn.QueryRow(`
 		SELECT
 			id, email, password, name, surname, sex, birthday, city, interests, access_token, refresh_token
 		FROM
@@ -120,16 +112,14 @@ func (p *userRepository) GetByIDAndAccessToken(tx *sql.Tx, id, token string) (*d
 		&user.Surname, &user.Sex, &user.Birthday, &user.City, &user.Interests, &user.AccessToken,
 		&user.RefreshToken)
 	if err != nil {
-		tx.Rollback()
-
 		return nil, err
 	}
 
 	return &user, nil
 }
 
-func (p *userRepository) UpdateByID(tx *sql.Tx, user *domain.User) error {
-	_, err := tx.Exec(`
+func (p *userRepository) UpdateByID(user *domain.User) error {
+	_, err := p.conn.Exec(`
 		UPDATE 
 			user
 		SET
@@ -139,30 +129,26 @@ func (p *userRepository) UpdateByID(tx *sql.Tx, user *domain.User) error {
 		    id = ?`, user.Email, user.Password, user.Name, user.Surname, user.Birthday, user.Sex,
 		user.City, user.Interests, user.AccessToken, user.RefreshToken, time.Now().UTC(), user.ID)
 	if err != nil {
-		tx.Rollback()
-
 		return err
 	}
 
 	return nil
 }
 
-func (p *userRepository) GetCount(tx *sql.Tx) (int, error) {
+func (p *userRepository) GetCount() (int, error) {
 	var count int
 
-	if err := tx.QueryRow(`SELECT count(*) FROM user`).Scan(&count); err != nil {
-		tx.Rollback()
-
+	if err := p.conn.QueryRow(`SELECT count(*) FROM user`).Scan(&count); err != nil {
 		return 0, err
 	}
 
 	return count, nil
 }
 
-func (p *userRepository) GetByLimitAndOffsetExceptUserID(tx *sql.Tx, userID string, limit, offset int) ([]*domain.User, error) {
+func (p *userRepository) GetByLimitAndOffsetExceptUserID(userID string, limit, offset int) ([]*domain.User, error) {
 	users := make([]*domain.User, 0, 10)
 
-	rows, err := tx.Query(`
+	rows, err := p.conn.Query(`
 		SELECT
 			id, email, password, name, surname, sex, birthday, city, interests, access_token, refresh_token
 		FROM
@@ -172,8 +158,6 @@ func (p *userRepository) GetByLimitAndOffsetExceptUserID(tx *sql.Tx, userID stri
 		ORDER BY create_time
 		LIMIT ? OFFSET ?`, userID, limit, offset)
 	if err != nil {
-		tx.Rollback()
-
 		return nil, err
 	}
 	defer rows.Close()
@@ -183,8 +167,6 @@ func (p *userRepository) GetByLimitAndOffsetExceptUserID(tx *sql.Tx, userID stri
 
 		if err = rows.Scan(&user.ID, &user.Email, &user.Password, &user.Name, &user.Surname, &user.Sex, &user.Birthday,
 			&user.City, &user.Interests, &user.AccessToken, &user.RefreshToken); err != nil {
-			tx.Rollback()
-
 			return nil, err
 		}
 
@@ -194,10 +176,10 @@ func (p *userRepository) GetByLimitAndOffsetExceptUserID(tx *sql.Tx, userID stri
 	return users, nil
 }
 
-func (p *userRepository) GetByPrefixOfNameAndSurname(tx *sql.Tx, prefix string) ([]*domain.User, error) {
+func (p *userRepository) GetByPrefixOfNameAndSurname(prefix string) ([]*domain.User, error) {
 	users := make([]*domain.User, 0, 100)
 
-	rows, err := tx.Query(`
+	rows, err := p.conn.Query(`
 		SELECT
 			id, email, password, name, surname, sex, birthday, city, interests, access_token, refresh_token
 		FROM
@@ -206,8 +188,6 @@ func (p *userRepository) GetByPrefixOfNameAndSurname(tx *sql.Tx, prefix string) 
 			  name LIKE ? AND surname LIKE ?
 		ORDER BY id`, prefix+"%", prefix+"%")
 	if err != nil {
-		tx.Rollback()
-
 		return nil, err
 	}
 	defer rows.Close()
@@ -217,8 +197,6 @@ func (p *userRepository) GetByPrefixOfNameAndSurname(tx *sql.Tx, prefix string) 
 
 		if err = rows.Scan(&user.ID, &user.Email, &user.Password, &user.Name, &user.Surname, &user.Sex, &user.Birthday,
 			&user.City, &user.Interests, &user.AccessToken, &user.RefreshToken); err != nil {
-			tx.Rollback()
-
 			return nil, err
 		}
 
@@ -253,9 +231,9 @@ func (m *messengerRepository) CommitTx(tx *sql.Tx) error {
 	return tx.Commit()
 }
 
-func (m *messengerRepository) CreateChat(tx *sql.Tx, masterID, slaveID string) (string, error) {
+func (m *messengerRepository) CreateChat(masterID, slaveID string) (string, error) {
 	var chatID string
-	err := tx.QueryRow(`
+	err := m.conn.QueryRow(`
 		SELECT
 			UC1.chat_id
 		FROM 
@@ -278,51 +256,43 @@ func (m *messengerRepository) CreateChat(tx *sql.Tx, masterID, slaveID string) (
 	case sql.ErrNoRows:
 		chatID = uuid.NewV4().String()
 	default:
-		tx.Rollback()
-
 		return "", err
 	}
 
-	_, err = tx.Exec(`
+	_, err = m.conn.Exec(`
 		INSERT 
 			INTO chat (id, create_time) 
 		VALUES
 			(?, ?)`, chatID, time.Now().UTC())
 	if err != nil {
-		tx.Rollback()
-
 		return "", err
 	}
 
-	_, err = tx.Exec(`
+	_, err = m.conn.Exec(`
 		INSERT 
 			INTO user_chat (user_id, chat_id) 
 		VALUES
 			(?, ?)`, masterID, chatID)
 	if err != nil {
-		tx.Rollback()
-
 		return "", err
 	}
 
-	_, err = tx.Exec(`
+	_, err = m.conn.Exec(`
 		INSERT 
 			INTO user_chat (user_id, chat_id) 
 		VALUES
 			(?, ?)`, slaveID, chatID)
 	if err != nil {
-		tx.Rollback()
-
 		return "", err
 	}
 
 	return chatID, nil
 }
 
-func (m *messengerRepository) GetCountChats(tx *sql.Tx, userID string) (int, error) {
+func (m *messengerRepository) GetCountChats(userID string) (int, error) {
 	var count int
 
-	err := tx.QueryRow(`
+	err := m.conn.QueryRow(`
 		SELECT 
 			count(*)
 		FROM user_chat
@@ -330,18 +300,16 @@ func (m *messengerRepository) GetCountChats(tx *sql.Tx, userID string) (int, err
 		    ON user_chat.chat_id = chat.id
 		WHERE user_chat.user_id = ?`, userID).Scan(&count)
 	if err != nil {
-		tx.Rollback()
-
 		return 0, err
 	}
 
 	return count, nil
 }
 
-func (m *messengerRepository) GetChatWithCompanion(tx *sql.Tx, masterID, slaveID string) (*domain.Chat, error) {
+func (m *messengerRepository) GetChatWithCompanion(masterID, slaveID string) (*domain.Chat, error) {
 	var chat domain.Chat
 
-	err := tx.QueryRow(`
+	err := m.conn.QueryRow(`
 		SELECT 
 			C1.id, C1.create_time
 		FROM (
@@ -358,18 +326,16 @@ func (m *messengerRepository) GetChatWithCompanion(tx *sql.Tx, masterID, slaveID
 			ON C1.id = UC1.chat_id
 		where UC1.user_id = ?`, masterID, slaveID).Scan(&chat.ID, &chat.CreateTime)
 	if err != nil {
-		tx.Rollback()
-
 		return nil, err
 	}
 
 	return &chat, nil
 }
 
-func (m *messengerRepository) GetChatAsParticipant(tx *sql.Tx, userID string) (*domain.Chat, error) {
+func (m *messengerRepository) GetChatAsParticipant(userID string) (*domain.Chat, error) {
 	var chat domain.Chat
 
-	err := tx.QueryRow(`
+	err := m.conn.QueryRow(`
 		SELECT
 			chat.id, chat.create_time
 		FROM user
@@ -379,18 +345,16 @@ func (m *messengerRepository) GetChatAsParticipant(tx *sql.Tx, userID string) (*
 			ON user_chat.chat_id = chat.id
 		WHERE user.id = ?`, userID).Scan(&chat.ID, &chat.CreateTime)
 	if err != nil {
-		tx.Rollback()
-
 		return nil, err
 	}
 
 	return &chat, nil
 }
 
-func (m *messengerRepository) GetChats(tx *sql.Tx, userID string, limit, offset int) ([]*domain.Chat, error) {
+func (m *messengerRepository) GetChats(userID string, limit, offset int) ([]*domain.Chat, error) {
 	chats := make([]*domain.Chat, 0, 10)
 
-	rows, err := tx.Query(`
+	rows, err := m.conn.Query(`
 		SELECT
 			chat.id, chat.create_time
 		FROM user
@@ -402,8 +366,6 @@ func (m *messengerRepository) GetChats(tx *sql.Tx, userID string, limit, offset 
 		ORDER BY chat.id
 		LIMIT ? OFFSET ?`, userID, limit, offset)
 	if err != nil {
-		tx.Rollback()
-
 		return nil, err
 	}
 
@@ -416,8 +378,6 @@ func (m *messengerRepository) GetChats(tx *sql.Tx, userID string, limit, offset 
 	for rows.Next() {
 		var row chatRow
 		if err = rows.Scan(&row.id, &row.createTime); err != nil {
-			tx.Rollback()
-
 			return nil, err
 		}
 
@@ -426,7 +386,7 @@ func (m *messengerRepository) GetChats(tx *sql.Tx, userID string, limit, offset 
 	rows.Close()
 
 	for _, chat := range chatRows {
-		rows, err = tx.Query(`
+		rows, err = m.conn.Query(`
 		SELECT
 			user.id, user.name, user.surname
 		FROM user_chat
@@ -434,8 +394,6 @@ func (m *messengerRepository) GetChats(tx *sql.Tx, userID string, limit, offset 
 			ON user_chat.user_id = user.id
 		WHERE user_chat.chat_id = ? AND user_chat.user_id != ?`, chat.id, userID)
 		if err != nil {
-			tx.Rollback()
-
 			return nil, err
 		}
 
@@ -446,8 +404,6 @@ func (m *messengerRepository) GetChats(tx *sql.Tx, userID string, limit, offset 
 				Surname string
 			}
 			if err = rows.Scan(&user.ID, &user.Name, &user.Surname); err != nil {
-				tx.Rollback()
-
 				return nil, err
 			}
 
@@ -485,7 +441,7 @@ func (m *messengerRepository) GetChats(tx *sql.Tx, userID string, limit, offset 
 	return chats, nil
 }
 
-func (m *messengerRepository) SendMessages(tx *sql.Tx, shardID int, userID, chatID string, messages []*domain.ShortMessage) error {
+func (m *messengerRepository) SendMessages(shardID int, userID, chatID string, messages []*domain.ShortMessage) error {
 	sqlStr := "INSERT INTO message (shard_id, text, status, create_time, user_id, chat_id) VALUES "
 	vals := make([]interface{}, 0, len(messages)*6)
 
@@ -498,27 +454,23 @@ func (m *messengerRepository) SendMessages(tx *sql.Tx, shardID int, userID, chat
 	sqlStr = sqlStr[0 : len(sqlStr)-1]
 
 	//prepare the statement
-	stmt, err := tx.Prepare(sqlStr)
+	stmt, err := m.conn.Prepare(sqlStr)
 	if err != nil {
-		tx.Rollback()
-
 		return err
 	}
 
 	//format all vals at once
 	if _, err = stmt.Exec(vals...); err != nil {
-		tx.Rollback()
-
 		return err
 	}
 
 	return nil
 }
 
-func (m *messengerRepository) GetCountMessages(tx *sql.Tx, chatID string) (int, error) {
+func (m *messengerRepository) GetCountMessages(chatID string) (int, error) {
 	var count int
 	//select count(*) from (select max(create_time) from message where chat_id = "188a4d72-64a7-4dd4-beae-df8ca11fce70" group by id) AS a;
-	err := tx.QueryRow(`
+	err := m.conn.QueryRow(`
 		SELECT 
 			count(*)
 		FROM (
@@ -529,18 +481,16 @@ func (m *messengerRepository) GetCountMessages(tx *sql.Tx, chatID string) (int, 
 		    GROUP BY id
 		) AS MSG`, chatID).Scan(&count)
 	if err != nil {
-		tx.Rollback()
-
 		return 0, err
 	}
 
 	return count, nil
 }
 
-func (m *messengerRepository) GetMessages(tx *sql.Tx, chatID string, limit, offset int) ([]*domain.Message, error) {
+func (m *messengerRepository) GetMessages(chatID string, limit, offset int) ([]*domain.Message, error) {
 	messages := make([]*domain.Message, 0, 10)
 
-	rows, err := tx.Query(`
+	rows, err := m.conn.Query(`
 		SELECT
 			id, text, status, user_id, max(create_time) as create_time
 		FROM message
@@ -548,8 +498,6 @@ func (m *messengerRepository) GetMessages(tx *sql.Tx, chatID string, limit, offs
 		GROUP BY id, text, status, user_id
 		LIMIT ? OFFSET ?`, chatID, limit, offset)
 	if err != nil {
-		tx.Rollback()
-
 		return nil, err
 	}
 	defer rows.Close()
@@ -558,8 +506,6 @@ func (m *messengerRepository) GetMessages(tx *sql.Tx, chatID string, limit, offs
 		var message domain.Message
 
 		if err = rows.Scan(&message.ID, &message.Text, &message.Status, &message.UserID, &message.CreateTime); err != nil {
-			tx.Rollback()
-
 			return nil, err
 		}
 

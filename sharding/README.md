@@ -142,7 +142,7 @@ make migrate
 Настроем логгирование для отладки на стороне proxySQL. Для этого перейдем в mysql оболочку docker-container'а proxysql.
 Пароль - *radmin*:
 ```shell script
-docker exec -it proxysql mysql -u radmin -p -h proxysql -P 6032
+docker exec -it proxysql mysql -u radmin -p -h proxysql -P 6032 --prompt='Admin> '
 ```
 
 Зададим необходимые переменные и выйдем из container'а:
