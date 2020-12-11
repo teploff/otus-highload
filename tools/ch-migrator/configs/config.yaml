@@ -1,0 +1,3 @@
+migrations_path: "./migrations"
+dsn: "clickhouse://127.0.0.1:9000?database=default&username=default&password=password&x-multi-statement=true"
+operation: "up"
