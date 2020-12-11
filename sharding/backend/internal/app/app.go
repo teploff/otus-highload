@@ -50,7 +50,7 @@ func NewApp(cfg *config.Config, opts ...Option) *App {
 }
 
 // Run lunch application.
-func (a *App) Run(mysqlConn *sql.DB, redisConn *redis.Client) {
+func (a *App) Run(mysqlConn, chConn *sql.DB, redisConn *redis.Client) {
 	authSvc := implementation.NewAuthService(implementation.NewUserRepository(mysqlConn), a.cfg.JWT)
 	socialSvc := implementation.NewSocialService(implementation.NewUserRepository(mysqlConn))
 

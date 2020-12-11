@@ -6,6 +6,9 @@ storage:
   max_open_conns: 10
   max_idle_conns: 10
 
+ch:
+  dsn: "tcp://127.0.0.1:9000?debug=false&database=default&username=default&password=password"
+
 cache:
   addr: "localhost:6379"
   password: "password"

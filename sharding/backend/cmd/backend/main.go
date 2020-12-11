@@ -6,11 +6,12 @@ import (
 	"context"
 	"database/sql"
 	"flag"
-	"github.com/go-redis/redis/v8"
 	"os"
 	"os/signal"
 	"syscall"
 
+	_ "github.com/ClickHouse/clickhouse-go"
+	"github.com/go-redis/redis/v8"
 	_ "github.com/go-sql-driver/mysql"
 	"go.uber.org/zap"
 )
@@ -44,6 +45,16 @@ func main() {
 		logger.Fatal("mysql ping fail, ", zap.Error(err))
 	}
 
+	chConn, err := sql.Open("clickhouse", cfg.Clickhouse.DSN)
+	if err != nil {
+		logger.Fatal("clickhouse connection fail", zap.Error(err))
+	}
+
+	if err = chConn.Ping(); err != nil {
+		logger.Fatal("clickhouse ping fail, ", zap.Error(err))
+	}
+	defer chConn.Close()
+
 	redisConn := redis.NewClient(&redis.Options{
 		Addr:     cfg.Cache.Addr,
 		Password: cfg.Cache.Password,
@@ -58,7 +69,7 @@ func main() {
 	application := app.NewApp(cfg,
 		app.WithLogger(logger),
 	)
-	go application.Run(mysqlConn, redisConn)
+	go application.Run(mysqlConn, chConn, redisConn)
 
 	done := make(chan os.Signal, 1)
 	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
