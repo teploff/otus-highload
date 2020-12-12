@@ -17,6 +17,7 @@ type Config struct {
 	Stan       StanConfig       `mapstructure:"stan"`
 	JWT        JWTConfig        `mapstructure:"jwt"`
 	Logger     LoggerConfig     `mapstructure:"logger"`
+	Sharding   ShardingConfig   `mapstructure:"sharding"`
 }
 
 type StorageConfig struct {
@@ -56,6 +57,12 @@ type JWTConfig struct {
 // LoggerConfig logger configuration.
 type LoggerConfig struct {
 	Level string `mapstructure:"level"`
+}
+
+type ShardingConfig struct {
+	CountNodes      int `mapstructure:"count_nodes"`
+	LadyGagaShardID int `mapstructure:"lady_gaga_shard_id"`
+	MaxMsgFreq      int `mapstructure:"max_msg_freq"`
 }
 
 // Load create configuration from file & environments.

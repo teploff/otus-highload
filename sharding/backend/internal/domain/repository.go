@@ -35,7 +35,8 @@ type MessengerRepository interface {
 }
 
 type CacheRepository interface {
-	GetLadyGagaUsers(ctx context.Context) ([]string, error)
+	DoesUserExist(ctx context.Context, userID string) (bool, error)
+	GetAllUsers(ctx context.Context) ([]string, error)
 	Persist(ctx context.Context, userID string) error
 }
 

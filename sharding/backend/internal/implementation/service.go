@@ -5,8 +5,10 @@ import (
 	"backend/internal/domain"
 	"context"
 	"database/sql"
+	"encoding/binary"
 	"errors"
 	"fmt"
+	uuid "github.com/satori/go.uuid"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
@@ -278,17 +280,21 @@ func (s *socialService) GetQuestionnairesByNameAndSurname(ctx context.Context, p
 }
 
 type messengerService struct {
-	userRep  domain.UserRepository
-	messRep  domain.MessengerRepository
-	cacheRep domain.CacheRepository
+	userRep      domain.UserRepository
+	messRep      domain.MessengerRepository
+	cacheRep     domain.CacheRepository
+	shardingCfg  config.ShardingConfig
+	userActivity *senderActivity
 }
 
 func NewMessengerService(userRep domain.UserRepository, messengerRep domain.MessengerRepository,
-	cacheRep domain.CacheRepository) *messengerService {
+	cacheRep domain.CacheRepository, cfg config.ShardingConfig) *messengerService {
 	return &messengerService{
-		userRep:  userRep,
-		messRep:  messengerRep,
-		cacheRep: cacheRep,
+		userRep:      userRep,
+		messRep:      messengerRep,
+		cacheRep:     cacheRep,
+		shardingCfg:  cfg,
+		userActivity: newSenderActivity(cfg.MaxMsgFreq),
 	}
 }
 
@@ -338,13 +344,29 @@ func (m *messengerService) GetChats(_ context.Context, userID string, limit, off
 	return chats, total, nil
 }
 
-func (m *messengerService) SendMessages(_ context.Context, userID, chatID string, messages []*domain.ShortMessage) error {
-	err := m.messRep.SendMessages(0, userID, chatID, messages)
+func (m *messengerService) SendMessages(ctx context.Context, userID, chatID string, messages []*domain.ShortMessage) error {
+	var shardID int
+
+	isLadyGaga, err := m.cacheRep.DoesUserExist(ctx, userID)
 	if err != nil {
 		return err
 	}
 
-	return nil
+	if !isLadyGaga {
+		if isLadyGaga = m.userActivity.DoesUserLadyGaga(userID, len(messages)); isLadyGaga {
+			if err = m.cacheRep.Persist(ctx, userID); err != nil {
+				return err
+			}
+		}
+	}
+
+	if isLadyGaga {
+		shardID = m.shardingCfg.LadyGagaShardID
+	} else {
+		shardID = int(binary.BigEndian.Uint64(uuid.NewV4().Bytes()) % uint64(m.shardingCfg.CountNodes))
+	}
+
+	return m.messRep.SendMessages(shardID, userID, chatID, messages)
 }
 
 func (m *messengerService) GetMessages(_ context.Context, userID, chatID string, limit, offset int) ([]*domain.Message, int, error) {

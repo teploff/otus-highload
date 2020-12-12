@@ -226,6 +226,9 @@ services:
       - JWT_SECRET=secret
       - JWT_ACCESS_TOKEN_TIME_EXPIRE=1h
       - JWT_REFRESH_TOKEN_TIME_EXPIRE=24h
+      - SHARDING_COUNT_NODES=2
+      - SHARDING_LADY_GAGA_SHARD_ID=2
+      - SHARDING_MAX_MSG_FREQ=15
     restart: unless-stopped
     networks:
       - stage_network

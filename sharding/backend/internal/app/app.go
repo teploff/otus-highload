@@ -63,7 +63,7 @@ func (a *App) Run(mysqlConn, chConn *sql.DB, redisConn *redis.Client, stanConn s
 	messengerSvc := implementation.NewMessengerService(
 		implementation.NewUserRepository(mysqlConn),
 		implementation.NewMessengerRepository(a.chStorage),
-		implementation.NewCacheRepository(redisConn))
+		implementation.NewCacheRepository(redisConn), a.cfg.Sharding)
 
 	a.httpSrv = httptransport.NewHTTPServer(a.cfg.Addr, httptransport.MakeEndpoints(authSvc, socialSvc, messengerSvc))
 

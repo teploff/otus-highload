@@ -211,6 +211,8 @@ curl -X GET -H "Content-Type: application/json" -H "Authorization: ${ALICE_ACCES
     http://localhost:9999/messenger/messages?chat_id=$CHAT_ID
 ```
 
+docker exec -it ch-cluster clickhouse-client --user default --password password
+
 <a name="results"></a>
 ## Итоги
 В ходе выполнения домашнего задания был описан:

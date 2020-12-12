@@ -24,5 +24,10 @@ jwt:
   access_token_time_expire: "1h"
   refresh_token_time_expire: "24h"
 
+sharding:
+  count_nodes: 2
+  lady_gaga_shard_id: 2
+  max_msg_freq: 10
+
 logger:
   level: "info"

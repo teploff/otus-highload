@@ -524,7 +524,20 @@ func NewCacheRepository(client *redis.Client) *cacheRepository {
 	return &cacheRepository{client: client}
 }
 
-func (c *cacheRepository) GetLadyGagaUsers(ctx context.Context) ([]string, error) {
+func (c *cacheRepository) DoesUserExist(ctx context.Context, userID string) (bool, error) {
+	err := c.client.Get(ctx, userID).Err()
+
+	switch err {
+	case nil:
+		return true, nil
+	case redis.Nil:
+		return false, nil
+	default:
+		return false, err
+	}
+}
+
+func (c *cacheRepository) GetAllUsers(ctx context.Context) ([]string, error) {
 	return c.client.Keys(ctx, "*").Result()
 }
 
