@@ -8,7 +8,6 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
-	uuid "github.com/satori/go.uuid"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
@@ -363,7 +362,7 @@ func (m *messengerService) SendMessages(ctx context.Context, userID, chatID stri
 	if isLadyGaga {
 		shardID = m.shardingCfg.LadyGagaShardID
 	} else {
-		shardID = int(binary.BigEndian.Uint64(uuid.NewV4().Bytes()) % uint64(m.shardingCfg.CountNodes))
+		shardID = int(binary.BigEndian.Uint64([]byte(userID)) % uint64(m.shardingCfg.CountNodes))
 	}
 
 	return m.messRep.SendMessages(shardID, userID, chatID, messages)
