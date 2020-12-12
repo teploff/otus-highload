@@ -217,15 +217,15 @@ curl -X POST -H "Content-Type: application/json" -H "Authorization: ${BOB_ACCESS
          "messages": [
           {
             "text": "Hello, Alice!",
-            "status": 0
+            "status": "created"
           },
           {
             "text": "What is up?",
-            "status": 0
+            "status": "created"
           },
           {
            "text": "I miss you!",
-           "status": 0
+           "status": "created"
           }
           ]
         }' \
