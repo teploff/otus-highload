@@ -52,7 +52,7 @@ type Questionnaire struct {
 
 type ShortMessage struct {
 	Text   string `json:"text" binding:"required"`
-	Status int    `json:"status" binding:"oneof=0 1 2 3"`
+	Status string `json:"status" binding:"oneof=created received read deleted"`
 }
 
 type Message struct {

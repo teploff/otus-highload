@@ -36,7 +36,12 @@ func NewAuthService(rep domain.UserRepository, cfg config.JWTConfig) *authServic
 }
 
 func (a *authService) SignUp(ctx context.Context, profile *domain.User) error {
-	if err := a.repository.Persist(profile); err != nil {
+	tx, err := a.repository.GetTx(ctx)
+	if err != nil {
+		return err
+	}
+
+	if err = a.repository.Persist(tx, profile); err != nil {
 		if a.repository.CompareError(err, domain.DuplicateKeyErrNumber) {
 			return fmt.Errorf(fmt.Sprintf("user with email: %s already exist", profile.Email))
 		}
@@ -44,11 +49,16 @@ func (a *authService) SignUp(ctx context.Context, profile *domain.User) error {
 		return err
 	}
 
-	return nil
+	return a.repository.CommitTx(tx)
 }
 
 func (a *authService) SignIn(ctx context.Context, credentials *domain.Credentials) (*domain.TokenPair, error) {
-	user, err := a.repository.GetByEmail(credentials.Email)
+	tx, err := a.repository.GetTx(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	user, err := a.repository.GetByEmail(tx, credentials.Email)
 	switch {
 	case errors.Is(err, sql.ErrNoRows):
 		return nil, fmt.Errorf("incorrect username or password")
@@ -72,11 +82,11 @@ func (a *authService) SignIn(ctx context.Context, credentials *domain.Credential
 	user.AccessToken = &tokenPair.AccessToken
 	user.RefreshToken = &tokenPair.RefreshToken
 
-	if err = a.repository.UpdateByID(user); err != nil {
+	if err = a.repository.UpdateByID(tx, user); err != nil {
 		return nil, err
 	}
 
-	return &tokenPair, nil
+	return &tokenPair, a.repository.CommitTx(tx)
 }
 
 func (a *authService) createTokenPair(user *domain.User) (domain.TokenPair, error) {
@@ -132,13 +142,18 @@ func (a *authService) parseToken(tokenString string) (jwt.MapClaims, error) {
 }
 
 func (a *authService) RefreshToken(ctx context.Context, token string) (*domain.TokenPair, error) {
+	tx, err := a.repository.GetTx(ctx)
+	if err != nil {
+		return nil, err
+	}
+
 	claims, err := a.parseToken(token)
 	if err != nil {
 		return nil, err
 	}
 
 	userID := claims["aud"].(string)
-	user, err := a.repository.GetByIDAndRefreshToken(userID, token)
+	user, err := a.repository.GetByIDAndRefreshToken(tx, userID, token)
 	if err != nil {
 		return nil, err
 	}
@@ -151,35 +166,45 @@ func (a *authService) RefreshToken(ctx context.Context, token string) (*domain.T
 	user.AccessToken = &newTokenPair.AccessToken
 	user.RefreshToken = &newTokenPair.RefreshToken
 
-	if err = a.repository.UpdateByID(user); err != nil {
+	if err = a.repository.UpdateByID(tx, user); err != nil {
 		return nil, err
 	}
 
-	return &newTokenPair, nil
+	return &newTokenPair, a.repository.CommitTx(tx)
 }
 
 func (a *authService) Authenticate(ctx context.Context, token string) (string, error) {
+	tx, err := a.repository.GetTx(ctx)
+	if err != nil {
+		return "", err
+	}
+
 	claims, err := a.parseToken(token)
 	if err != nil {
 		return "", fmt.Errorf("invalid token")
 	}
 
 	userID := claims["aud"].(string)
-	_, err = a.repository.GetByIDAndAccessToken(userID, token)
+	_, err = a.repository.GetByIDAndAccessToken(tx, userID, token)
 	if err != nil {
 		return "", fmt.Errorf("invalid token")
 	}
 
-	return userID, nil
+	return userID, a.repository.CommitTx(tx)
 }
 
 func (a *authService) GetUserIDByEmail(ctx context.Context, email string) (string, error) {
-	user, err := a.repository.GetByEmail(email)
+	tx, err := a.repository.GetTx(ctx)
 	if err != nil {
 		return "", err
 	}
 
-	return user.ID, nil
+	user, err := a.repository.GetByEmail(tx, email)
+	if err != nil {
+		return "", err
+	}
+
+	return user.ID, a.repository.CommitTx(tx)
 }
 
 type socialService struct {
@@ -193,12 +218,17 @@ func NewSocialService(rep domain.UserRepository) *socialService {
 }
 
 func (s *socialService) GetQuestionnaires(ctx context.Context, userID string, limit, offset int) ([]*domain.Questionnaire, int, error) {
-	count, err := s.repository.GetCount()
+	tx, err := s.repository.GetTx(ctx)
 	if err != nil {
 		return nil, 0, err
 	}
 
-	users, err := s.repository.GetByLimitAndOffsetExceptUserID(userID, limit, offset)
+	count, err := s.repository.GetCount(tx)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	users, err := s.repository.GetByLimitAndOffsetExceptUserID(tx, userID, limit, offset)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -217,11 +247,16 @@ func (s *socialService) GetQuestionnaires(ctx context.Context, userID string, li
 	}
 
 	// count - 1: without myself
-	return questionnaires, count - 1, nil
+	return questionnaires, count - 1, s.repository.CommitTx(tx)
 }
 
 func (s *socialService) GetQuestionnairesByNameAndSurname(ctx context.Context, prefix string) ([]*domain.Questionnaire, error) {
-	users, err := s.repository.GetByPrefixOfNameAndSurname(prefix)
+	tx, err := s.repository.GetTx(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	users, err := s.repository.GetByPrefixOfNameAndSurname(tx, prefix)
 	if err != nil {
 		return nil, err
 	}
@@ -239,7 +274,7 @@ func (s *socialService) GetQuestionnairesByNameAndSurname(ctx context.Context, p
 		})
 	}
 
-	return questionnaires, nil
+	return questionnaires, s.repository.CommitTx(tx)
 }
 
 type messengerService struct {
@@ -258,7 +293,12 @@ func NewMessengerService(userRep domain.UserRepository, messengerRep domain.Mess
 }
 
 func (m *messengerService) CreateChat(ctx context.Context, masterID, slaveID string) (string, error) {
-	_, err := m.userRep.GetByID(slaveID)
+	tx, err := m.userRep.GetTx(ctx)
+	if err != nil {
+		return "", err
+	}
+
+	_, err = m.userRep.GetByID(tx, slaveID)
 	switch err {
 	case nil:
 	case sql.ErrNoRows:
@@ -272,10 +312,10 @@ func (m *messengerService) CreateChat(ctx context.Context, masterID, slaveID str
 		return "", err
 	}
 
-	return chatID, nil
+	return chatID, m.userRep.CommitTx(tx)
 }
 
-func (m *messengerService) GetChat(ctx context.Context, masterID, slaveID string) (*domain.Chat, error) {
+func (m *messengerService) GetChat(_ context.Context, masterID, slaveID string) (*domain.Chat, error) {
 	chat, err := m.messRep.GetChatWithCompanion(masterID, slaveID)
 	if err != nil {
 		return nil, err
@@ -284,7 +324,7 @@ func (m *messengerService) GetChat(ctx context.Context, masterID, slaveID string
 	return chat, nil
 }
 
-func (m *messengerService) GetChats(ctx context.Context, userID string, limit, offset int) ([]*domain.Chat, int, error) {
+func (m *messengerService) GetChats(_ context.Context, userID string, limit, offset int) ([]*domain.Chat, int, error) {
 	total, err := m.messRep.GetCountChats(userID)
 	if err != nil {
 		return nil, 0, err
@@ -298,7 +338,7 @@ func (m *messengerService) GetChats(ctx context.Context, userID string, limit, o
 	return chats, total, nil
 }
 
-func (m *messengerService) SendMessages(ctx context.Context, userID, chatID string, messages []*domain.ShortMessage) error {
+func (m *messengerService) SendMessages(_ context.Context, userID, chatID string, messages []*domain.ShortMessage) error {
 	err := m.messRep.SendMessages(0, userID, chatID, messages)
 	if err != nil {
 		return err
@@ -307,7 +347,7 @@ func (m *messengerService) SendMessages(ctx context.Context, userID, chatID stri
 	return nil
 }
 
-func (m *messengerService) GetMessages(ctx context.Context, userID, chatID string, limit, offset int) ([]*domain.Message, int, error) {
+func (m *messengerService) GetMessages(_ context.Context, userID, chatID string, limit, offset int) ([]*domain.Message, int, error) {
 	_, err := m.messRep.GetChatAsParticipant(userID)
 	if err != nil {
 		return nil, 0, err

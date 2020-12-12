@@ -3,9 +3,11 @@ package main
 import (
 	"backend/internal/app"
 	"backend/internal/config"
+	zaplogger "backend/internal/infrastructure/logger"
 	"context"
 	"database/sql"
 	"flag"
+	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
@@ -20,15 +22,12 @@ func main() {
 	configFile := flag.String("config", "./configs/config.yaml", "configuration file path")
 	flag.Parse()
 
-	logger, err := zap.NewProduction()
-	if err != nil {
-		panic(err)
-	}
-
 	cfg, err := config.Load(*configFile)
 	if err != nil {
-		logger.Fatal("error reading config file", zap.Error(err))
+		panic(fmt.Sprintf("error reading config file %s", err))
 	}
+
+	logger := zaplogger.NewZapLogger(cfg.Logger)
 
 	mysqlConn, err := sql.Open("mysql", cfg.Storage.DSN)
 	if err != nil {

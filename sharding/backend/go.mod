@@ -13,8 +13,10 @@ require (
 	github.com/gobwas/pool v0.2.1 // indirect
 	github.com/gobwas/ws v1.0.4
 	github.com/gorilla/websocket v1.4.2
+	github.com/rtsoftSG/plugin v0.1.11
 	github.com/satori/go.uuid v1.2.0
 	github.com/spf13/viper v1.7.1
 	go.uber.org/zap v1.16.0
 	golang.org/x/crypto v0.0.0-20201124201722-c8d3bf9c5392
+	golang.org/x/sync v0.0.0-20190423024810-112230192c58
 )
