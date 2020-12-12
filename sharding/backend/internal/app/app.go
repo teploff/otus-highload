@@ -8,6 +8,7 @@ import (
 	wstransport "backend/internal/transport/ws"
 	"context"
 	"database/sql"
+	"github.com/nats-io/stan.go"
 	"log"
 	"net/http"
 	"time"
@@ -52,7 +53,7 @@ func NewApp(cfg *config.Config, opts ...Option) *App {
 }
 
 // Run lunch application.
-func (a *App) Run(mysqlConn, chConn *sql.DB, redisConn *redis.Client) {
+func (a *App) Run(mysqlConn, chConn *sql.DB, redisConn *redis.Client, stanConn stan.Conn) {
 	a.chStorage = clickhouse.NewStorage(chConn, a.cfg.Clickhouse.PushTimeout, a.logger)
 	go a.chStorage.StartBatching()
 

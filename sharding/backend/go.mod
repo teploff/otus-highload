@@ -13,6 +13,7 @@ require (
 	github.com/gobwas/pool v0.2.1 // indirect
 	github.com/gobwas/ws v1.0.4
 	github.com/gorilla/websocket v1.4.2
+	github.com/nats-io/stan.go v0.7.0
 	github.com/rtsoftSG/plugin v0.1.11
 	github.com/satori/go.uuid v1.2.0
 	github.com/spf13/viper v1.7.1

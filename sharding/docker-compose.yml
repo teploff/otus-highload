@@ -190,6 +190,22 @@ services:
     networks:
       - stage_network
 
+  nats-streaming:
+    image: nats-streaming
+    container_name: nats_streaming
+    ports:
+      - "4222:4222"
+      - "8222:8222"
+    command:
+      - "--cluster_id=stan_cluster"
+      - "--store=file"
+      - "--dir=datastore"
+      - "--http_port=8222"
+      - "--max_age=1h"
+      - "--max_inactivity=1h"
+    networks:
+      - stage_network
+
   backend:
     build:
       context: backend
@@ -205,6 +221,8 @@ services:
       - CACHE_ADDR=redis_sharding:6379
       - CACHE_PASSWORD=password
       - CACHE_DB=0
+      - STAN_CLUSTER_ID=stan_cluster
+      - STAN_ADDR=nats://nats_streaming:4222
       - JWT_SECRET=secret
       - JWT_ACCESS_TOKEN_TIME_EXPIRE=1h
       - JWT_REFRESH_TOKEN_TIME_EXPIRE=24h
