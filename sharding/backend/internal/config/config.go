@@ -14,7 +14,6 @@ type Config struct {
 	Storage    StorageConfig    `mapstructure:"storage"`
 	Clickhouse ClickhouseConfig `mapstructure:"ch"`
 	Cache      CacheConfig      `mapstructure:"cache"`
-	Stan       StanConfig       `mapstructure:"stan"`
 	JWT        JWTConfig        `mapstructure:"jwt"`
 	Logger     LoggerConfig     `mapstructure:"logger"`
 	Sharding   ShardingConfig   `mapstructure:"sharding"`
@@ -36,16 +35,6 @@ type CacheConfig struct {
 	Addr     string `mapstructure:"addr"`
 	Password string `mapstructure:"password"`
 	DB       int    `mapstructure:"db"`
-}
-
-// StanConfig configuration for the stan (nats-streaming).
-//
-// ClusterID - represented conn to stan. It cans contain only alphanumeric and `-` or `_` characters.
-//
-// Addr - Bind to host address.
-type StanConfig struct {
-	ClusterID string `mapstructure:"cluster_id"`
-	Addr      string `mapstructure:"addr"`
 }
 
 type JWTConfig struct {

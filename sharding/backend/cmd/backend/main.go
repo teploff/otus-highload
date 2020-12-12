@@ -8,7 +8,6 @@ import (
 	"database/sql"
 	"flag"
 	"fmt"
-	"github.com/nats-io/stan.go"
 	"os"
 	"os/signal"
 	"syscall"
@@ -17,11 +16,6 @@ import (
 	"github.com/go-redis/redis/v8"
 	_ "github.com/go-sql-driver/mysql"
 	"go.uber.org/zap"
-)
-
-const (
-	pingInterval = 60
-	pingAttempts = 2 * 60
 )
 
 func main() {
@@ -71,20 +65,10 @@ func main() {
 	}
 	defer redisConn.Close()
 
-	stanConn, err := stan.Connect(cfg.Stan.ClusterID, "backend-sharding",
-		stan.Pings(pingInterval, pingAttempts),
-		stan.SetConnectionLostHandler(func(_ stan.Conn, reason error) {
-			logger.Fatal("Connection lost, reason: ", zap.Error(reason))
-		}), stan.NatsURL(cfg.Stan.Addr))
-	if err != nil {
-		logger.Fatal("stan transport", zap.Error(err))
-	}
-	defer stanConn.Close()
-
 	application := app.NewApp(cfg,
 		app.WithLogger(logger),
 	)
-	go application.Run(mysqlConn, chConn, redisConn, stanConn)
+	go application.Run(mysqlConn, chConn, redisConn)
 
 	done := make(chan os.Signal, 1)
 	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)

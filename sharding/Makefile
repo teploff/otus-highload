@@ -1,7 +1,7 @@
 .PHONY: init migrate down
 
 init:
-	docker-compose up -d --build ch-cluster ch-shard-1 ch-shard-2 ch-shard-3 mysql-storage redis nats-streaming backend ;\
+	docker-compose up -d --build ch-cluster ch-shard-1 ch-shard-2 ch-shard-3 mysql-storage redis backend ;\
 	docker image prune -f ;\
 
 migrate:
