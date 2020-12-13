@@ -318,16 +318,29 @@ select * from message;
 
 Как видим, сообщения находятся именно тут.
 
+Выйдем из docker-container'а командой:
+```mysql based
 exit
+```
 
+Если перейти на первую node'у,
+```shell script
 docker exec -it ch-shard-1 clickhouse-client --user default --password password
+```
+то при запросе сообщений
+```mysql based
+select * from message;
+```
 
-Если перейти на первую node'e, то при запросе сообщений увидим следующее: </br>
+увидим следующее: </br>
 <p align="center">
     <img src="static/shard_node_absent_messaging.png">
 </p>
 
+Выйдем из docker-container'а командой:
+```mysql based
 exit
+```
 
 
 TODO: заголовок
@@ -368,7 +381,10 @@ select shard_id, count(*) from message group by shard_id;
     <img src="static/effect_lady_gaga.png">
 </p>
 
+Выйдем из docker-container'а командой:
+```mysql based
 exit
+```
 
 И теперь последующие сообщения от Боба автоматически будут уже шардироваться на shard c номеров 4.
 
