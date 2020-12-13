@@ -364,6 +364,24 @@ select shard_id, count(*) from message group by shard_id;
 
 И теперь последующие сообщения от Боба автоматически будут уже шардироваться на shard c номеров 4.
 
+Перейдем в оболочку ClickHouse четвертого shard'а:
+```shell script
+docker exec -it ch-shard-0 clickhouse-client --user default --password password
+```
+и запросим все сообщения:
+```sql
+select * from message;
+```
+<p align="center">
+    <img src="static/lady_gaga_shard.png">
+</p>
+
+Как видим, одно единственное сообщение находятся именно тут.
+
+Выйдем из docker-container'а командой:
+```mysql based
+exit
+```
 
 TODO Решардинг
 Теперь представим такую ситуацию, что в какой-то момент времени нам существующих трех shard'ов стало не хватать. И нам

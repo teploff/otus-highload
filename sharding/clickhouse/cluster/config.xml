@@ -200,6 +200,14 @@
         <messages>
             <shard>
                 <replica>
+                    <host>ch-shard-0</host>
+                    <port>9000</port>
+                    <user>default</user>
+                    <password>password</password>
+                </replica>
+            </shard>
+            <shard>
+                <replica>
                     <host>ch-shard-1</host>
                     <port>9000</port>
                     <user>default</user>
@@ -217,6 +225,14 @@
             <shard>
                 <replica>
                     <host>ch-shard-3</host>
+                    <port>9000</port>
+                    <user>default</user>
+                    <password>password</password>
+                </replica>
+            </shard>
+            <shard>
+                <replica>
+                    <host>ch-shard-4</host>
                     <port>9000</port>
                     <user>default</user>
                     <password>password</password>
