@@ -18,7 +18,7 @@
         - [ Оценка предложенного варианта решения ](#work-solution-estimate)
     - [ Выполнение ](#work-execute)
         - [ Подготовка ](#work-execute-preparation)
-        - [ Простой механизм шардирования на ClickHouse ](#work-execute-clickhouse-sharding)
+        - [ Простой механизм шардирования в ClickHouse ](#work-execute-clickhouse-sharding)
         - [ "Эффект *Lady Gaga*" с последующим переводом на другую node'у ](#work-execute-lady-gaga)
         - [ Процедура решардинга ](#work-execute-resharding)
 4. [ Итоги ](#results)
@@ -278,7 +278,7 @@ curl -X GET -H "Content-Type: application/json" -H "Authorization: ${ALICE_ACCES
 
 
 <a name="work-execute-clickhouse-sharding"></a>
-#### Простой механизм шардирования на ClickHouse
+#### Простой механизм шардирования в ClickHouse
 Шардирование в ClickHouse, как уже было сказано ранее, осуществляется через Distributed таблицу, подробнее [тут](https://clickhouse.tech/docs/ru/engines/table-engines/special/distributed/).
 При создании таблицы с таким движком третьим параметром идет способ, по которому ClickHouse определяет, в какой из 
 shard'ов осуществлять операцию вставки. В рамках этой работы, для большей гибкости, мы взяли на себя обязательство явно
