@@ -34,6 +34,7 @@ func NewHTTPServer(addr string, endpoints *Endpoints) *http.Server {
 		messengerGroup.GET("/chats", endpoints.Messenger.GetChats)
 		messengerGroup.POST("/messages", endpoints.Messenger.SendMessage)
 		messengerGroup.GET("/messages", endpoints.Messenger.GetMessages)
+		messengerGroup.PUT("/shard", endpoints.Messenger.UpdateCountShards)
 	}
 
 	router.GET("/ws", endpoints.Ws.Connect)

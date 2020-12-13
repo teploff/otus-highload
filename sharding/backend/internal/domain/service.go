@@ -23,4 +23,5 @@ type MessengerService interface {
 	SendMessages(ctx context.Context, userID, chatID string, messages []*ShortMessage) error
 	GetChats(ctx context.Context, userID string, limit, offset int) ([]*Chat, int, error)
 	GetMessages(ctx context.Context, userID, chatID string, limit, offset int) ([]*Message, int, error)
+	UpdateCountShards(ctx context.Context, count int) error
 }

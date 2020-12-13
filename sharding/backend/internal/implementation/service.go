@@ -386,3 +386,9 @@ func (m *messengerService) GetMessages(_ context.Context, userID, chatID string,
 
 	return messages, total, nil
 }
+
+func (m *messengerService) UpdateCountShards(_ context.Context, count int) error {
+	m.shardingCfg.CountNodes = count
+
+	return nil
+}

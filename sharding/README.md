@@ -318,10 +318,16 @@ select * from message;
 
 Как видим, сообщения находятся именно тут.
 
+exit
+
+docker exec -it ch-shard-1 clickhouse-client --user default --password password
+
 Если перейти на первую node'e, то при запросе сообщений увидим следующее: </br>
 <p align="center">
     <img src="static/shard_node_absent_messaging.png">
 </p>
+
+exit
 
 
 TODO: заголовок
@@ -361,6 +367,8 @@ select shard_id, count(*) from message group by shard_id;
 <p align="center">
     <img src="static/effect_lady_gaga.png">
 </p>
+
+exit
 
 И теперь последующие сообщения от Боба автоматически будут уже шардироваться на shard c номеров 4.
 
@@ -443,7 +451,11 @@ exit
 
 Поставим в известность систему о том, что появилось еще 2 shard'a командой:
 ```shell script
-
+curl -X PUT -H "Content-Type: application/json" \
+    -d '{
+         "count": 4
+        }' \
+    http://localhost:9999/messenger/shard
 ```
 
 Теперь отправим еще два сообщения от Генри Алисе
