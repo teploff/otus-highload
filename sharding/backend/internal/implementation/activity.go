@@ -45,7 +45,7 @@ func (s *senderActivity) DoesUserLadyGaga(userID string, messageCount int) bool 
 		}
 	}
 
-	if s.users[userID].count >= s.maxMsgFrequency {
+	if s.users[userID].count > s.maxMsgFrequency {
 		delete(s.users, userID)
 
 		return true

@@ -306,7 +306,7 @@ exit
 Давайте перейдем на 0 shard и проверим, что действительно сообщения хранятся именно на нем. Для этого перейдем в 
 оболочку ClickHouse нулевого shard'а
 ```shell script
-docker exec -it ch-shard-1 clickhouse-client --user default --password password
+docker exec -it ch-shard-0 clickhouse-client --user default --password password
 ```
 и запросим все сообщения:
 ```sql
