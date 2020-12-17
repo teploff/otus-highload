@@ -3,6 +3,7 @@ package app
 import (
 	"backend/internal/config"
 	"backend/internal/implementation"
+	"backend/internal/infrastructure/clickhouse"
 	httptransport "backend/internal/transport/http"
 	wstransport "backend/internal/transport/ws"
 	"context"
@@ -28,10 +29,11 @@ func WithLogger(l *zap.Logger) Option {
 
 // App is main application instance.
 type App struct {
-	cfg     *config.Config
-	httpSrv *http.Server
-	wsConns *wstransport.Conns
-	logger  *zap.Logger
+	cfg       *config.Config
+	chStorage *clickhouse.Storage
+	httpSrv   *http.Server
+	wsConns   *wstransport.Conns
+	logger    *zap.Logger
 }
 
 // NewApp returns instance of app.
@@ -51,13 +53,16 @@ func NewApp(cfg *config.Config, opts ...Option) *App {
 
 // Run lunch application.
 func (a *App) Run(mysqlConn, chConn *sql.DB, redisConn *redis.Client) {
+	a.chStorage = clickhouse.NewStorage(chConn, a.cfg.Clickhouse.PushTimeout, a.logger)
+	go a.chStorage.StartBatching()
+
 	authSvc := implementation.NewAuthService(implementation.NewUserRepository(mysqlConn), a.cfg.JWT)
 	socialSvc := implementation.NewSocialService(implementation.NewUserRepository(mysqlConn))
 
 	messengerSvc := implementation.NewMessengerService(
 		implementation.NewUserRepository(mysqlConn),
-		implementation.NewMessengerRepository(mysqlConn),
-		implementation.NewCacheRepository(redisConn))
+		implementation.NewMessengerRepository(a.chStorage),
+		implementation.NewCacheRepository(redisConn), a.cfg.Sharding)
 
 	a.httpSrv = httptransport.NewHTTPServer(a.cfg.Addr, httptransport.MakeEndpoints(authSvc, socialSvc, messengerSvc))
 
@@ -77,4 +82,6 @@ func (a *App) Stop() {
 	if err := a.httpSrv.Shutdown(ctx); err != nil {
 		log.Fatal("http closing error, ", zap.Error(err))
 	}
+
+	a.chStorage.Stop()
 }

@@ -47,6 +47,21 @@ services:
     networks:
       - stage_network
 
+  ch-shard-0:
+    image: yandex/clickhouse-server:20.6.6.7
+    container_name: ch-shard-0
+    volumes:
+      - ch-shard-0-data:/opt/clickhouse/data
+      - ./clickhouse/shard/config.xml:/etc/clickhouse-server/config.xml
+      - ./clickhouse/shard/users.xml:/etc/clickhouse-server/users.xml
+    ulimits:
+      nproc: 65535
+      nofile:
+        soft: 262144
+        hard: 262144
+    networks:
+      - stage_network
+
   ch-shard-1:
     image: yandex/clickhouse-server:20.6.6.7
     container_name: ch-shard-1
@@ -92,6 +107,21 @@ services:
     networks:
       - stage_network
 
+  ch-shard-4:
+    image: yandex/clickhouse-server:20.6.6.7
+    container_name: ch-shard-4
+    volumes:
+      - ch-shard-4-data:/opt/clickhouse/data
+      - ./clickhouse/shard/config.xml:/etc/clickhouse-server/config.xml
+      - ./clickhouse/shard/users.xml:/etc/clickhouse-server/users.xml
+    ulimits:
+      nproc: 65535
+      nofile:
+        soft: 262144
+        hard: 262144
+    networks:
+      - stage_network
+
   mysql-migrator:
     build:
       context: ../tools/migrator
@@ -125,6 +155,23 @@ services:
       - stage_network
     depends_on:
       - ch-cluster
+
+  ch-shard-migrator-0:
+    build:
+      context: ../tools/ch-migrator
+      dockerfile: Dockerfile
+    image: ch-migrator:sharding
+    container_name: ch-migrator-0
+    environment:
+      MIGRATIONS_PATH: "./migrations"
+      DSN: "clickhouse://ch-shard-0:9000?database=default&username=default&password=password&x-multi-statement=true"
+      OPERATION: "up"
+    volumes:
+      - ./backend/migrations/clickhouse/shard:/app/migrations
+    networks:
+      - stage_network
+    depends_on:
+      - ch-shard-0
 
   ch-shard-migrator-1:
     build:
@@ -177,6 +224,23 @@ services:
     depends_on:
       - ch-shard-3
 
+  ch-shard-migrator-4:
+    build:
+      context: ../tools/ch-migrator
+      dockerfile: Dockerfile
+    image: ch-migrator:sharding
+    container_name: ch-migrator-4
+    environment:
+      MIGRATIONS_PATH: "./migrations"
+      DSN: "clickhouse://ch-shard-4:9000?database=default&username=default&password=password&x-multi-statement=true"
+      OPERATION: "up"
+    volumes:
+      - ./backend/migrations/clickhouse/shard:/app/migrations
+    networks:
+      - stage_network
+    depends_on:
+      - ch-shard-4
+
   redis:
     build:
       context: redis
@@ -208,6 +272,9 @@ services:
       - JWT_SECRET=secret
       - JWT_ACCESS_TOKEN_TIME_EXPIRE=1h
       - JWT_REFRESH_TOKEN_TIME_EXPIRE=24h
+      - SHARDING_COUNT_NODES=2
+      - SHARDING_LADY_GAGA_SHARD_ID=4
+      - SHARDING_MAX_MSG_FREQ=10
     restart: unless-stopped
     networks:
       - stage_network
@@ -218,9 +285,11 @@ services:
 
 volumes:
   ch-cluster-data:
+  ch-shard-0-data:
   ch-shard-1-data:
   ch-shard-2-data:
   ch-shard-3-data:
+  ch-shard-4-data:
   mysql-storage-data:
   mysql-storage-log:
   redis-data:

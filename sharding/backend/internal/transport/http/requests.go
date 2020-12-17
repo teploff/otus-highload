@@ -65,3 +65,7 @@ type GetMessagesRequest struct {
 	Limit  *int   `json:"limit" form:"limit"`
 	Offset *int   `json:"offset" form:"offset"`
 }
+
+type UpdateCountShardsRequest struct {
+	Count int `json:"count" binding:"required"`
+}

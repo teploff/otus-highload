@@ -10,8 +10,9 @@ CREATE TABLE message (
 ) ENGINE = Distributed(messages, default, message, shard_id);
 
 CREATE TABLE chat (
-    datetime    DateTime,
-    id          UUID,
-    create_time Int64
+    datetime     DateTime,
+    id           UUID,
+    create_time  Int64,
+    participants Array(UUID)
 ) ENGINE = MergeTree()
-ORDER BY (datetime, id, create_time);
+ORDER BY (datetime, id, create_time, participants);

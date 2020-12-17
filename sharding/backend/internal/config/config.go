@@ -15,6 +15,8 @@ type Config struct {
 	Clickhouse ClickhouseConfig `mapstructure:"ch"`
 	Cache      CacheConfig      `mapstructure:"cache"`
 	JWT        JWTConfig        `mapstructure:"jwt"`
+	Logger     LoggerConfig     `mapstructure:"logger"`
+	Sharding   ShardingConfig   `mapstructure:"sharding"`
 }
 
 type StorageConfig struct {
@@ -25,7 +27,8 @@ type StorageConfig struct {
 }
 
 type ClickhouseConfig struct {
-	DSN string `mapstructure:"dsn"`
+	DSN         string        `mapstructure:"dsn"`
+	PushTimeout time.Duration `mapstructure:"push_timeout"`
 }
 
 type CacheConfig struct {
@@ -38,6 +41,17 @@ type JWTConfig struct {
 	Secret                 string
 	AccessTokenTimeExpire  time.Duration `mapstructure:"access_token_time_expire"`
 	RefreshTokenTimeExpire time.Duration `mapstructure:"refresh_token_time_expire"`
+}
+
+// LoggerConfig logger configuration.
+type LoggerConfig struct {
+	Level string `mapstructure:"level"`
+}
+
+type ShardingConfig struct {
+	CountNodes      int `mapstructure:"count_nodes"`
+	LadyGagaShardID int `mapstructure:"lady_gaga_shard_id"`
+	MaxMsgFreq      int `mapstructure:"max_msg_freq"`
 }
 
 // Load create configuration from file & environments.

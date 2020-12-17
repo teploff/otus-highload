@@ -32,12 +32,13 @@ func MakeEndpoints(auth domain.AuthService, social domain.SocialService, messeng
 			GetQuestionnairesByNameAndSurname: makeGetQuestionnairesByNameAndSurnameEndpoint(auth, social),
 		},
 		Messenger: &MessengerEndpoints{
-			CreateChat:  makeCreateChatEndpoint(auth, messenger),
-			GetChat:     makeGetChatEndpoint(auth, messenger),
-			DeleteChats: makeDeleteChatsEndpoint(auth, messenger),
-			GetChats:    makeGetChatsEndpoint(auth, messenger),
-			GetMessages: makeGetMessagesEndpoint(auth, messenger),
-			SendMessage: makeSendMessageEndpoint(auth, messenger),
+			CreateChat:        makeCreateChatEndpoint(auth, messenger),
+			GetChat:           makeGetChatEndpoint(auth, messenger),
+			DeleteChats:       makeDeleteChatsEndpoint(auth, messenger),
+			GetChats:          makeGetChatsEndpoint(auth, messenger),
+			GetMessages:       makeGetMessagesEndpoint(auth, messenger),
+			SendMessage:       makeSendMessageEndpoint(auth, messenger),
+			UpdateCountShards: makeUpdateCountShardsEndpoint(messenger),
 		},
 		Ws: &WsEndpoints{
 			Connect: makeWsConnectEndpoint(auth),
@@ -292,12 +293,13 @@ func makeGetQuestionnairesByNameAndSurnameEndpoint(authSvc domain.AuthService, s
 }
 
 type MessengerEndpoints struct {
-	CreateChat  gin.HandlerFunc
-	GetChat     gin.HandlerFunc
-	DeleteChats gin.HandlerFunc
-	GetChats    gin.HandlerFunc
-	GetMessages gin.HandlerFunc
-	SendMessage gin.HandlerFunc
+	CreateChat        gin.HandlerFunc
+	GetChat           gin.HandlerFunc
+	DeleteChats       gin.HandlerFunc
+	GetChats          gin.HandlerFunc
+	GetMessages       gin.HandlerFunc
+	SendMessage       gin.HandlerFunc
+	UpdateCountShards gin.HandlerFunc
 }
 
 func makeCreateChatEndpoint(authSvc domain.AuthService, messSvc domain.MessengerService) gin.HandlerFunc {
@@ -563,6 +565,29 @@ func makeSendMessageEndpoint(authSvc domain.AuthService, messSvc domain.Messenge
 		}
 
 		if err = messSvc.SendMessages(c, userID, request.ChatID, request.Messages); err != nil {
+			c.JSON(http.StatusBadRequest, ErrorResponse{
+				Message: err.Error(),
+			})
+
+			return
+		}
+
+		c.JSON(http.StatusOK, EmptyResponse{})
+	}
+}
+
+func makeUpdateCountShardsEndpoint(messSvc domain.MessengerService) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var request UpdateCountShardsRequest
+		if err := c.Bind(&request); err != nil {
+			c.JSON(http.StatusBadRequest, ErrorResponse{
+				Message: err.Error(),
+			})
+
+			return
+		}
+
+		if err := messSvc.UpdateCountShards(c, request.Count); err != nil {
 			c.JSON(http.StatusBadRequest, ErrorResponse{
 				Message: err.Error(),
 			})

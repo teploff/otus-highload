@@ -11,21 +11,19 @@ const DuplicateKeyErrNumber = 1062
 type UserRepository interface {
 	GetTx(ctx context.Context) (*sql.Tx, error)
 	CommitTx(tx *sql.Tx) error
-	Persist(user *User) error
-	GetByID(id string) (*User, error)
-	GetByEmail(email string) (*User, error)
-	GetByIDAndRefreshToken(id, token string) (*User, error)
-	GetByIDAndAccessToken(id, token string) (*User, error)
-	GetCount() (int, error)
-	GetByLimitAndOffsetExceptUserID(userID string, limit, offset int) ([]*User, error)
-	GetByPrefixOfNameAndSurname(prefix string) ([]*User, error)
-	UpdateByID(user *User) error
+	Persist(tx *sql.Tx, user *User) error
+	GetByID(tx *sql.Tx, id string) (*User, error)
+	GetByEmail(tx *sql.Tx, email string) (*User, error)
+	GetByIDAndRefreshToken(tx *sql.Tx, id, token string) (*User, error)
+	GetByIDAndAccessToken(tx *sql.Tx, id, token string) (*User, error)
+	GetCount(*sql.Tx) (int, error)
+	GetByLimitAndOffsetExceptUserID(tx *sql.Tx, userID string, limit, offset int) ([]*User, error)
+	GetByPrefixOfNameAndSurname(tx *sql.Tx, prefix string) ([]*User, error)
+	UpdateByID(tx *sql.Tx, user *User) error
 	CompareError(err error, number uint16) bool
 }
 
 type MessengerRepository interface {
-	GetTx(ctx context.Context) (*sql.Tx, error)
-	CommitTx(tx *sql.Tx) error
 	CreateChat(masterID, slaveID string) (string, error)
 	GetCountChats(userID string) (int, error)
 	GetChatWithCompanion(masterID, slaveID string) (*Chat, error)
@@ -37,7 +35,8 @@ type MessengerRepository interface {
 }
 
 type CacheRepository interface {
-	GetLadyGagaUsers(ctx context.Context) ([]string, error)
+	DoesUserExist(ctx context.Context, userID string) (bool, error)
+	GetAllUsers(ctx context.Context) ([]string, error)
 	Persist(ctx context.Context, userID string) error
 }
 
