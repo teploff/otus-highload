@@ -1,10 +1,12 @@
 .PHONY: up down reload_backend reload_frontend
 
 up:
-	docker-compose -f docker-compose.yml up -d storage adminer ;\
-	docker-compose -f docker-compose.yml up --build migrator ;\
-	docker-compose rm -f migrator ;\
-	docker-compose -f docker-compose.yml up -d --build social_network_backend social_network_frontend ;\
+	docker-compose -f docker-compose.yml up --build -d storage adminer backend frontend ;\
+	docker image prune -f ;\
+
+migrate:
+	docker-compose up --build migrator ;\
+	docker rm -f mysql-migrator ;\
 	docker image prune -f ;\
 
 reload_backend:

@@ -2,8 +2,8 @@ version: '3.7'
 
 services:
   storage:
-    image: mysql
-    container_name: storage_stage
+    image: mysql:8.0
+    container_name: mysql-storage
     command: --default-authentication-plugin=mysql_native_password
     ports:
       - '3306:3306'
@@ -12,8 +12,10 @@ services:
       MYSQL_USER: user
       MYSQL_PASSWORD: password
       MYSQL_DATABASE: social-network
+    volumes:
+      - mysql-storage-data:/var/lib/mysql
     networks:
-      - stage_network
+      - stage-network
 
   adminer:
     image: adminer
@@ -23,50 +25,61 @@ services:
     depends_on:
       - storage
     networks:
-      - stage_network
+      - stage-network
 
   migrator:
     build:
-      context: server
-      dockerfile: migrator.Dockerfile
-    image: mysql_migrator:stage
-    container_name: mysql_migrator_stage
-    depends_on:
-      - adminer
-    networks:
-      - stage_network
-
-  social_network_backend:
-    build:
-      context: server
+      context: tools/migrator
       dockerfile: Dockerfile
-    image: social_network_backend:stage
-    container_name: social_network_backend_stage
+    image: migrator:mysql
+    container_name: mysql-migrator
+    environment:
+      MIGRATIONS_PATH: "./migrations"
+      DSN: "user:password@tcp(mysql-storage:3306)/social-network"
+      OPERATION: "up"
+    volumes:
+      - ./backend/migrations:/app/migrations
+    depends_on:
+      - storage
+    networks:
+      - stage-network
+
+  backend:
+    build:
+      context: backend
+      dockerfile: Dockerfile
+    image: backend:stage
+    container_name: backend
     ports:
       - '9999:9999'
     environment:
       - ADDR=0.0.0.0:9999
-      - STORAGE_DSN=user:password@tcp(storage_stage:3306)/social-network?parseTime=true
+      - STORAGE_DSN=user:password@tcp(mysql-storage:3306)/social-network?parseTime=true
       - JWT_SECRET=secret
       - JWT_ACCESS_TOKEN_TIME_EXPIRE=1h
       - JWT_REFRESH_TOKEN_TIME_EXPIRE=24h
-    networks:
-      - stage_network
     depends_on:
       - storage
+    networks:
+      - stage-network
 
-  social_network_frontend:
+  frontend:
     build:
       context: front
       dockerfile: Dockerfile
-    image: social_network_frontend:stage
-    container_name: social_network_frontend_stage
+    image: frontend:stage
+    container_name: frontend
     ports:
       - '8081:80'
+    depends_on:
+      - backend
     networks:
-      - stage_network
+      - stage-network
+
+volumes:
+  mysql-storage-data:
 
 networks:
-  stage_network:
-    name: stage_network
+  stage-network:
+    name: stage-network
     driver: bridge

@@ -6,7 +6,6 @@ import (
 	uuid "github.com/satori/go.uuid"
 	"net"
 	"social-network/internal/domain"
-	"social-network/internal/infrastructure/tarantool"
 	wstransport "social-network/internal/transport/ws"
 	"time"
 
@@ -584,107 +583,4 @@ func (w *wsPoolRepository) AddConnection(userID string, conn net.Conn) {
 
 func (w *wsPoolRepository) RemoveConnection(userID string, conn net.Conn) {
 	w.conns.Remove(userID, conn)
-}
-
-type tarUserRepository struct {
-	conn *tarantool.Conn
-}
-
-func NewTarantoolRepository(conn *tarantool.Conn) *tarUserRepository {
-	return &tarUserRepository{conn: conn}
-}
-
-func (t *tarUserRepository) GetTx(ctx context.Context) (*sql.Tx, error) {
-	return nil, nil
-}
-
-func (t *tarUserRepository) CommitTx(tx *sql.Tx) error {
-	return nil
-}
-
-func (t *tarUserRepository) Persist(tx *sql.Tx, user *domain.User) error {
-	panic("implement me")
-}
-
-func (t *tarUserRepository) GetByID(tx *sql.Tx, id string) (*domain.User, error) {
-	panic("implement me")
-}
-
-func (t *tarUserRepository) GetByEmail(tx *sql.Tx, email string) (*domain.User, error) {
-	panic("implement me")
-}
-
-func (t *tarUserRepository) GetByIDAndRefreshToken(tx *sql.Tx, id, token string) (*domain.User, error) {
-	panic("implement me")
-}
-
-func (t *tarUserRepository) GetByIDAndAccessToken(tx *sql.Tx, id, token string) (*domain.User, error) {
-	panic("implement me")
-}
-
-func (t *tarUserRepository) GetCount(tx *sql.Tx) (int, error) {
-	panic("implement me")
-}
-
-func (t *tarUserRepository) GetByLimitAndOffsetExceptUserID(tx *sql.Tx, userID string, limit, offset int) ([]*domain.User, error) {
-	panic("implement me")
-}
-
-func (t *tarUserRepository) GetByPrefixOfNameAndSurname(_ *sql.Tx, prefix string) ([]*domain.User, error) {
-	users := make([]*domain.User, 0, 100)
-	roughData, err := t.conn.CallFunc("find_users_by_name_and_surname", []interface{}{"ma"})
-	if err != nil {
-		return nil, err
-	}
-
-	for _, data := range roughData {
-		if v, ok := data.([]interface{}); ok {
-			id, _ := v[0].(string)
-			email, _ := v[1].(string)
-			password, _ := v[2].(string)
-			name, _ := v[3].(string)
-			surname, _ := v[4].(string)
-			sex, _ := v[5].(string)
-			birthday, _ := v[6].(string)
-			city, _ := v[7].(string)
-			interests, _ := v[8].(string)
-			b, _ := time.Parse("2006-01-02", birthday)
-			users = append(users, &domain.User{
-				ID: id,
-				Credentials: domain.Credentials{
-					Email:    email,
-					Password: password,
-				},
-				Name:      name,
-				Surname:   surname,
-				Birthday:  b,
-				Sex:       sex,
-				City:      city,
-				Interests: interests,
-			})
-		}
-
-	}
-
-	return users, nil
-}
-
-func (t *tarUserRepository) UpdateByID(tx *sql.Tx, user *domain.User) error {
-	panic("implement me")
-}
-
-func (t *tarUserRepository) CompareError(err error, number uint16) bool {
-	panic("implement me")
-}
-
-// Tx is a transaction.
-type TxStub struct {
-}
-
-func (t *TxStub) Commit() error {
-	return nil
-}
-
-func (t *TxStub) Rollback() error {
-	return nil
 }

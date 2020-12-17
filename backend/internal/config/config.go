@@ -10,10 +10,9 @@ import (
 )
 
 type Config struct {
-	Addr      string          `mapstructure:"addr"`
-	Storage   StorageConfig   `mapstructure:"storage"`
-	Tarantool TarantoolConfig `mapstructure:"tarantool"`
-	JWT       JWTConfig       `mapstructure:"jwt"`
+	Addr    string        `mapstructure:"addr"`
+	Storage StorageConfig `mapstructure:"storage"`
+	JWT     JWTConfig     `mapstructure:"jwt"`
 }
 
 type StorageConfig struct {
@@ -21,14 +20,6 @@ type StorageConfig struct {
 	ConnMaxLifetime time.Duration `mapstructure:"conn_max_lifetime"`
 	MaxOpenConns    int           `mapstructure:"max_open_conns"`
 	MaxIdleConns    int           `mapstructure:"max_idle_conns"`
-}
-
-type TarantoolConfig struct {
-	Host     string `mapstructure:"host"`
-	Port     int    `mapstructure:"port"`
-	User     string `mapstructure:"user"`
-	Password string `mapstructure:"password"`
-	Space    string `mapstructure:"space"`
 }
 
 type JWTConfig struct {
