@@ -1,9 +1,11 @@
 package main
 
 import (
+	"context"
 	"database/sql"
 	"flag"
 	"fmt"
+	"github.com/go-redis/redis/v8"
 	"os"
 	"os/signal"
 	"social-network/internal/app"
@@ -38,11 +40,24 @@ func main() {
 	mysqlConn.SetMaxOpenConns(cfg.Storage.MaxOpenConns)
 	mysqlConn.SetMaxIdleConns(cfg.Storage.MaxIdleConns)
 
-	logger.Info("try establish connection to MySQL...")
+	logger.Info("try establish connection with MySQL...")
 	if err = establishConnection(mysqlConn, cfg.Storage.AttemptCount); err != nil {
 		logger.Fatal("mysql ping fail, ", zap.Error(err))
 	}
 	logger.Info("connection with MySQL is established")
+
+	redisConn := redis.NewClient(&redis.Options{
+		Addr:     cfg.Cache.Addr,
+		Password: cfg.Cache.Password,
+		DB:       cfg.Cache.DB,
+	})
+
+	logger.Info("try establish connection with Redis...")
+	if _, err = redisConn.Ping(context.TODO()).Result(); err != nil {
+		logger.Fatal("redis ping fail, ", zap.Error(err))
+	}
+	logger.Info("connection with Redis is established")
+	defer redisConn.Close()
 
 	application := app.NewApp(cfg,
 		app.WithLogger(logger),
