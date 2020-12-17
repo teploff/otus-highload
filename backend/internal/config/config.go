@@ -13,6 +13,7 @@ type Config struct {
 	Addr    string        `mapstructure:"addr"`
 	Storage StorageConfig `mapstructure:"storage"`
 	JWT     JWTConfig     `mapstructure:"jwt"`
+	Logger  LoggerConfig  `mapstructure:"logger"`
 }
 
 type StorageConfig struct {
@@ -20,12 +21,20 @@ type StorageConfig struct {
 	ConnMaxLifetime time.Duration `mapstructure:"conn_max_lifetime"`
 	MaxOpenConns    int           `mapstructure:"max_open_conns"`
 	MaxIdleConns    int           `mapstructure:"max_idle_conns"`
+	AttemptCount    int           `mapstructure:"attempt_count"`
 }
 
 type JWTConfig struct {
 	Secret                 string
 	AccessTokenTimeExpire  time.Duration `mapstructure:"access_token_time_expire"`
 	RefreshTokenTimeExpire time.Duration `mapstructure:"refresh_token_time_expire"`
+}
+
+// LoggerConfig logger configuration.
+//
+// Level - logging level.
+type LoggerConfig struct {
+	Level string `yaml:"level"`
 }
 
 // Load create configuration from file & environments.
