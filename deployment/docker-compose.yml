@@ -33,6 +33,22 @@ services:
     networks:
       - stage-network
 
+  nats-streaming:
+    image: nats-streaming
+    container_name: nats-streaming
+    ports:
+      - "4222:4222"
+      - "8222:8222"
+    command:
+      - "--cluster_id=stan-cluster"
+      - "--store=file"
+      - "--dir=datastore"
+      - "--http_port=8222"
+      - "--max_age=1h"
+      - "--max_inactivity=1h"
+    networks:
+      - stage-network
+
   adminer:
     image: adminer
     container_name: adminer
@@ -54,7 +70,7 @@ services:
       DSN: "user:password@tcp(mysql-storage:3306)/social-network"
       OPERATION: "up"
     volumes:
-      - ./backend/migrations:/app/migrations
+      - ../backend/migrations:/app/migrations
     depends_on:
       - storage
     networks:
@@ -74,12 +90,15 @@ services:
       - CACHE_ADDR=redis-cache:6379
       - CACHE_PASSWORD=password
       - CACHE_DB=0
+      - STAN_CLUSTER_ID=stan-cluster
+      - STAN_ADDR=nats://nats-streaming:4222
       - JWT_SECRET=secret
       - JWT_ACCESS_TOKEN_TIME_EXPIRE=1h
       - JWT_REFRESH_TOKEN_TIME_EXPIRE=24h
     depends_on:
       - storage
       - cache
+      - nats-streaming
     networks:
       - stage-network
 

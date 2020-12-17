@@ -11,6 +11,7 @@ import (
 	"social-network/internal/app"
 	"social-network/internal/config"
 	zaplogger "social-network/internal/infrastructure/logger"
+	"social-network/internal/infrastructure/stan"
 	"syscall"
 	"time"
 
@@ -58,6 +59,12 @@ func main() {
 	}
 	logger.Info("connection with Redis is established")
 	defer redisConn.Close()
+
+	client, err := stan.NewClient(cfg.Stan, logger)
+	if err != nil {
+		logger.Fatal("stan connection fail", zap.Error(err))
+	}
+	defer client.Close()
 
 	application := app.NewApp(cfg,
 		app.WithLogger(logger),

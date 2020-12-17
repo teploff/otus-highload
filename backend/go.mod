@@ -13,6 +13,7 @@ require (
 	github.com/gobwas/ws v1.0.4
 	github.com/golang-migrate/migrate v3.5.4+incompatible
 	github.com/gorilla/websocket v1.4.2
+	github.com/nats-io/stan.go v0.7.0
 	github.com/pressly/goose v2.6.0+incompatible // indirect
 	github.com/satori/go.uuid v1.2.0
 	github.com/spf13/viper v1.7.1

@@ -12,6 +12,10 @@ cache:
   password: "password"
   db: 0
 
+stan:
+  cluster_id: "stan-cluster"
+  addr: "localhost:4222"
+
 jwt:
   secret: "some_secret"
   access_token_time_expire: "1h"
