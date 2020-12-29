@@ -1,10 +1,29 @@
 <template>
   <div class="page-container">
-    <md-app>
-      <md-app-toolbar class="md-primary">
-        <span class="md-title">My Title</span>
-      </md-app-toolbar>
+    <md-toolbar class="md-primary">
+      <div class="md-toolbar-row">
+        <div class="md-toolbar-section-start">
+          <md-button class="md-icon-button">
+            <md-icon>menu</md-icon>
+          </md-button>
+        </div>
 
+        <md-autocomplete
+            class="search"
+            v-model="selectedEmployee"
+            :md-options="employees"
+            md-layout="box">
+          <label>Search...</label>
+        </md-autocomplete>
+
+        <div class="md-toolbar-section-end">
+          <md-button class="md-icon-button">
+            <md-icon>login</md-icon>
+          </md-button>
+        </div>
+      </div>
+    </md-toolbar>
+    <md-app>
       <md-app-drawer md-permanent="clipped">
         <md-list>
           <md-list-item @click="followHomePage">
@@ -45,7 +64,24 @@ export default {
   data: () => ({
     countNewsNotify: 0,
     countMsgNotify: 0,
-    countFriendsNotify: 0
+    countFriendsNotify: 0,
+    selectedEmployee: null,
+    employees: [
+      'Jim Halpert',
+      'Dwight Schrute',
+      'Michael Scott',
+      'Pam Beesly',
+      'Angela Martin',
+      'Kelly Kapoor',
+      'Ryan Howard',
+      'Kevin Malone',
+      'Creed Bratton',
+      'Oscar Nunez',
+      'Toby Flenderson',
+      'Stanley Hudson',
+      'Meredith Palmer',
+      'Phyllis Lapin-Vance'
+    ]
   }),
   methods: {
     followHomePage() {
@@ -73,5 +109,9 @@ export default {
 .md-drawer {
  width: 230px;
  max-width: calc(100vw - 125px);
+}
+
+.search {
+  max-width: 500px;
 }
 </style>
