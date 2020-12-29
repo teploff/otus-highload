@@ -1,30 +1,31 @@
 <template>
   <div class="page-container">
-    <md-toolbar class="md-primary">
-      <div class="md-toolbar-row">
-        <div class="md-toolbar-section-start">
-          <md-button class="md-icon-button">
-            <md-icon>menu</md-icon>
-          </md-button>
-        </div>
+    <md-app md-waterfall md-mode="flexible">
+      <md-app-toolbar class="md-large md-primary">
+        <div class="md-toolbar-row">
+          <div class="md-toolbar-section-start">
+            <md-button class="md-icon-button" @click="menuVisible = !menuVisible">
+              <md-icon>menu</md-icon>
+            </md-button>
+          </div>
 
-        <md-autocomplete
-            class="search"
-            v-model="selectedEmployee"
-            :md-options="employees"
-            md-layout="box">
-          <label>Search...</label>
-        </md-autocomplete>
+          <md-autocomplete
+              class="search"
+              v-model="selectedEmployee"
+              :md-options="people"
+              md-layout="box">
+            <label>Search people...</label>
+          </md-autocomplete>
 
-        <div class="md-toolbar-section-end">
-          <md-button class="md-icon-button">
-            <md-icon>login</md-icon>
-          </md-button>
+          <div class="md-toolbar-section-end">
+            <md-button class="md-icon-button">
+              <md-icon>login</md-icon>
+            </md-button>
+          </div>
         </div>
-      </div>
-    </md-toolbar>
-    <md-app>
-      <md-app-drawer md-permanent="clipped">
+      </md-app-toolbar>
+
+      <md-app-drawer :md-active.sync="menuVisible">
         <md-list>
           <md-list-item @click="followHomePage">
             <md-icon>assignment_ind</md-icon>
@@ -62,26 +63,12 @@
 export default {
   name: 'Home',
   data: () => ({
+    menuVisible: false,
     countNewsNotify: 0,
     countMsgNotify: 0,
     countFriendsNotify: 0,
     selectedEmployee: null,
-    employees: [
-      'Jim Halpert',
-      'Dwight Schrute',
-      'Michael Scott',
-      'Pam Beesly',
-      'Angela Martin',
-      'Kelly Kapoor',
-      'Ryan Howard',
-      'Kevin Malone',
-      'Creed Bratton',
-      'Oscar Nunez',
-      'Toby Flenderson',
-      'Stanley Hudson',
-      'Meredith Palmer',
-      'Phyllis Lapin-Vance'
-    ]
+    people: [],
   }),
   methods: {
     followHomePage() {
@@ -102,7 +89,8 @@ export default {
 
 <style scoped>
 .md-app {
-  min-height: 350px;
+  max-height: 100vh;
+  min-height: 100vh;
   border: 1px solid rgba(#000, .12);
 }
 
@@ -114,4 +102,10 @@ export default {
 .search {
   max-width: 500px;
 }
+
+.md-toolbar {
+  height: 50px;
+  padding: inherit;
+}
+
 </style>

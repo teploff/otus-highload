@@ -1,11 +1,31 @@
 <template>
   <div class="page-container">
-    <md-app>
-      <md-app-toolbar class="md-primary">
-        <span class="md-title">My Title</span>
+    <md-app md-waterfall md-mode="flexible">
+      <md-app-toolbar class="md-large md-primary">
+        <div class="md-toolbar-row">
+          <div class="md-toolbar-section-start">
+            <md-button class="md-icon-button" @click="menuVisible = !menuVisible">
+              <md-icon>menu</md-icon>
+            </md-button>
+          </div>
+
+          <md-autocomplete
+              class="search"
+              v-model="selectedEmployee"
+              :md-options="people"
+              md-layout="box">
+            <label>Search people...</label>
+          </md-autocomplete>
+
+          <div class="md-toolbar-section-end">
+            <md-button class="md-icon-button">
+              <md-icon>login</md-icon>
+            </md-button>
+          </div>
+        </div>
       </md-app-toolbar>
 
-      <md-app-drawer md-permanent="clipped">
+      <md-app-drawer :md-active.sync="menuVisible">
         <md-list>
           <md-list-item @click="followHomePage">
             <md-icon>assignment_ind</md-icon>
@@ -33,7 +53,7 @@
       </md-app-drawer>
 
       <md-app-content>
-        Friends payload!
+        Home payload!
       </md-app-content>
     </md-app>
   </div>
@@ -41,11 +61,14 @@
 
 <script>
 export default {
-  name: 'Friends',
+  name: 'Home',
   data: () => ({
+    menuVisible: false,
     countNewsNotify: 0,
     countMsgNotify: 0,
-    countFriendsNotify: 0
+    countFriendsNotify: 0,
+    selectedEmployee: null,
+    people: [],
   }),
   methods: {
     followHomePage() {
@@ -66,12 +89,22 @@ export default {
 
 <style scoped>
 .md-app {
-  min-height: 350px;
+  max-height: 100vh;
+  min-height: 100vh;
   border: 1px solid rgba(#000, .12);
 }
 
 .md-drawer {
   width: 230px;
   max-width: calc(100vw - 125px);
+}
+
+.search {
+  max-width: 500px;
+}
+
+.md-toolbar {
+  height: 50px;
+  padding: inherit;
 }
 </style>
