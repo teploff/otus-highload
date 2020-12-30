@@ -13,17 +13,23 @@ import (
 
 type Endpoints struct {
 	Auth      *AuthEndpoints
+	Profile   *ProfileEndpoints
 	Social    *SocialEndpoints
 	Messenger *MessengerEndpoints
 	Ws        *WsEndpoints
 }
 
-func MakeEndpoints(auth domain.AuthService, social domain.SocialService, messenger domain.MessengerService) *Endpoints {
+func MakeEndpoints(auth domain.AuthService, profile domain.ProfileService, social domain.SocialService, messenger domain.MessengerService) *Endpoints {
 	return &Endpoints{
 		Auth: &AuthEndpoints{
 			SignUp:       makeSignUpEndpoint(auth),
 			SignIn:       makeSignInEndpoint(auth),
 			RefreshToken: makeRefreshTokenEndpoint(auth),
+		},
+		Profile: &ProfileEndpoints{
+			Search: &SearchEndpoints{
+				GetByAnthroponym: makeSearchProfileByAnthroponym(auth, profile),
+			},
 		},
 		Social: &SocialEndpoints{
 			GetAllQuestionnaires:              makeGetAllQuestionnairesEndpoint(auth, social),
@@ -147,6 +153,74 @@ func makeRefreshTokenEndpoint(svc domain.AuthService) gin.HandlerFunc {
 				Message: err.Error(),
 			})
 		}
+	}
+}
+
+type ProfileEndpoints struct {
+	Search *SearchEndpoints
+}
+
+type SearchEndpoints struct {
+	GetByAnthroponym gin.HandlerFunc
+}
+
+func makeSearchProfileByAnthroponym(authSvc domain.AuthService, profileSvc domain.ProfileService) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var header AuthorizationHeader
+		if err := c.ShouldBindHeader(&header); err != nil {
+			c.JSON(http.StatusUnauthorized, ErrorResponse{
+				Message: err.Error(),
+			})
+
+			return
+		}
+
+		var request SearchProfileByAnthroponymRequest
+		if err := c.BindQuery(&request); err != nil {
+			c.JSON(http.StatusBadRequest, ErrorResponse{
+				Message: err.Error(),
+			})
+
+			return
+		}
+
+		userID, err := authSvc.Authenticate(c, header.AccessToken)
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, ErrorResponse{
+				Message: err.Error(),
+			})
+
+			return
+		}
+
+		const (
+			defaultLimit  = 10
+			defaultOffset = 0
+		)
+
+		if request.Limit == nil {
+			request.Limit = new(int)
+			*request.Limit = defaultLimit
+		}
+		if request.Offset == nil {
+			request.Offset = new(int)
+			*request.Offset = defaultOffset
+		}
+
+		quest, count, err := profileSvc.SearchByAnthroponym(c, request.Anthroponym, userID, *request.Limit, *request.Offset)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, ErrorResponse{
+				Message: err.Error(),
+			})
+
+			return
+		}
+
+		c.JSON(http.StatusOK, QuestionnairesResponse{
+			Questionnaires: quest,
+			Count:          count,
+		})
+
 	}
 }
 

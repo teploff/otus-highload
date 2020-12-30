@@ -192,6 +192,41 @@ func (a *authService) Authenticate(ctx context.Context, token string) (string, e
 	return userID, a.repository.CommitTx(tx)
 }
 
+type profileService struct {
+	repository domain.UserRepository
+}
+
+func NewProfileService(repository domain.UserRepository) *profileService {
+	return &profileService{repository: repository}
+}
+
+func (p *profileService) SearchByAnthroponym(ctx context.Context, anthroponym, userID string, limit, offset int) ([]*domain.Questionnaire, int, error) {
+	tx, err := p.repository.GetTx(ctx)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	users, count, err := p.repository.GetByAnthroponym(tx, anthroponym, userID, limit, offset)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	questionnaires := make([]*domain.Questionnaire, 0, len(users))
+	for _, user := range users {
+		questionnaires = append(questionnaires, &domain.Questionnaire{
+			Email:     user.Email,
+			Name:      user.Name,
+			Surname:   user.Surname,
+			Birthday:  user.Birthday,
+			Sex:       user.Sex,
+			City:      user.City,
+			Interests: user.Interests,
+		})
+	}
+
+	return questionnaires, count, p.repository.CommitTx(tx)
+}
+
 type socialService struct {
 	repository domain.UserRepository
 }

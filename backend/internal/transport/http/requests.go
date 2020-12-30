@@ -25,6 +25,12 @@ type RefreshTokenRequest struct {
 	RefreshToken string `json:"refresh_token" binding:"required"`
 }
 
+type SearchProfileByAnthroponymRequest struct {
+	Anthroponym string `json:"anthroponym" form:"anthroponym" binding:"required"`
+	Limit       *int   `json:"limit" form:"limit"`
+	Offset      *int   `json:"offset" form:"offset"`
+}
+
 type GetAllQuestionnairesRequest struct {
 	Limit  *int `json:"limit" binding:"required"`
 	Offset int  `json:"offset"`

@@ -23,6 +23,14 @@ func NewHTTPServer(addr string, endpoints *Endpoints) *http.Server {
 		authGroup.PUT("/token", endpoints.Auth.RefreshToken)
 	}
 
+	profileGroup := router.Group("/profile")
+	{
+		profileSearchGroup := profileGroup.Group("/search")
+		{
+			profileSearchGroup.GET("/anthroponym", endpoints.Profile.Search.GetByAnthroponym)
+		}
+	}
+
 	router.POST("/questionnaires", endpoints.Social.GetAllQuestionnaires)
 	router.GET("/questionnaires", endpoints.Social.GetQuestionnairesByNameAndSurname)
 

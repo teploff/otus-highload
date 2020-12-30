@@ -19,6 +19,7 @@ type UserRepository interface {
 	GetCount(tx *sql.Tx) (int, error)
 	GetByLimitAndOffsetExceptUserID(tx *sql.Tx, userID string, limit, offset int) ([]*User, error)
 	GetByPrefixOfNameAndSurname(tx *sql.Tx, prefix string) ([]*User, error)
+	GetByAnthroponym(tx *sql.Tx, userID, anthroponym string, limit, offset int) ([]*User, int, error)
 	UpdateByID(tx *sql.Tx, user *User) error
 	CompareError(err error, number uint16) bool
 }

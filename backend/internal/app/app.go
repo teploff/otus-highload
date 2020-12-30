@@ -50,12 +50,13 @@ func NewApp(cfg *config.Config, opts ...Option) *App {
 // Run lunch application.
 func (a *App) Run(mysqlConn *sql.DB) {
 	authSvc := implementation.NewAuthService(implementation.NewUserRepository(mysqlConn), a.cfg.JWT)
+	profileSvc := implementation.NewProfileService(implementation.NewUserRepository(mysqlConn))
 	socialSvc := implementation.NewSocialService(implementation.NewUserRepository(mysqlConn))
 	messengerSvc := implementation.NewMessengerService(
 		implementation.NewUserRepository(mysqlConn),
 		implementation.NewMessengerRepository(mysqlConn))
 
-	a.httpSrv = httptransport.NewHTTPServer(a.cfg.Addr, httptransport.MakeEndpoints(authSvc, socialSvc, messengerSvc))
+	a.httpSrv = httptransport.NewHTTPServer(a.cfg.Addr, httptransport.MakeEndpoints(authSvc, profileSvc, socialSvc, messengerSvc))
 
 	go func() {
 		if err := a.httpSrv.ListenAndServe(); err != nil {

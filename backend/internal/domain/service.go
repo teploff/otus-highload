@@ -11,6 +11,10 @@ type AuthService interface {
 	Authenticate(ctx context.Context, token string) (string, error)
 }
 
+type ProfileService interface {
+	SearchByAnthroponym(ctx context.Context, anthroponym, userID string, limit, offset int) ([]*Questionnaire, int, error)
+}
+
 type SocialService interface {
 	GetQuestionnaires(ctx context.Context, userID string, limit, offset int) ([]*Questionnaire, int, error)
 	GetQuestionnairesByNameAndSurname(ctx context.Context, prefix string) ([]*Questionnaire, error)
