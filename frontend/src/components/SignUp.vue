@@ -224,12 +224,12 @@ export default {
         })
         .catch((error) => {
           const err = JSON.parse(JSON.stringify(error.response));
-          this.flashMessage.error(
-            { title: 'Error Message Title',
-              message: err.data.message,
-              position: 'center',
-              icon: '../../static/images/error.svg',
-            });
+          this.flashMessage.error({
+            title: 'Error Message Title',
+            message: err.data.message,
+            position: 'center',
+            icon: '../../static/images/error.svg',
+          });
         });
     },
   },

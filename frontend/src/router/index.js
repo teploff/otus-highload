@@ -7,6 +7,7 @@ import Home from '@/components/Home';
 import News from '@/components/News';
 import Messenger from '@/components/Messenger';
 import Friends from '@/components/Friends';
+import People from '@/components/People';
 
 Vue.use(Router);
 
@@ -46,6 +47,11 @@ export default new Router({
       path: '/friends',
       name: 'Friends',
       component: Friends,
+    },
+    {
+      path: '/people',
+      name: 'People',
+      component: People,
     },
   ],
   mode: 'history',
