@@ -89,7 +89,7 @@
                     <md-card-content>
                       <p style="text-align: left"> <b>Sex:</b> {{ card.sex }} </p>
                       <p style="text-align: left">
-                        <b>Birthday:</b> {{ new Date(card.birthday) | dateFormat('DD.MM.YYYY') }}
+                        <b>Birthday:</b> {{ $moment(card.birthday).format('Do MMMM YYYY') }}
                       </p>
                       <p style="text-align: left"> <b>City:</b> {{ card.city }} </p>
                       <p style="text-align: left"> <b>Interests:</b> {{ card.interests }} </p>

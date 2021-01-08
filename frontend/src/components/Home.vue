@@ -14,7 +14,7 @@
               v-model.trim="selectedHuman"
               @input="searchPeople"
               md-layout="box"
-              :md-options="stub">
+              :md-options="[]">
             <label>Search people...</label>
           </md-autocomplete>
 
@@ -79,7 +79,6 @@ export default {
       questionnaires: [],
       count: 0
     },
-    stub: []
   }),
   methods: {
     refreshToken() {

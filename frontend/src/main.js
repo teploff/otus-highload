@@ -7,9 +7,12 @@ import 'vue-material/dist/theme/default.css'
 import FlashMessage from '@smartweb/vue-flash-message';
 import Paginate from 'vuejs-paginate'
 import store from './store'
+import VueMoment from 'vue-moment';
 
 Vue.config.productionTip = false
+
 Vue.use(VueMaterial)
+Vue.use(VueMoment)
 Vue.use(FlashMessage);
 
 Vue.component('paginate', Paginate);
