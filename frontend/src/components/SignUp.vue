@@ -139,9 +139,10 @@
 
 <script>
 import axios from 'axios';
+import moment from 'moment';
 import { validationMixin } from 'vuelidate';
 import { required, email, minLength, maxLength, sameAs } from 'vuelidate/lib/validators';
-import { apiUrl, headers } from '../const';
+import { apiUrl, headers } from '@/const';
 
 export default {
   name: 'SignUp',
@@ -153,7 +154,7 @@ export default {
       repeatedPassword: '',
       name: '',
       surname: '',
-      birthday: Date(),
+      birthday: moment().set({'year': 1990, 'month': 1, 'day': 1}).format('yyyy-MM-d'),
       sex: 'male',
       city: '',
       interests: '',

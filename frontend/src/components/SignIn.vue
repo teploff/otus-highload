@@ -53,7 +53,7 @@
 import axios from 'axios';
 import { validationMixin } from 'vuelidate';
 import { required, email } from 'vuelidate/lib/validators';
-import { apiUrl, headers } from '../const';
+import { apiUrl, headers } from '@/const';
 
 export default {
   name: 'SignIn',
@@ -98,12 +98,13 @@ export default {
     },
     signIn() {
       const path = `${apiUrl}/auth/sign-in`;
+
       axios.post(path, this.payload, { headers })
         .then((response) => {
           const tokenPair = JSON.parse(JSON.stringify(response.data));
           localStorage.setItem('access_token', tokenPair.access_token);
           localStorage.setItem('refresh_token', tokenPair.refresh_token);
-          this.$router.push({ name: 'Questionnaires' });
+          this.$router.push({ name: 'Home' });
         })
         .catch((error) => {
           const err = JSON.parse(JSON.stringify(error.response));
@@ -111,7 +112,7 @@ export default {
             { title: 'Error Message Title',
               message: err.data.message,
               position: 'center',
-              icon: '../../static/images/error.svg',
+              icon: '../assets/error.svg',
             });
         });
     },
