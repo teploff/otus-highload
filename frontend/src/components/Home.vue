@@ -11,8 +11,9 @@
 
           <md-autocomplete
               class="search"
-              v-model="selectedEmployee"
+              v-model.trim="selectedHuman"
               :md-options="people"
+              @input="searchPeople"
               md-layout="box">
             <label>Search people...</label>
           </md-autocomplete>
@@ -60,6 +61,8 @@
 </template>
 
 <script>
+import { debounce } from '@/const'
+
 export default {
   name: 'Home',
   data: () => ({
@@ -67,7 +70,7 @@ export default {
     countNewsNotify: 0,
     countMsgNotify: 0,
     countFriendsNotify: 0,
-    selectedEmployee: null,
+    selectedHuman: null,
     people: [],
   }),
   methods: {
@@ -83,6 +86,9 @@ export default {
     followFriendsPage() {
       this.$router.push({ name: 'Friends' });
     },
+    searchPeople: debounce(function (){
+      console.log('hello')
+    }, 500),
   },
 };
 </script>
