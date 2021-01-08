@@ -11,8 +11,9 @@
 
           <md-autocomplete
               class="search"
-              v-model="selectedEmployee"
-              :md-options="people"
+              v-model.trim="searchPayload.anthroponym"
+              @input="searchPeople"
+              :md-options="[]"
               md-layout="box">
             <label>Search people...</label>
           </md-autocomplete>
@@ -121,7 +122,7 @@
 </template>
 
 <script>
-import {apiUrl, headers} from "@/const";
+import {apiUrl, debounce, headers} from "@/const";
 import axios from "axios";
 
 export default {
@@ -131,8 +132,6 @@ export default {
     countNewsNotify: 0,
     countMsgNotify: 0,
     countFriendsNotify: 0,
-    selectedEmployee: null,
-    people: [],
     searchPayload: {
       anthroponym: null,
       limit: 10,
@@ -238,6 +237,32 @@ export default {
             }
           });
     },
+    searchPeople: debounce(function (){
+      this.$store.commit("changeAnthroponym", this.searchPayload.anthroponym);
+      const path = `${apiUrl}/profile/search/anthroponym`;
+
+      headers.Authorization = localStorage.getItem('access_token');
+
+      axios.get(path, {
+        headers: headers,
+        params: this.searchPayload
+      })
+          .then((response) => {
+            this.cards = JSON.parse(JSON.stringify(response.data));
+          })
+          .catch((error) => {
+            const err = JSON.parse(JSON.stringify(error.response));
+            if (err.status === 401) {
+              this.refreshToken();
+            }
+            this.flashMessage.error({
+              title: 'Error Message Title',
+              message: err.data.message,
+              position: 'center',
+              icon: '../assets/error.svg',
+            });
+          });
+    }, 1000),
   },
 };
 </script>
