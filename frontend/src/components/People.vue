@@ -80,7 +80,12 @@
                 </md-card-header>
 
                 <md-card-expand>
-                  <md-card-actions md-alignment="right">
+                  <md-card-actions md-alignment="space-between">
+                    <div>
+                      <md-button v-show="true">Add as Friend</md-button>
+                      <md-button v-show="false" disabled>Pending</md-button>
+                      <md-button v-show="false" disabled>Your friend</md-button>
+                    </div>
                     <md-card-expand-trigger>
                       <md-button class="learn-more-button" style="color: #337ab7">Learn more</md-button>
                     </md-card-expand-trigger>
@@ -243,6 +248,7 @@ export default {
       this.getPeopleByAnthroponym(this.$store.getters.searchAnthroponym)
     },
     searchPeople: debounce(function (){
+      this.searchPayload.offset = 0
       this.$store.commit("changeAnthroponym", this.searchPayload.anthroponym);
 
       this.getPeopleByAnthroponym(this.$store.getters.searchAnthroponym)
