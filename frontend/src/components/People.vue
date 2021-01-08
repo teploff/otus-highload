@@ -147,12 +147,9 @@ export default {
   }),
   created: function () {
     const path = `${apiUrl}/profile/search/anthroponym`;
-    console.log("hehe")
 
     this.searchPayload.anthroponym = this.$store.getters.searchAnthroponym
     headers.Authorization = localStorage.getItem('access_token');
-
-    console.log("hehe")
 
     axios.get(path, {
       headers: headers,
@@ -225,7 +222,7 @@ export default {
       const path = `${apiUrl}/profile/search/anthroponym`;
       headers.Authorization = localStorage.getItem('access_token');
 
-      this.payload.offset = (pageNum - 1) * this.countCardsInWindow;
+      this.searchPayload.offset = (pageNum - 1) * this.countCardsInWindow;
 
       axios.get(path, {
         headers: headers,
