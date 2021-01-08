@@ -240,7 +240,7 @@ func (p *userRepository) GetByAnthroponym(tx *sql.Tx, anthroponym, userID string
 	if len(strs) > 1 {
 		rows, err = tx.Query(`
 			SELECT
-			    FOUND_ROWS() id, email, password, name, surname, sex, birthday, city, interests, access_token, refresh_token
+			    SQL_CALC_FOUND_ROWS id, email, password, name, surname, sex, birthday, city, interests, access_token, refresh_token
 			FROM
 		    	user
 			WHERE 
@@ -250,7 +250,7 @@ func (p *userRepository) GetByAnthroponym(tx *sql.Tx, anthroponym, userID string
 	} else {
 		rows, err = tx.Query(`
 			SELECT
-				FOUND_ROWS() id, email, password, name, surname, sex, birthday, city, interests, access_token, refresh_token
+				SQL_CALC_FOUND_ROWS id, email, password, name, surname, sex, birthday, city, interests, access_token, refresh_token
 			FROM
 		    	user
 			WHERE 
