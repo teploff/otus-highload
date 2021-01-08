@@ -13,13 +13,13 @@
               class="search"
               v-model.trim="searchPayload.anthroponym"
               @input="searchPeople"
-              md-layout="box"
-              :md-options="[]">
+              :md-options="[]"
+              md-layout="box">
             <label>Search people...</label>
           </md-autocomplete>
 
           <div class="md-toolbar-section-end">
-            <md-button class="md-icon-button">
+            <md-button class="md-icon-button" @click="logOut">
               <md-icon>login</md-icon>
             </md-button>
           </div>
@@ -97,6 +97,12 @@ export default {
       this.$store.commit("changeAnthroponym", this.searchPayload.anthroponym);
       this.$router.push({ name: 'People' })
     }, 1000),
+    logOut() {
+      this.$store.commit("changeAccessToken", null);
+      this.$store.commit("changeRefreshToken", null);
+
+      this.$router.push({ name: 'SignIn' });
+    },
   },
 };
 </script>

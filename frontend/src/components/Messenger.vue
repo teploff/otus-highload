@@ -11,14 +11,15 @@
 
           <md-autocomplete
               class="search"
-              v-model="selectedEmployee"
-              :md-options="people"
+              v-model.trim="searchPayload.anthroponym"
+              @input="searchPeople"
+              :md-options="[]"
               md-layout="box">
             <label>Search people...</label>
           </md-autocomplete>
 
           <div class="md-toolbar-section-end">
-            <md-button class="md-icon-button">
+            <md-button class="md-icon-button" @click="logOut">
               <md-icon>login</md-icon>
             </md-button>
           </div>
@@ -60,6 +61,8 @@
 </template>
 
 <script>
+import {debounce} from "@/const";
+
 export default {
   name: 'Home',
   data: () => ({
@@ -67,8 +70,9 @@ export default {
     countNewsNotify: 0,
     countMsgNotify: 0,
     countFriendsNotify: 0,
-    selectedEmployee: null,
-    people: [],
+    searchPayload: {
+      anthroponym: null,
+    },
   }),
   beforeCreate() {
     if (this.$store.getters.accessToken === null) {
@@ -87,6 +91,16 @@ export default {
     },
     followFriendsPage() {
       this.$router.push({ name: 'Friends' });
+    },
+    searchPeople: debounce(function (){
+      this.$store.commit("changeAnthroponym", this.searchPayload.anthroponym);
+      this.$router.push({ name: 'People' })
+    }, 1000),
+    logOut() {
+      this.$store.commit("changeAccessToken", null);
+      this.$store.commit("changeRefreshToken", null);
+
+      this.$router.push({ name: 'SignIn' });
     },
   },
 };
