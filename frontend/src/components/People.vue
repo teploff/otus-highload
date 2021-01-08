@@ -19,7 +19,7 @@
           </md-autocomplete>
 
           <div class="md-toolbar-section-end">
-            <md-button class="md-icon-button">
+            <md-button class="md-icon-button" @click="logOut">
               <md-icon>login</md-icon>
             </md-button>
           </div>
@@ -122,8 +122,8 @@
 </template>
 
 <script>
-import {apiUrl, debounce, headers} from "@/const";
 import axios from "axios";
+import {apiUrl, debounce, headers} from "@/const";
 
 export default {
   name: 'People',
@@ -143,32 +143,20 @@ export default {
     },
     countCardsInWindow: 10,
     page: 1,
+    tokenPair: {
+      accessToken: null,
+      refreshToken: null
+    }
   }),
+  beforeCreate() {
+    if  (this.$store.getters.accessToken === null) {
+      this.$router.push({ name: 'SignIn' });
+    }
+  },
   created: function () {
-    const path = `${apiUrl}/profile/search/anthroponym`;
-
-    this.searchPayload.anthroponym = this.$store.getters.searchAnthroponym
-    headers.Authorization = localStorage.getItem('access_token');
-
-    axios.get(path, {
-      headers: headers,
-      params: this.searchPayload
-    })
-        .then((response) => {
-          this.cards = JSON.parse(JSON.stringify(response.data));
-        })
-        .catch((error) => {
-          const err = JSON.parse(JSON.stringify(error.response));
-          if (err.status === 401) {
-            this.refreshToken();
-          }
-          this.flashMessage.error({
-            title: 'Error Message Title',
-            message: err.data.message,
-            position: 'center',
-            icon: '../assets/error.svg',
-          });
-        });
+    if (this.$store.getters.searchAnthroponym !== null && this.$store.getters.searchAnthroponym !== '') {
+      this.getPeopleByAnthroponym(this.$store.getters.searchAnthroponym)
+    }
   },
   beforeDestroy() {
     this.$store.commit("changeAnthroponym", null);
@@ -186,22 +174,54 @@ export default {
     followFriendsPage() {
       this.$router.push({ name: 'Friends' }).catch(() => {});
     },
+    getPeopleByAnthroponym(anthroponym) {
+      const path = `${apiUrl}/profile/search/anthroponym`;
+
+      this.searchPayload.anthroponym = anthroponym
+      headers.Authorization = this.$store.getters.accessToken
+
+      axios.get(path, {
+        headers: headers,
+        params: this.searchPayload
+      })
+          .then((response) => {
+            this.cards = JSON.parse(JSON.stringify(response.data));
+          })
+          .catch((error) => {
+            const err = JSON.parse(JSON.stringify(error.response));
+
+            if (err.status === 401) {
+              this.refreshToken();
+            }
+
+            this.flashMessage.error({
+              title: 'Error Message Title',
+              message: err.data.message,
+              position: 'center',
+              icon: '../assets/error.svg',
+            });
+          });
+    },
     refreshToken() {
       const path = `${apiUrl}/auth/token`;
-      const refreshToken = localStorage.getItem('refresh_token');
+      const camelcaseKeys = require('camelcase-keys');
 
-      if (refreshToken === null) {
+      if (this.$store.getters.refreshToken === null) {
         this.$router.push({ name: 'SignIn' });
       }
 
       const payload = {
-        refresh_token: refreshToken,
+        refresh_token: this.$store.getters.refreshToken,
       };
-      axios.put(path, payload)
+      axios.put(path, payload, {transformResponse: [(data) => {
+          return camelcaseKeys(JSON.parse(data), { deep: true })}
+        ]})
           .then((response) => {
-            const tokenPair = JSON.parse(JSON.stringify(response.data));
-            localStorage.setItem('access_token', tokenPair.access_token);
-            localStorage.setItem('refresh_token', tokenPair.refresh_token);
+            this.tokenPair = response.data;
+
+            this.$store.commit("changeAccessToken", this.tokenPair.accessToken);
+            this.$store.commit("changeRefreshToken", this.tokenPair.refreshToken);
+
             this.$router.push({ name: 'People' });
           })
           .catch((error) => {
@@ -218,51 +238,21 @@ export default {
           });
     },
     paginatorClick(pageNum) {
-      const path = `${apiUrl}/profile/search/anthroponym`;
-      headers.Authorization = localStorage.getItem('access_token');
-
       this.searchPayload.offset = (pageNum - 1) * this.countCardsInWindow;
 
-      axios.get(path, {
-        headers: headers,
-        params: this.searchPayload
-      })
-          .then((response) => {
-            this.cards = JSON.parse(JSON.stringify(response.data));
-          })
-          .catch((error) => {
-            const err = JSON.parse(JSON.stringify(error.response));
-            if (err.status === 401) {
-              this.refreshToken();
-            }
-          });
+      this.getPeopleByAnthroponym(this.$store.getters.searchAnthroponym)
     },
     searchPeople: debounce(function (){
       this.$store.commit("changeAnthroponym", this.searchPayload.anthroponym);
-      const path = `${apiUrl}/profile/search/anthroponym`;
 
-      headers.Authorization = localStorage.getItem('access_token');
-
-      axios.get(path, {
-        headers: headers,
-        params: this.searchPayload
-      })
-          .then((response) => {
-            this.cards = JSON.parse(JSON.stringify(response.data));
-          })
-          .catch((error) => {
-            const err = JSON.parse(JSON.stringify(error.response));
-            if (err.status === 401) {
-              this.refreshToken();
-            }
-            this.flashMessage.error({
-              title: 'Error Message Title',
-              message: err.data.message,
-              position: 'center',
-              icon: '../assets/error.svg',
-            });
-          });
+      this.getPeopleByAnthroponym(this.$store.getters.searchAnthroponym)
     }, 1000),
+    logOut() {
+      this.$store.commit("changeAccessToken", null);
+      this.$store.commit("changeRefreshToken", null);
+
+      this.$router.push({ name: 'SignIn' });
+    },
   },
 };
 </script>

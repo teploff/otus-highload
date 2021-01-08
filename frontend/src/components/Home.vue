@@ -11,7 +11,7 @@
 
           <md-autocomplete
               class="search"
-              v-model.trim="selectedHuman"
+              v-model.trim="searchPayload.anthroponym"
               @input="searchPeople"
               md-layout="box"
               :md-options="[]">
@@ -61,8 +61,7 @@
 </template>
 
 <script>
-import axios from 'axios';
-import { apiUrl, debounce } from '@/const'
+import { debounce } from '@/const'
 
 export default {
   name: 'Home',
@@ -74,41 +73,14 @@ export default {
     searchPayload: {
       anthroponym: null,
     },
-    selectedHuman: null,
-    people: {
-      questionnaires: [],
-      count: 0
-    },
   }),
+  created() {
+    if (this.$store.getters.accessToken === null) {
+      console.log("lololo")
+      this.$router.push({ name: 'SignIn' });
+    }
+  },
   methods: {
-    refreshToken() {
-      const path = `${apiUrl}/auth/token`;
-      const refreshToken = localStorage.getItem('refresh_token');
-
-      if (refreshToken === null) {
-        this.$router.push({ name: 'SignIn' });
-      }
-
-      const payload = {
-        refresh_token: refreshToken,
-      };
-      axios.put(path, payload)
-          .then((response) => {
-            const tokenPair = JSON.parse(JSON.stringify(response.data));
-
-            localStorage.setItem('access_token', tokenPair.access_token);
-            localStorage.setItem('refresh_token', tokenPair.refresh_token);
-
-            this.$router.push({ name: 'Home' });
-          })
-          .catch((error) => {
-            const err = JSON.parse(JSON.stringify(error.response));
-            if (err.status === 401) {
-              this.$router.push({ name: 'SignIn' });
-            }
-            console.log(err);
-          });
-    },
     followHomePage() {
       this.$router.push({ name: 'Home' }).catch(() => {});
     },
@@ -122,7 +94,7 @@ export default {
       this.$router.push({ name: 'Friends' });
     },
     searchPeople: debounce(function (){
-      this.$store.commit("changeAnthroponym", this.selectedHuman);
+      this.$store.commit("changeAnthroponym", this.searchPayload.anthroponym);
       this.$router.push({ name: 'People' })
     }, 1000),
   },

@@ -63,6 +63,10 @@ export default {
       email: '',
       password: '',
     },
+    tokenPair: {
+      accessToken: null,
+      refreshToken: null
+    }
   }),
   validations: {
     payload: {
@@ -98,24 +102,29 @@ export default {
     },
     signIn() {
       const path = `${apiUrl}/auth/sign-in`;
+      const camelcaseKeys = require('camelcase-keys');
 
-      axios.post(path, this.payload, { headers })
-        .then((response) => {
-          const tokenPair = JSON.parse(JSON.stringify(response.data));
-          localStorage.setItem('access_token', tokenPair.access_token);
-          localStorage.setItem('refresh_token', tokenPair.refresh_token);
-          this.$router.push({ name: 'Home' });
-        })
-        .catch((error) => {
-          const err = JSON.parse(JSON.stringify(error.response));
-          this.flashMessage.error(
-            { title: 'Error Message Title',
+      axios.post(path, this.payload, { headers, transformResponse: [(data) => {
+        return camelcaseKeys(JSON.parse(data), { deep: true })}
+        ]})
+          .then((response) => {
+            this.tokenPair = response.data;
+
+            this.$store.commit("changeAccessToken", this.tokenPair.accessToken);
+            this.$store.commit("changeRefreshToken", this.tokenPair.refreshToken);
+
+            this.$router.push({ name: 'Home' });
+          })
+          .catch((error) => {
+            const err = JSON.parse(JSON.stringify(error.response));
+            this.flashMessage.error({
+              title: 'Error Message Title',
               message: err.data.message,
               position: 'center',
               icon: '../assets/error.svg',
             });
-        });
-    },
+          });
+      },
   },
 };
 </script>

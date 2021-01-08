@@ -70,6 +70,11 @@ export default {
     selectedEmployee: null,
     people: [],
   }),
+  beforeCreate() {
+    if (this.$store.getters.accessToken === null) {
+      this.$router.push({ name: 'SignIn' });
+    }
+  },
   methods: {
     followHomePage() {
       this.$router.push({ name: 'Home' });

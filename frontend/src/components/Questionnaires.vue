@@ -74,7 +74,7 @@
 
 <script>
 import axios from 'axios';
-import { apiUrl, headers } from '../const';
+import { apiUrl, headers } from '@/const';
 
 export default {
   name: 'Questionnaires',
