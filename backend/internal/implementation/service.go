@@ -214,13 +214,15 @@ func (p *profileService) SearchByAnthroponym(ctx context.Context, anthroponym, u
 	questionnaires := make([]*domain.Questionnaire, 0, len(users))
 	for _, user := range users {
 		questionnaires = append(questionnaires, &domain.Questionnaire{
-			Email:     user.Email,
-			Name:      user.Name,
-			Surname:   user.Surname,
-			Birthday:  user.Birthday,
-			Sex:       user.Sex,
-			City:      user.City,
-			Interests: user.Interests,
+			ID:               user.ID,
+			Email:            user.Email,
+			Name:             user.Name,
+			Surname:          user.Surname,
+			Birthday:         user.Birthday,
+			Sex:              user.Sex,
+			City:             user.City,
+			Interests:        user.Interests,
+			FriendshipStatus: user.FriendshipStatus,
 		})
 	}
 
@@ -228,27 +230,42 @@ func (p *profileService) SearchByAnthroponym(ctx context.Context, anthroponym, u
 }
 
 type socialService struct {
-	repository domain.UserRepository
+	userRepository   domain.UserRepository
+	socialRepository domain.SocialRepository
 }
 
-func NewSocialService(rep domain.UserRepository) *socialService {
+func NewSocialService(userRep domain.UserRepository, socialRep domain.SocialRepository) *socialService {
 	return &socialService{
-		repository: rep,
+		userRepository:   userRep,
+		socialRepository: socialRep,
 	}
+}
+
+func (s *socialService) AddFriend(ctx context.Context, userID, friendID string) error {
+	tx, err := s.socialRepository.GetTx(ctx)
+	if err != nil {
+		return err
+	}
+
+	if err = s.socialRepository.CreateFriendship(tx, userID, friendID); err != nil {
+		return err
+	}
+
+	return s.userRepository.CommitTx(tx)
 }
 
 func (s *socialService) GetQuestionnaires(ctx context.Context, userID string, limit, offset int) ([]*domain.Questionnaire, int, error) {
-	tx, err := s.repository.GetTx(ctx)
+	tx, err := s.userRepository.GetTx(ctx)
 	if err != nil {
 		return nil, 0, err
 	}
 
-	count, err := s.repository.GetCount(tx)
+	count, err := s.userRepository.GetCount(tx)
 	if err != nil {
 		return nil, 0, err
 	}
 
-	users, err := s.repository.GetByLimitAndOffsetExceptUserID(tx, userID, limit, offset)
+	users, err := s.userRepository.GetByLimitAndOffsetExceptUserID(tx, userID, limit, offset)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -267,16 +284,16 @@ func (s *socialService) GetQuestionnaires(ctx context.Context, userID string, li
 	}
 
 	// count - 1: without myself
-	return questionnaires, count - 1, s.repository.CommitTx(tx)
+	return questionnaires, count - 1, s.userRepository.CommitTx(tx)
 }
 
 func (s *socialService) GetQuestionnairesByNameAndSurname(ctx context.Context, prefix string) ([]*domain.Questionnaire, error) {
-	tx, err := s.repository.GetTx(ctx)
+	tx, err := s.userRepository.GetTx(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	users, err := s.repository.GetByPrefixOfNameAndSurname(tx, prefix)
+	users, err := s.userRepository.GetByPrefixOfNameAndSurname(tx, prefix)
 	if err != nil {
 		return nil, err
 	}
@@ -294,7 +311,7 @@ func (s *socialService) GetQuestionnairesByNameAndSurname(ctx context.Context, p
 		})
 	}
 
-	return questionnaires, s.repository.CommitTx(tx)
+	return questionnaires, s.userRepository.CommitTx(tx)
 }
 
 type messengerService struct {

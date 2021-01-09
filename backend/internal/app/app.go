@@ -51,7 +51,9 @@ func NewApp(cfg *config.Config, opts ...Option) *App {
 func (a *App) Run(mysqlConn *sql.DB) {
 	authSvc := implementation.NewAuthService(implementation.NewUserRepository(mysqlConn), a.cfg.JWT)
 	profileSvc := implementation.NewProfileService(implementation.NewUserRepository(mysqlConn))
-	socialSvc := implementation.NewSocialService(implementation.NewUserRepository(mysqlConn))
+	socialSvc := implementation.NewSocialService(
+		implementation.NewUserRepository(mysqlConn),
+		implementation.NewSocialRepository(mysqlConn))
 	messengerSvc := implementation.NewMessengerService(
 		implementation.NewUserRepository(mysqlConn),
 		implementation.NewMessengerRepository(mysqlConn))

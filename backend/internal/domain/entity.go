@@ -25,14 +25,15 @@ func (c *Credentials) DoesPasswordMatch(password string) bool {
 type User struct {
 	ID string `json:"id"`
 	Credentials
-	Name         string    `json:"name"`
-	Surname      string    `json:"surname"`
-	Birthday     time.Time `json:"birthday"`
-	Sex          string    `json:"sex"`
-	City         string    `json:"city"`
-	Interests    string    `json:"interests"`
-	AccessToken  *string   `json:"access_token"`
-	RefreshToken *string   `json:"refresh_token"`
+	Name             string    `json:"name"`
+	Surname          string    `json:"surname"`
+	Birthday         time.Time `json:"birthday"`
+	Sex              string    `json:"sex"`
+	City             string    `json:"city"`
+	Interests        string    `json:"interests"`
+	AccessToken      *string   `json:"access_token"`
+	RefreshToken     *string   `json:"refresh_token"`
+	FriendshipStatus string    `json:"friendship_status"`
 }
 
 type TokenPair struct {
@@ -40,14 +41,22 @@ type TokenPair struct {
 	RefreshToken string `json:"refresh_token"`
 }
 
+type FriendShip struct {
+	MasterUserID string
+	SlaveUserID  string
+	Status       string
+}
+
 type Questionnaire struct {
-	Email     string    `json:"email"`
-	Name      string    `json:"name"`
-	Surname   string    `json:"surname"`
-	Birthday  time.Time `json:"birthday"`
-	Sex       string    `json:"sex"`
-	City      string    `json:"city"`
-	Interests string    `json:"interests"`
+	ID               string    `json:"id"`
+	Email            string    `json:"email"`
+	Name             string    `json:"name"`
+	Surname          string    `json:"surname"`
+	Birthday         time.Time `json:"birthday"`
+	Sex              string    `json:"sex"`
+	City             string    `json:"city"`
+	Interests        string    `json:"interests"`
+	FriendshipStatus string    `json:"friendship_status"`
 }
 
 type ShortMessage struct {

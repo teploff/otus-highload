@@ -32,6 +32,7 @@ func MakeEndpoints(auth domain.AuthService, profile domain.ProfileService, socia
 			},
 		},
 		Social: &SocialEndpoints{
+			AddFriend:                         makeAddFriendEndpoint(auth, social),
 			GetAllQuestionnaires:              makeGetAllQuestionnairesEndpoint(auth, social),
 			GetQuestionnairesByNameAndSurname: makeGetQuestionnairesByNameAndSurnameEndpoint(auth, social),
 		},
@@ -225,8 +226,50 @@ func makeSearchProfileByAnthroponym(authSvc domain.AuthService, profileSvc domai
 }
 
 type SocialEndpoints struct {
+	AddFriend                         gin.HandlerFunc
 	GetAllQuestionnaires              gin.HandlerFunc
 	GetQuestionnairesByNameAndSurname gin.HandlerFunc
+}
+
+func makeAddFriendEndpoint(authSvc domain.AuthService, socialSvc domain.SocialService) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var header AuthorizationHeader
+		if err := c.ShouldBindHeader(&header); err != nil {
+			c.JSON(http.StatusUnauthorized, ErrorResponse{
+				Message: err.Error(),
+			})
+
+			return
+		}
+
+		var request AddFriendRequest
+		if err := c.Bind(&request); err != nil {
+			c.JSON(http.StatusBadRequest, ErrorResponse{
+				Message: err.Error(),
+			})
+
+			return
+		}
+
+		userID, err := authSvc.Authenticate(c, header.AccessToken)
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, ErrorResponse{
+				Message: err.Error(),
+			})
+
+			return
+		}
+
+		if err = socialSvc.AddFriend(c, userID, request.FriendID); err != nil {
+			c.JSON(http.StatusInternalServerError, ErrorResponse{
+				Message: err.Error(),
+			})
+
+			return
+		}
+
+		c.JSON(http.StatusOK, EmptyResponse{})
+	}
 }
 
 func makeGetAllQuestionnairesEndpoint(authSvc domain.AuthService, socialSvc domain.SocialService) gin.HandlerFunc {

@@ -82,9 +82,10 @@
                 <md-card-expand>
                   <md-card-actions md-alignment="space-between">
                     <div>
-                      <md-button v-show="true">Add as Friend</md-button>
-                      <md-button v-show="false" disabled>Pending</md-button>
-                      <md-button v-show="false" disabled>Your friend</md-button>
+                      <md-button v-show="card.friendshipStatus === 'noname'" @click="addFriend(card.id)">Add Friend</md-button>
+                      <md-button v-show="card.friendshipStatus === 'expected'" disabled>Pending</md-button>
+                      <md-button v-show="card.friendshipStatus === 'confirmed'">Confirm Friend</md-button>
+                      <md-button v-show="card.friendshipStatus === 'accepted'" disabled>Your friend</md-button>
                     </div>
                     <md-card-expand-trigger>
                       <md-button class="learn-more-button" style="color: #337ab7">Learn more</md-button>
@@ -181,19 +182,23 @@ export default {
     },
     getPeopleByAnthroponym(anthroponym) {
       const path = `${apiUrl}/profile/search/anthroponym`;
+      const camelcaseKeys = require('camelcase-keys');
 
       this.searchPayload.anthroponym = anthroponym
       headers.Authorization = this.$store.getters.accessToken
 
       axios.get(path, {
         headers: headers,
-        params: this.searchPayload
+        params: this.searchPayload,
+        transformResponse: [(data) => {
+          return camelcaseKeys(JSON.parse(data), { deep: true })}
+        ]
       })
           .then((response) => {
-            this.cards = JSON.parse(JSON.stringify(response.data));
+            this.cards = response.data;
           })
           .catch((error) => {
-            const err = JSON.parse(JSON.stringify(error.response));
+            const err = error.response;
 
             if (err.status === 401) {
               this.refreshToken();
@@ -248,10 +253,12 @@ export default {
       this.getPeopleByAnthroponym(this.$store.getters.searchAnthroponym)
     },
     searchPeople: debounce(function (){
-      this.searchPayload.offset = 0
-      this.$store.commit("changeAnthroponym", this.searchPayload.anthroponym);
+      if (this.searchPayload.anthroponym !== '') {
+        this.searchPayload.offset = 0
+        this.$store.commit("changeAnthroponym", this.searchPayload.anthroponym);
 
-      this.getPeopleByAnthroponym(this.$store.getters.searchAnthroponym)
+        this.getPeopleByAnthroponym(this.$store.getters.searchAnthroponym)
+      }
     }, 1000),
     logOut() {
       this.$store.commit("changeAccessToken", null);
@@ -259,6 +266,39 @@ export default {
 
       this.$router.push({ name: 'SignIn' });
     },
+    addFriend(fiendID) {
+      const path = `${apiUrl}/social/friend`;
+      const camelcaseKeys = require('camelcase-keys');
+
+      headers.Authorization = this.$store.getters.accessToken
+      const payload = {
+        friend_id: fiendID,
+      };
+
+      axios.post(path, payload, {headers: headers, transformResponse: [(data) => {
+          return camelcaseKeys(JSON.parse(data), { deep: true })}
+        ]})
+          .then(() => {
+            for (let i = 0; i < this.cards.questionnaires.length; i++) {
+              if (this.cards.questionnaires[i].id === fiendID) {
+                this.cards.questionnaires[i].friendshipStatus = "expected"
+              }
+            }
+          })
+          .catch((error) => {
+            const err = error.response;
+            if (err.status === 401) {
+              this.$router.push({ name: 'SignIn' });
+            }
+
+            this.flashMessage.error({
+              title: 'Error Message Title',
+              message: err.data.message,
+              position: 'center',
+              icon: '../assets/error.svg',
+            });
+          });
+    }
   },
 };
 </script>

@@ -24,6 +24,12 @@ type UserRepository interface {
 	CompareError(err error, number uint16) bool
 }
 
+type SocialRepository interface {
+	GetTx(ctx context.Context) (*sql.Tx, error)
+	CommitTx(tx *sql.Tx) error
+	CreateFriendship(tx *sql.Tx, subjUserID, objUserID string) error
+}
+
 type MessengerRepository interface {
 	GetTx(ctx context.Context) (*sql.Tx, error)
 	CommitTx(tx *sql.Tx) error

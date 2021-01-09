@@ -13,6 +13,13 @@ import (
 	"github.com/go-sql-driver/mysql"
 )
 
+const (
+	friendshipNonameStatus    = "noname"
+	friendshipExpectedStatus  = "expected"
+	friendshipConfirmedStatus = "confirmed"
+	friendshipAcceptedStatus  = "accepted"
+)
+
 type userRepository struct {
 	conn *sql.DB
 }
@@ -233,7 +240,46 @@ func (p *userRepository) GetByAnthroponym(tx *sql.Tx, anthroponym, userID string
 		count int
 		err   error
 	)
+
+	friendships := make([]*domain.FriendShip, 0, 100)
 	users := make([]*domain.User, 0, 100)
+
+	rows, err = tx.Query(`
+		SELECT
+			master_user_id, slave_user_id, status
+		FROM
+			user
+		JOIN friendship 
+			ON user.id = friendship.master_user_id
+		WHERE
+			user.id = ?
+		UNION
+		SELECT
+			master_user_id, slave_user_id, status
+		FROM
+			user
+		JOIN friendship 
+			ON user.id = friendship.slave_user_id
+		WHERE
+			user.id = ?`, userID, userID)
+	if err != nil {
+		tx.Rollback()
+
+		return nil, 0, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		friendship := new(domain.FriendShip)
+
+		if err = rows.Scan(&friendship.MasterUserID, &friendship.SlaveUserID, &friendship.Status); err != nil {
+			tx.Rollback()
+
+			return nil, 0, err
+		}
+
+		friendships = append(friendships, friendship)
+	}
 
 	strs := strings.Split(anthroponym, " ")
 
@@ -244,9 +290,9 @@ func (p *userRepository) GetByAnthroponym(tx *sql.Tx, anthroponym, userID string
 			FROM
 		    	user
 			WHERE 
-				name LIKE ? OR surname LIKE ? OR name LIKE ? OR surname LIKE ? AND id != ?
+				(name LIKE ? AND surname LIKE ?) OR (name LIKE ? AND surname LIKE ?) AND id != ?
 			ORDER BY surname
-			LIMIT ? OFFSET ?`, strs[0]+"%", strs[0]+"%", strs[1]+"%", strs[1]+"%", userID, limit, offset)
+			LIMIT ? OFFSET ?`, strs[0]+"%", strs[1]+"%", strs[1]+"%", strs[0]+"%", userID, limit, offset)
 	} else {
 		rows, err = tx.Query(`
 			SELECT
@@ -268,12 +314,26 @@ func (p *userRepository) GetByAnthroponym(tx *sql.Tx, anthroponym, userID string
 
 	for rows.Next() {
 		user := new(domain.User)
+		user.FriendshipStatus = friendshipNonameStatus
 
 		if err = rows.Scan(&user.ID, &user.Email, &user.Password, &user.Name, &user.Surname, &user.Sex, &user.Birthday,
 			&user.City, &user.Interests, &user.AccessToken, &user.RefreshToken); err != nil {
 			tx.Rollback()
 
 			return nil, 0, err
+		}
+
+		for _, friendship := range friendships {
+			if friendship.MasterUserID == user.ID {
+				switch friendship.Status {
+				case friendshipExpectedStatus:
+					user.FriendshipStatus = friendshipConfirmedStatus
+				default:
+					user.FriendshipStatus = friendshipAcceptedStatus
+				}
+			} else if friendship.SlaveUserID == user.ID {
+				user.FriendshipStatus = friendship.Status
+			}
 		}
 
 		users = append(users, user)
@@ -627,6 +687,37 @@ func (m *messengerRepository) GetMessages(tx *sql.Tx, chatID string, limit, offs
 	}
 
 	return messages, nil
+}
+
+type socialRepository struct {
+	conn *sql.DB
+}
+
+func NewSocialRepository(conn *sql.DB) *socialRepository {
+	return &socialRepository{conn: conn}
+}
+
+func (s *socialRepository) GetTx(ctx context.Context) (*sql.Tx, error) {
+	return s.conn.BeginTx(ctx, nil)
+}
+
+func (s *socialRepository) CommitTx(tx *sql.Tx) error {
+	return tx.Commit()
+}
+
+func (s *socialRepository) CreateFriendship(tx *sql.Tx, masterUserID, slaveUserID string) error {
+	_, err := tx.Exec(`
+		INSERT 
+			INTO friendship (master_user_id, slave_user_id, status, create_time) 
+		VALUES
+			( ?, ?, ?, ?)`, masterUserID, slaveUserID, "expected", time.Now().UTC())
+	if err != nil {
+		tx.Rollback()
+
+		return err
+	}
+
+	return nil
 }
 
 type wsPoolRepository struct {

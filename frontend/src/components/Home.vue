@@ -76,7 +76,6 @@ export default {
   }),
   created() {
     if (this.$store.getters.accessToken === null) {
-      console.log("lololo")
       this.$router.push({ name: 'SignIn' });
     }
   },

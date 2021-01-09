@@ -16,6 +16,7 @@ type ProfileService interface {
 }
 
 type SocialService interface {
+	AddFriend(ctx context.Context, userID, friendID string) error
 	GetQuestionnaires(ctx context.Context, userID string, limit, offset int) ([]*Questionnaire, int, error)
 	GetQuestionnairesByNameAndSurname(ctx context.Context, prefix string) ([]*Questionnaire, error)
 }
