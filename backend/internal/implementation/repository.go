@@ -784,7 +784,7 @@ func (s *socialRepository) GetFriends(tx *sql.Tx, userID string) ([]*domain.User
 		JOIN friendship 
 			ON user.id = friendship.master_user_id
 		WHERE
-			user.id = ? and friendship.status = ?
+			friendship.slave_user_id = ? and friendship.status = ?
 		UNION
 		SELECT
 			user.id, user.email, user.password, user.name, user.surname, user.sex, user.birthday, user.city, user.interests, user.access_token, user.refresh_token
@@ -793,7 +793,7 @@ func (s *socialRepository) GetFriends(tx *sql.Tx, userID string) ([]*domain.User
 		JOIN friendship 
 			ON user.id = friendship.slave_user_id
 		WHERE
-			user.id = ? and friendship.status = ?`, userID, friendshipAcceptedStatus, userID, friendshipAcceptedStatus)
+			friendship.master_user_id = ? and friendship.status = ?`, userID, friendshipAcceptedStatus, userID, friendshipAcceptedStatus)
 	if err != nil {
 		tx.Rollback()
 
