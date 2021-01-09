@@ -293,6 +293,64 @@ func (s *socialService) BreakFriendship(ctx context.Context, userID, friendID st
 	return s.socialRepository.CommitTx(tx)
 }
 
+func (s *socialService) GetFriends(ctx context.Context, userID string) ([]*domain.Questionnaire, error) {
+	tx, err := s.socialRepository.GetTx(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	users, err := s.socialRepository.GetFriends(tx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	questionnaires := make([]*domain.Questionnaire, 0, len(users))
+	for _, user := range users {
+		questionnaires = append(questionnaires, &domain.Questionnaire{
+			ID:               user.ID,
+			Email:            user.Email,
+			Name:             user.Name,
+			Surname:          user.Surname,
+			Birthday:         user.Birthday,
+			Sex:              user.Sex,
+			City:             user.City,
+			Interests:        user.Interests,
+			FriendshipStatus: user.FriendshipStatus,
+		})
+	}
+
+	return questionnaires, s.socialRepository.CommitTx(tx)
+}
+
+func (s *socialService) GetFollowers(ctx context.Context, userID string) ([]*domain.Questionnaire, error) {
+	tx, err := s.socialRepository.GetTx(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	users, err := s.socialRepository.GetFollowers(tx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	questionnaires := make([]*domain.Questionnaire, 0, len(users))
+	for _, user := range users {
+		questionnaires = append(questionnaires, &domain.Questionnaire{
+			ID:               user.ID,
+			Email:            user.Email,
+			Name:             user.Name,
+			Surname:          user.Surname,
+			Birthday:         user.Birthday,
+			Sex:              user.Sex,
+			City:             user.City,
+			Interests:        user.Interests,
+			FriendshipStatus: user.FriendshipStatus,
+		})
+	}
+
+	return questionnaires, s.socialRepository.CommitTx(tx)
+}
+
 func (s *socialService) GetQuestionnaires(ctx context.Context, userID string, limit, offset int) ([]*domain.Questionnaire, int, error) {
 	tx, err := s.userRepository.GetTx(ctx)
 	if err != nil {

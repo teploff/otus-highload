@@ -23,6 +23,14 @@ type QuestionnairesResponse struct {
 	Count          int                     `json:"count"`
 }
 
+type GetFriendsResponse struct {
+	Friends []*domain.Questionnaire `json:"friends"`
+}
+
+type GetFollowersResponse struct {
+	Followers []*domain.Questionnaire `json:"followers"`
+}
+
 type CreateChatResponse struct {
 	ChatID string `json:"chat_id"`
 }

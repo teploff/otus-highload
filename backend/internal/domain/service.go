@@ -20,6 +20,8 @@ type SocialService interface {
 	ConfirmFriendship(ctx context.Context, userID, friendID string) error
 	RejectFriendship(ctx context.Context, userID, friendID string) error
 	BreakFriendship(ctx context.Context, userID, friendID string) error
+	GetFriends(ctx context.Context, userID string) ([]*Questionnaire, error)
+	GetFollowers(ctx context.Context, userID string) ([]*Questionnaire, error)
 	GetQuestionnaires(ctx context.Context, userID string, limit, offset int) ([]*Questionnaire, int, error)
 	GetQuestionnairesByNameAndSurname(ctx context.Context, prefix string) ([]*Questionnaire, error)
 }

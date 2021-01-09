@@ -768,6 +768,95 @@ func (s *socialRepository) BreakFriendship(tx *sql.Tx, userID, friendID string) 
 	return nil
 }
 
+func (s *socialRepository) GetFriends(tx *sql.Tx, userID string) ([]*domain.User, error) {
+	var (
+		rows *sql.Rows
+		err  error
+	)
+
+	users := make([]*domain.User, 0, 100)
+
+	rows, err = tx.Query(`
+		SELECT
+			user.id, user.email, user.password, user.name, user.surname, user.sex, user.birthday, user.city, user.interests, user.access_token, user.refresh_token
+		FROM
+			user
+		JOIN friendship 
+			ON user.id = friendship.master_user_id
+		WHERE
+			user.id = ? and friendship.status = ?
+		UNION
+		SELECT
+			user.id, user.email, user.password, user.name, user.surname, user.sex, user.birthday, user.city, user.interests, user.access_token, user.refresh_token
+		FROM
+			user
+		JOIN friendship 
+			ON user.id = friendship.slave_user_id
+		WHERE
+			user.id = ? and friendship.status = ?`, userID, friendshipAcceptedStatus, userID, friendshipAcceptedStatus)
+	if err != nil {
+		tx.Rollback()
+
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		user := new(domain.User)
+
+		if err = rows.Scan(&user.ID, &user.Email, &user.Password, &user.Name, &user.Surname, &user.Sex, &user.Birthday,
+			&user.City, &user.Interests, &user.AccessToken, &user.RefreshToken); err != nil {
+			tx.Rollback()
+
+			return nil, err
+		}
+
+		users = append(users, user)
+	}
+
+	return users, nil
+}
+
+func (s *socialRepository) GetFollowers(tx *sql.Tx, userID string) ([]*domain.User, error) {
+	var (
+		rows *sql.Rows
+		err  error
+	)
+
+	users := make([]*domain.User, 0, 100)
+
+	rows, err = tx.Query(`
+		SELECT
+			user.id, user.email, user.password, user.name, user.surname, user.sex, user.birthday, user.city, user.interests, user.access_token, user.refresh_token
+		FROM
+			user
+		JOIN friendship
+			ON user.id = friendship.slave_user_id
+		WHERE
+			user.id = ? and friendship.status = ?`, userID, friendshipExpectedStatus, userID, friendshipExpectedStatus)
+	if err != nil {
+		tx.Rollback()
+
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		user := new(domain.User)
+
+		if err = rows.Scan(&user.ID, &user.Email, &user.Password, &user.Name, &user.Surname, &user.Sex, &user.Birthday,
+			&user.City, &user.Interests, &user.AccessToken, &user.RefreshToken); err != nil {
+			tx.Rollback()
+
+			return nil, err
+		}
+
+		users = append(users, user)
+	}
+
+	return users, nil
+}
+
 type wsPoolRepository struct {
 	conns *wstransport.Conns
 }

@@ -31,6 +31,8 @@ type SocialRepository interface {
 	ConfirmFriendship(tx *sql.Tx, userID, friendID string) error
 	RejectFriendship(tx *sql.Tx, userID, friendID string) error
 	BreakFriendship(tx *sql.Tx, userID, friendID string) error
+	GetFriends(tx *sql.Tx, userID string) ([]*User, error)
+	GetFollowers(tx *sql.Tx, userID string) ([]*User, error)
 }
 
 type MessengerRepository interface {

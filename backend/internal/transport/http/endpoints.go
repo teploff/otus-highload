@@ -35,6 +35,9 @@ func MakeEndpoints(auth domain.AuthService, profile domain.ProfileService, socia
 			CreateFriendship:                  makeCreateFriendshipEndpoint(auth, social),
 			ConfirmFriendship:                 makeConfirmFriendshipEndpoint(auth, social),
 			RejectFriendship:                  makeRejectFriendshipEndpoint(auth, social),
+			BreakFriendship:                   makeBreakFriendshipEndpoint(auth, social),
+			GetFriends:                        makeGetFriendsEndpoint(auth, social),
+			GetFollowers:                      makeGetFollowersEndpoint(auth, social),
 			GetAllQuestionnaires:              makeGetAllQuestionnairesEndpoint(auth, social),
 			GetQuestionnairesByNameAndSurname: makeGetQuestionnairesByNameAndSurnameEndpoint(auth, social),
 		},
@@ -232,6 +235,8 @@ type SocialEndpoints struct {
 	ConfirmFriendship                 gin.HandlerFunc
 	RejectFriendship                  gin.HandlerFunc
 	BreakFriendship                   gin.HandlerFunc
+	GetFriends                        gin.HandlerFunc
+	GetFollowers                      gin.HandlerFunc
 	GetAllQuestionnaires              gin.HandlerFunc
 	GetQuestionnairesByNameAndSurname gin.HandlerFunc
 }
@@ -397,6 +402,72 @@ func makeBreakFriendshipEndpoint(authSvc domain.AuthService, socialSvc domain.So
 		}
 
 		c.JSON(http.StatusOK, EmptyResponse{})
+	}
+}
+
+func makeGetFriendsEndpoint(authSvc domain.AuthService, socialSvc domain.SocialService) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var header AuthorizationHeader
+		if err := c.ShouldBindHeader(&header); err != nil {
+			c.JSON(http.StatusUnauthorized, ErrorResponse{
+				Message: err.Error(),
+			})
+
+			return
+		}
+
+		userID, err := authSvc.Authenticate(c, header.AccessToken)
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, ErrorResponse{
+				Message: err.Error(),
+			})
+
+			return
+		}
+
+		friends, err := socialSvc.GetFriends(c, userID)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, ErrorResponse{
+				Message: err.Error(),
+			})
+
+			return
+		}
+
+		c.JSON(http.StatusOK, GetFriendsResponse{Friends: friends})
+	}
+}
+
+func makeGetFollowersEndpoint(authSvc domain.AuthService, socialSvc domain.SocialService) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var header AuthorizationHeader
+		if err := c.ShouldBindHeader(&header); err != nil {
+			c.JSON(http.StatusUnauthorized, ErrorResponse{
+				Message: err.Error(),
+			})
+
+			return
+		}
+
+		userID, err := authSvc.Authenticate(c, header.AccessToken)
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, ErrorResponse{
+				Message: err.Error(),
+			})
+
+			return
+		}
+
+		followers, err := socialSvc.GetFollowers(c, userID)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, ErrorResponse{
+				Message: err.Error(),
+			})
+
+			return
+		}
+
+		c.JSON(http.StatusOK, GetFollowersResponse{Followers: followers})
 	}
 }
 
