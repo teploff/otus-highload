@@ -831,9 +831,9 @@ func (s *socialRepository) GetFollowers(tx *sql.Tx, userID string) ([]*domain.Us
 		FROM
 			user
 		JOIN friendship
-			ON user.id = friendship.slave_user_id
+			ON user.id = friendship.master_user_id
 		WHERE
-			user.id = ? and friendship.status = ?`, userID, friendshipExpectedStatus, userID, friendshipExpectedStatus)
+			friendship.slave_user_id = ? and friendship.status = ?`, userID, friendshipExpectedStatus)
 	if err != nil {
 		tx.Rollback()
 
