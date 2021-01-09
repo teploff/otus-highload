@@ -267,7 +267,7 @@ export default {
       this.$router.push({ name: 'SignIn' });
     },
     addFriend(fiendID) {
-      const path = `${apiUrl}/social/friend`;
+      const path = `${apiUrl}/social/create-friendship`;
       const camelcaseKeys = require('camelcase-keys');
 
       headers.Authorization = this.$store.getters.accessToken
