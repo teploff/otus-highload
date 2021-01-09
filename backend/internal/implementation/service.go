@@ -241,7 +241,7 @@ func NewSocialService(userRep domain.UserRepository, socialRep domain.SocialRepo
 	}
 }
 
-func (s *socialService) AddFriend(ctx context.Context, userID, friendID string) error {
+func (s *socialService) CreateFriendship(ctx context.Context, userID, friendID string) error {
 	tx, err := s.socialRepository.GetTx(ctx)
 	if err != nil {
 		return err
@@ -251,7 +251,46 @@ func (s *socialService) AddFriend(ctx context.Context, userID, friendID string) 
 		return err
 	}
 
-	return s.userRepository.CommitTx(tx)
+	return s.socialRepository.CommitTx(tx)
+}
+
+func (s *socialService) ConfirmFriendship(ctx context.Context, userID, friendID string) error {
+	tx, err := s.socialRepository.GetTx(ctx)
+	if err != nil {
+		return err
+	}
+
+	if err = s.socialRepository.CreateFriendship(tx, userID, friendID); err != nil {
+		return err
+	}
+
+	return s.socialRepository.CommitTx(tx)
+}
+
+func (s *socialService) RejectFriendship(ctx context.Context, userID, friendID string) error {
+	tx, err := s.socialRepository.GetTx(ctx)
+	if err != nil {
+		return err
+	}
+
+	if err = s.socialRepository.CreateFriendship(tx, userID, friendID); err != nil {
+		return err
+	}
+
+	return s.socialRepository.CommitTx(tx)
+}
+
+func (s *socialService) BreakFriendship(ctx context.Context, userID, friendID string) error {
+	tx, err := s.socialRepository.GetTx(ctx)
+	if err != nil {
+		return err
+	}
+
+	if err = s.socialRepository.BreakFriendship(tx, userID, friendID); err != nil {
+		return err
+	}
+
+	return s.socialRepository.CommitTx(tx)
 }
 
 func (s *socialService) GetQuestionnaires(ctx context.Context, userID string, limit, offset int) ([]*domain.Questionnaire, int, error) {

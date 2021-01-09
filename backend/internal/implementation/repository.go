@@ -720,6 +720,54 @@ func (s *socialRepository) CreateFriendship(tx *sql.Tx, masterUserID, slaveUserI
 	return nil
 }
 
+func (s *socialRepository) ConfirmFriendship(tx *sql.Tx, userID, friendID string) error {
+	_, err := tx.Exec(`
+		UPDATE 
+			friendship
+		SET
+		    status = ?
+		WHERE
+		    master_user_id = ? AND slave_user_id = ?`, friendshipAcceptedStatus, friendID, userID)
+	if err != nil {
+		tx.Rollback()
+
+		return err
+	}
+
+	return nil
+}
+
+func (s *socialRepository) RejectFriendship(tx *sql.Tx, userID, friendID string) error {
+	_, err := tx.Exec(`
+		DELETE
+			FROM friendship
+		WHERE
+		    master_user_id = ? AND slave_user_id = ?`, friendID, userID)
+	if err != nil {
+		tx.Rollback()
+
+		return err
+	}
+
+	return nil
+}
+
+func (s *socialRepository) BreakFriendship(tx *sql.Tx, userID, friendID string) error {
+	_, err := tx.Exec(`
+		DELETE
+			FROM friendship
+		WHERE
+		    (master_user_id = ? AND slave_user_id = ?) OR (master_user_id = ? AND slave_user_id = ?) AND status = ?`,
+		friendID, userID, userID, friendID, friendshipAcceptedStatus)
+	if err != nil {
+		tx.Rollback()
+
+		return err
+	}
+
+	return nil
+}
+
 type wsPoolRepository struct {
 	conns *wstransport.Conns
 }

@@ -32,7 +32,9 @@ func MakeEndpoints(auth domain.AuthService, profile domain.ProfileService, socia
 			},
 		},
 		Social: &SocialEndpoints{
-			AddFriend:                         makeAddFriendEndpoint(auth, social),
+			CreateFriendship:                  makeCreateFriendshipEndpoint(auth, social),
+			ConfirmFriendship:                 makeConfirmFriendshipEndpoint(auth, social),
+			RejectFriendship:                  makeRejectFriendshipEndpoint(auth, social),
 			GetAllQuestionnaires:              makeGetAllQuestionnairesEndpoint(auth, social),
 			GetQuestionnairesByNameAndSurname: makeGetQuestionnairesByNameAndSurnameEndpoint(auth, social),
 		},
@@ -226,12 +228,15 @@ func makeSearchProfileByAnthroponym(authSvc domain.AuthService, profileSvc domai
 }
 
 type SocialEndpoints struct {
-	AddFriend                         gin.HandlerFunc
+	CreateFriendship                  gin.HandlerFunc
+	ConfirmFriendship                 gin.HandlerFunc
+	RejectFriendship                  gin.HandlerFunc
+	BreakFriendship                   gin.HandlerFunc
 	GetAllQuestionnaires              gin.HandlerFunc
 	GetQuestionnairesByNameAndSurname gin.HandlerFunc
 }
 
-func makeAddFriendEndpoint(authSvc domain.AuthService, socialSvc domain.SocialService) gin.HandlerFunc {
+func makeCreateFriendshipEndpoint(authSvc domain.AuthService, socialSvc domain.SocialService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var header AuthorizationHeader
 		if err := c.ShouldBindHeader(&header); err != nil {
@@ -242,7 +247,7 @@ func makeAddFriendEndpoint(authSvc domain.AuthService, socialSvc domain.SocialSe
 			return
 		}
 
-		var request AddFriendRequest
+		var request FriendshipRequest
 		if err := c.Bind(&request); err != nil {
 			c.JSON(http.StatusBadRequest, ErrorResponse{
 				Message: err.Error(),
@@ -260,7 +265,130 @@ func makeAddFriendEndpoint(authSvc domain.AuthService, socialSvc domain.SocialSe
 			return
 		}
 
-		if err = socialSvc.AddFriend(c, userID, request.FriendID); err != nil {
+		if err = socialSvc.CreateFriendship(c, userID, request.FriendID); err != nil {
+			c.JSON(http.StatusInternalServerError, ErrorResponse{
+				Message: err.Error(),
+			})
+
+			return
+		}
+
+		c.JSON(http.StatusOK, EmptyResponse{})
+	}
+}
+
+func makeConfirmFriendshipEndpoint(authSvc domain.AuthService, socialSvc domain.SocialService) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var header AuthorizationHeader
+		if err := c.ShouldBindHeader(&header); err != nil {
+			c.JSON(http.StatusUnauthorized, ErrorResponse{
+				Message: err.Error(),
+			})
+
+			return
+		}
+
+		var request FriendshipRequest
+		if err := c.Bind(&request); err != nil {
+			c.JSON(http.StatusBadRequest, ErrorResponse{
+				Message: err.Error(),
+			})
+
+			return
+		}
+
+		userID, err := authSvc.Authenticate(c, header.AccessToken)
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, ErrorResponse{
+				Message: err.Error(),
+			})
+
+			return
+		}
+
+		if err = socialSvc.ConfirmFriendship(c, userID, request.FriendID); err != nil {
+			c.JSON(http.StatusInternalServerError, ErrorResponse{
+				Message: err.Error(),
+			})
+
+			return
+		}
+
+		c.JSON(http.StatusOK, EmptyResponse{})
+	}
+}
+
+func makeRejectFriendshipEndpoint(authSvc domain.AuthService, socialSvc domain.SocialService) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var header AuthorizationHeader
+		if err := c.ShouldBindHeader(&header); err != nil {
+			c.JSON(http.StatusUnauthorized, ErrorResponse{
+				Message: err.Error(),
+			})
+
+			return
+		}
+
+		var request FriendshipRequest
+		if err := c.Bind(&request); err != nil {
+			c.JSON(http.StatusBadRequest, ErrorResponse{
+				Message: err.Error(),
+			})
+
+			return
+		}
+
+		userID, err := authSvc.Authenticate(c, header.AccessToken)
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, ErrorResponse{
+				Message: err.Error(),
+			})
+
+			return
+		}
+
+		if err = socialSvc.RejectFriendship(c, userID, request.FriendID); err != nil {
+			c.JSON(http.StatusInternalServerError, ErrorResponse{
+				Message: err.Error(),
+			})
+
+			return
+		}
+
+		c.JSON(http.StatusOK, EmptyResponse{})
+	}
+}
+
+func makeBreakFriendshipEndpoint(authSvc domain.AuthService, socialSvc domain.SocialService) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var header AuthorizationHeader
+		if err := c.ShouldBindHeader(&header); err != nil {
+			c.JSON(http.StatusUnauthorized, ErrorResponse{
+				Message: err.Error(),
+			})
+
+			return
+		}
+
+		var request FriendshipRequest
+		if err := c.Bind(&request); err != nil {
+			c.JSON(http.StatusBadRequest, ErrorResponse{
+				Message: err.Error(),
+			})
+
+			return
+		}
+
+		userID, err := authSvc.Authenticate(c, header.AccessToken)
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, ErrorResponse{
+				Message: err.Error(),
+			})
+
+			return
+		}
+
+		if err = socialSvc.BreakFriendship(c, userID, request.FriendID); err != nil {
 			c.JSON(http.StatusInternalServerError, ErrorResponse{
 				Message: err.Error(),
 			})

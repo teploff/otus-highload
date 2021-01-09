@@ -31,7 +31,7 @@ type SearchProfileByAnthroponymRequest struct {
 	Offset      *int   `json:"offset" form:"offset"`
 }
 
-type AddFriendRequest struct {
+type FriendshipRequest struct {
 	FriendID string `json:"friend_id" binding:"required"`
 }
 

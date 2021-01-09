@@ -33,7 +33,10 @@ func NewHTTPServer(addr string, endpoints *Endpoints) *http.Server {
 
 	socialGroup := router.Group("/social")
 	{
-		socialGroup.POST("/friend", endpoints.Social.AddFriend)
+		socialGroup.POST("/create-friendship", endpoints.Social.CreateFriendship)
+		socialGroup.POST("/confirm-friendship", endpoints.Social.ConfirmFriendship)
+		socialGroup.POST("/reject-friendship", endpoints.Social.RejectFriendship)
+		socialGroup.POST("/break-friendship", endpoints.Social.RejectFriendship)
 	}
 
 	router.POST("/questionnaires", endpoints.Social.GetAllQuestionnaires)

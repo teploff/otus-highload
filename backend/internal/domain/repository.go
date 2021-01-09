@@ -27,7 +27,10 @@ type UserRepository interface {
 type SocialRepository interface {
 	GetTx(ctx context.Context) (*sql.Tx, error)
 	CommitTx(tx *sql.Tx) error
-	CreateFriendship(tx *sql.Tx, subjUserID, objUserID string) error
+	CreateFriendship(tx *sql.Tx, userID, friendID string) error
+	ConfirmFriendship(tx *sql.Tx, userID, friendID string) error
+	RejectFriendship(tx *sql.Tx, userID, friendID string) error
+	BreakFriendship(tx *sql.Tx, userID, friendID string) error
 }
 
 type MessengerRepository interface {
