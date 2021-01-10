@@ -124,6 +124,7 @@
         </md-table>
       </md-app-content>
     </md-app>
+    <FlashMessage :position="'right top'"></FlashMessage>
   </div>
 </template>
 
@@ -272,7 +273,7 @@ export default {
 
       headers.Authorization = this.$store.getters.accessToken
       const payload = {
-        friend_id: fiendID,
+        friends_id: [fiendID],
       };
 
       axios.post(path, payload, {headers: headers, transformResponse: [(data) => {

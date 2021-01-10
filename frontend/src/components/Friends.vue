@@ -54,14 +54,88 @@
       </md-app-drawer>
 
       <md-app-content>
-        Home payload!
+        <md-tabs md-alignment="centered">
+          <md-tab id="tab-home" md-label="My Friends" md-icon="group" @click="getFriends">
+            <md-empty-state
+                v-show="friends.length === 0"
+                md-rounded
+                md-icon="access_time"
+                md-label="Nothing in Snoozed"
+                md-description="Anything you snooze will go here until it's time for it to return to the inbox.">
+            </md-empty-state>
+            <div v-show="friends.length !== 0">
+              <md-table v-model="friends" md-card @md-selected="selectFriends">
+                <md-table-toolbar>
+                  <h1 class="md-title" id="friend-requests">Friends</h1>
+                </md-table-toolbar>
+
+                <md-table-toolbar id="table-friends-header-toolbar" slot="md-table-alternate-header" slot-scope="{}">
+                  <div class="md-toolbar-section-start">{{ getAlternateLabel() }}</div>
+
+                  <div class="md-toolbar-section-end">
+                    <md-button class="md-icon-button" @click="removeFriends">
+                      <md-icon>delete</md-icon>
+                    </md-button>
+                  </div>
+                </md-table-toolbar>
+
+                <md-table-row slot="md-table-row" slot-scope="{ item }" md-selectable="multiple" md-auto-select>
+                  <md-table-cell md-label="Name" md-sort-by="name">{{ item.name }} {{ item.surname }}</md-table-cell>
+                  <md-table-cell md-label="Email" md-sort-by="email">{{ item.email }}</md-table-cell>
+                  <md-table-cell md-label="Sex" md-sort-by="sex">{{ item.sex }}</md-table-cell>
+                  <md-table-cell md-label="Birthday" md-sort-by="birthday">{{ item.birthday }}</md-table-cell>
+                </md-table-row>
+              </md-table>
+            </div>
+          </md-tab>
+          <md-tab id="tab-pages" md-label="Friend requests" md-icon="group_add" @click="getFollowers">
+            <md-empty-state
+                v-show="followers.length === 0"
+                md-rounded
+                md-icon="access_time"
+                md-label="Nothing in Snoozed"
+                md-description="Anything you snooze will go here until it's time for it to return to the inbox.">
+            </md-empty-state>
+
+            <div v-show="followers.length !== 0">
+              <md-table v-model="followers" md-card @md-selected="selectFollowers">
+                <md-table-toolbar>
+                  <h1 class="md-title" id="followers-requests">My followers</h1>
+                </md-table-toolbar>
+
+                <md-table-toolbar id="table-followers-header-toolbar" slot="md-table-alternate-header" slot-scope="{}">
+                  <div class="md-toolbar-section-start">{{ getAlternateLabel() }}</div>
+
+                  <div class="md-toolbar-section-end">
+                    <md-button class="md-icon-button">
+                      <md-icon>add</md-icon>
+                    </md-button>
+                    <md-button class="md-icon-button">
+                      <md-icon>delete</md-icon>
+                    </md-button>
+                  </div>
+                </md-table-toolbar>
+
+                <md-table-row slot="md-table-row" slot-scope="{ item }" md-selectable="multiple" md-auto-select>
+                  <md-table-cell md-label="Name" md-sort-by="name">{{ item.name }} {{ item.surname }}</md-table-cell>
+                  <md-table-cell md-label="Email" md-sort-by="email">{{ item.email }}</md-table-cell>
+                  <md-table-cell md-label="Sex" md-sort-by="sex">{{ item.sex }}</md-table-cell>
+                  <md-table-cell md-label="Birthday" md-sort-by="birthday">{{ $moment(item.birthday).format('MMMM Do YYYY') }}</md-table-cell>
+                  <md-table-cell md-label="City" md-sort-by="city">{{ item.city }}</md-table-cell>
+                </md-table-row>
+              </md-table>
+            </div>
+          </md-tab>
+        </md-tabs>
       </md-app-content>
     </md-app>
+    <FlashMessage :position="'right top'"></FlashMessage>
   </div>
 </template>
 
 <script>
-import {debounce} from "@/const";
+import {apiUrl, debounce, headers} from "@/const";
+import axios from "axios";
 
 export default {
   name: 'Home',
@@ -73,11 +147,18 @@ export default {
     searchPayload: {
       anthroponym: null,
     },
+    friends: [],
+    selectedFriends: [],
+    followers: [],
+    selectedFollowers: [],
   }),
   beforeCreate() {
     if (this.$store.getters.accessToken === null) {
       this.$router.push({ name: 'SignIn' });
     }
+  },
+  beforeMount() {
+    this.getFriends()
   },
   methods: {
     followHomePage() {
@@ -96,11 +177,159 @@ export default {
       this.$store.commit("changeAnthroponym", this.searchPayload.anthroponym);
       this.$router.push({ name: 'People' })
     }, 1000),
+    refreshToken() {
+      const path = `${apiUrl}/auth/token`;
+      const camelcaseKeys = require('camelcase-keys');
+
+      if (this.$store.getters.refreshToken === null) {
+        this.$router.push({ name: 'SignIn' });
+      }
+
+      const payload = {
+        refresh_token: this.$store.getters.refreshToken,
+      };
+      axios.put(path, payload, {transformResponse: [(data) => {
+          return camelcaseKeys(JSON.parse(data), { deep: true })}
+        ]})
+          .then((response) => {
+            this.tokenPair = response.data;
+
+            this.$store.commit("changeAccessToken", this.tokenPair.accessToken);
+            this.$store.commit("changeRefreshToken", this.tokenPair.refreshToken);
+
+            this.$router.push({ name: 'People' });
+          })
+          .catch((error) => {
+            const err = JSON.parse(JSON.stringify(error.response));
+            if (err.status === 401) {
+              this.$router.push({ name: 'SignIn' });
+            }
+            this.flashMessage.error({
+              title: 'Error Message Title',
+              message: err.data.message,
+              position: 'center',
+              icon: '../assets/error.svg',
+            });
+          });
+    },
     logOut() {
       this.$store.commit("changeAccessToken", null);
       this.$store.commit("changeRefreshToken", null);
 
       this.$router.push({ name: 'SignIn' });
+    },
+    selectFriends(items) {
+      this.selectedFriends = items
+    },
+    selectFollowers(items) {
+      this.selectedFollowers = items
+    },
+    getAlternateLabel () {
+    },
+    getFriends() {
+      const path = `${apiUrl}/social/friends`;
+      const camelcaseKeys = require('camelcase-keys');
+
+      headers.Authorization = this.$store.getters.accessToken
+
+      axios.get(path, {
+        headers: headers,
+        transformResponse: [(data) => {
+          return camelcaseKeys(JSON.parse(data), { deep: true })}
+        ]
+      })
+          .then((response) => {
+            this.friends = response.data.friends;
+          })
+          .catch((error) => {
+            const err = error.response;
+
+            if (err.status === 401) {
+              this.refreshToken();
+            }
+
+            this.flashMessage.setStrategy('single');
+            this.flashMessage.error({
+              title: 'Error Message Title',
+              message: err.data.message,
+              position: 'center',
+              icon: '../assets/error.svg',
+            });
+          });
+    },
+    getFollowers() {
+      const path = `${apiUrl}/social/followers`;
+      const camelcaseKeys = require('camelcase-keys');
+
+      headers.Authorization = this.$store.getters.accessToken
+
+      axios.get(path, {
+        headers: headers,
+        transformResponse: [(data) => {
+          return camelcaseKeys(JSON.parse(data), { deep: true })}
+        ]
+      })
+          .then((response) => {
+            this.followers = response.data.followers;
+          })
+          .catch((error) => {
+            const err = error.response;
+
+            if (err.status === 401) {
+              this.refreshToken();
+            }
+
+            this.flashMessage.error({
+              title: 'Error Message Title',
+              message: err.data.message,
+              position: 'center',
+              icon: '../assets/error.svg',
+            });
+          });
+    },
+    removeFriends() {
+      const path = `${apiUrl}/social/break-friendship`;
+      const camelcaseKeys = require('camelcase-keys');
+
+      if (this.$store.getters.refreshToken === null) {
+        this.$router.push({ name: 'SignIn' });
+      }
+
+      let friends_id = [];
+      for (let i in this.selectedFriends) {
+        friends_id.push(this.selectedFriends[i].id)
+      }
+
+      const payload = {
+        friends_id: friends_id,
+      };
+
+      axios.post(path, payload, {headers: headers, transformResponse: [(data) => {
+          return camelcaseKeys(JSON.parse(data), { deep: true })}
+        ]})
+          .then(() => {
+            this.friends = this.friends.filter(function(item) {
+              return !friends_id.some(function(s) { return s === item.id && s.lines === item.lines })
+            });
+          })
+          .catch((error) => {
+            const err = JSON.parse(JSON.stringify(error.response));
+            if (err.status === 401) {
+              this.$router.push({ name: 'SignIn' });
+            }
+            this.flashMessage.error({
+              title: 'Error Message Title',
+              message: err.data.message,
+              position: 'center',
+              icon: '../assets/error.svg',
+            });
+          });
+    },
+    acceptFollowers() {
+
+    },
+    removeFollowers() {
+
     },
   },
 };
@@ -126,4 +355,21 @@ export default {
   height: 50px;
   padding: inherit;
 }
+
+#table-friends-header-toolbar{
+  background-color: #d3e2fb;
+}
+
+#table-followers-header-toolbar {
+  background-color: #d3e2fb;
+}
+
+#friend-requests {
+  text-align: center;
+}
+
+#followers-requests {
+  text-align: center;
+}
+
 </style>

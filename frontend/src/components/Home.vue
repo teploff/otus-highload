@@ -57,6 +57,7 @@
         Home payload!
       </md-app-content>
     </md-app>
+    <FlashMessage :position="'right top'"></FlashMessage>
   </div>
 </template>
 
