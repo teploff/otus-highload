@@ -54,7 +54,15 @@
       </md-app-drawer>
 
       <md-app-content>
-        Home payload!
+        <md-autocomplete
+            id="news"
+            @input="createNews"
+            v-model="news"
+            :md-options="[]"
+            md-layout="box"
+            md-dense>
+          <label>What's a new?</label>
+        </md-autocomplete>
       </md-app-content>
     </md-app>
     <FlashMessage :position="'right top'"></FlashMessage>
@@ -62,7 +70,8 @@
 </template>
 
 <script>
-import { debounce } from '@/const'
+import {apiUrl, debounce, headers} from "@/const";
+import axios from "axios";
 
 export default {
   name: 'Home',
@@ -74,6 +83,7 @@ export default {
     searchPayload: {
       anthroponym: null,
     },
+    news: null
   }),
   created() {
     if (this.$store.getters.accessToken === null) {
@@ -97,6 +107,48 @@ export default {
       this.$store.commit("changeAnthroponym", this.searchPayload.anthroponym);
       this.$router.push({ name: 'People' })
     }, 1000),
+    createNews: debounce(function (){
+      if (this.news === null || this.news === '') {
+        return
+      }
+
+      const path = `${apiUrl}/social/create-news`;
+      const camelcaseKeys = require('camelcase-keys');
+
+      headers.Authorization = this.$store.getters.accessToken
+      const payload = {
+        news: [this.news],
+      };
+
+      axios.post(path, payload, {
+        headers: headers,
+        transformResponse: [(data) => {
+          return camelcaseKeys(JSON.parse(data), { deep: true })}
+        ]
+      })
+          .then(() => {
+            this.news = null
+            this.flashMessage.setStrategy('single');
+            this.flashMessage.success({
+              title: 'Success',
+              message: 'News were published!'
+            });
+          })
+          .catch((error) => {
+            const err = error.response;
+
+            if (err.status === 401) {
+              this.refreshToken();
+            }
+
+            this.flashMessage.error({
+              title: 'Error Message Title',
+              message: err.data.message,
+              position: 'center',
+              icon: '../assets/error.svg',
+            });
+          });
+    }, 1500),
     logOut() {
       this.$store.commit("changeAccessToken", null);
       this.$store.commit("changeRefreshToken", null);
@@ -128,4 +180,9 @@ export default {
   padding: inherit;
 }
 
+#news {
+  margin-left: auto;
+  margin-right: auto;
+  width: 60%;
+}
 </style>
