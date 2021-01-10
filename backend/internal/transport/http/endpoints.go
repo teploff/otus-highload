@@ -270,7 +270,7 @@ func makeCreateFriendshipEndpoint(authSvc domain.AuthService, socialSvc domain.S
 			return
 		}
 
-		if err = socialSvc.CreateFriendship(c, userID, request.FriendID); err != nil {
+		if err = socialSvc.CreateFriendship(c, userID, request.FriendsID); err != nil {
 			c.JSON(http.StatusInternalServerError, ErrorResponse{
 				Message: err.Error(),
 			})
@@ -311,7 +311,7 @@ func makeConfirmFriendshipEndpoint(authSvc domain.AuthService, socialSvc domain.
 			return
 		}
 
-		if err = socialSvc.ConfirmFriendship(c, userID, request.FriendID); err != nil {
+		if err = socialSvc.ConfirmFriendship(c, userID, request.FriendsID); err != nil {
 			c.JSON(http.StatusInternalServerError, ErrorResponse{
 				Message: err.Error(),
 			})
@@ -352,7 +352,7 @@ func makeRejectFriendshipEndpoint(authSvc domain.AuthService, socialSvc domain.S
 			return
 		}
 
-		if err = socialSvc.RejectFriendship(c, userID, request.FriendID); err != nil {
+		if err = socialSvc.RejectFriendship(c, userID, request.FriendsID); err != nil {
 			c.JSON(http.StatusInternalServerError, ErrorResponse{
 				Message: err.Error(),
 			})
@@ -393,7 +393,7 @@ func makeBreakFriendshipEndpoint(authSvc domain.AuthService, socialSvc domain.So
 			return
 		}
 
-		if err = socialSvc.BreakFriendship(c, userID, request.FriendID); err != nil {
+		if err = socialSvc.BreakFriendship(c, userID, request.FriendsID); err != nil {
 			c.JSON(http.StatusInternalServerError, ErrorResponse{
 				Message: err.Error(),
 			})

@@ -32,7 +32,7 @@ type SearchProfileByAnthroponymRequest struct {
 }
 
 type FriendshipRequest struct {
-	FriendID string `json:"friend_id" binding:"required"`
+	FriendsID []string `json:"friends_id" binding:"required"`
 }
 
 type GetAllQuestionnairesRequest struct {

@@ -241,52 +241,52 @@ func NewSocialService(userRep domain.UserRepository, socialRep domain.SocialRepo
 	}
 }
 
-func (s *socialService) CreateFriendship(ctx context.Context, userID, friendID string) error {
+func (s *socialService) CreateFriendship(ctx context.Context, userID string, friendsID []string) error {
 	tx, err := s.socialRepository.GetTx(ctx)
 	if err != nil {
 		return err
 	}
 
-	if err = s.socialRepository.CreateFriendship(tx, userID, friendID); err != nil {
+	if err = s.socialRepository.CreateFriendship(tx, userID, friendsID); err != nil {
 		return err
 	}
 
 	return s.socialRepository.CommitTx(tx)
 }
 
-func (s *socialService) ConfirmFriendship(ctx context.Context, userID, friendID string) error {
+func (s *socialService) ConfirmFriendship(ctx context.Context, userID string, friendsID []string) error {
 	tx, err := s.socialRepository.GetTx(ctx)
 	if err != nil {
 		return err
 	}
 
-	if err = s.socialRepository.CreateFriendship(tx, userID, friendID); err != nil {
+	if err = s.socialRepository.CreateFriendship(tx, userID, friendsID); err != nil {
 		return err
 	}
 
 	return s.socialRepository.CommitTx(tx)
 }
 
-func (s *socialService) RejectFriendship(ctx context.Context, userID, friendID string) error {
+func (s *socialService) RejectFriendship(ctx context.Context, userID string, friendsID []string) error {
 	tx, err := s.socialRepository.GetTx(ctx)
 	if err != nil {
 		return err
 	}
 
-	if err = s.socialRepository.CreateFriendship(tx, userID, friendID); err != nil {
+	if err = s.socialRepository.CreateFriendship(tx, userID, friendsID); err != nil {
 		return err
 	}
 
 	return s.socialRepository.CommitTx(tx)
 }
 
-func (s *socialService) BreakFriendship(ctx context.Context, userID, friendID string) error {
+func (s *socialService) BreakFriendship(ctx context.Context, userID string, friendsID []string) error {
 	tx, err := s.socialRepository.GetTx(ctx)
 	if err != nil {
 		return err
 	}
 
-	if err = s.socialRepository.BreakFriendship(tx, userID, friendID); err != nil {
+	if err = s.socialRepository.BreakFriendship(tx, userID, friendsID); err != nil {
 		return err
 	}
 

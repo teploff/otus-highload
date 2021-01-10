@@ -16,10 +16,10 @@ type ProfileService interface {
 }
 
 type SocialService interface {
-	CreateFriendship(ctx context.Context, userID, friendID string) error
-	ConfirmFriendship(ctx context.Context, userID, friendID string) error
-	RejectFriendship(ctx context.Context, userID, friendID string) error
-	BreakFriendship(ctx context.Context, userID, friendID string) error
+	CreateFriendship(ctx context.Context, userID string, friendsID []string) error
+	ConfirmFriendship(ctx context.Context, userID string, friendsID []string) error
+	RejectFriendship(ctx context.Context, userID string, friendsID []string) error
+	BreakFriendship(ctx context.Context, userID string, friendsID []string) error
 	GetFriends(ctx context.Context, userID string) ([]*Questionnaire, error)
 	GetFollowers(ctx context.Context, userID string) ([]*Questionnaire, error)
 	GetQuestionnaires(ctx context.Context, userID string, limit, offset int) ([]*Questionnaire, int, error)

@@ -705,13 +705,28 @@ func (s *socialRepository) CommitTx(tx *sql.Tx) error {
 	return tx.Commit()
 }
 
-func (s *socialRepository) CreateFriendship(tx *sql.Tx, masterUserID, slaveUserID string) error {
-	_, err := tx.Exec(`
-		INSERT 
-			INTO friendship (master_user_id, slave_user_id, status, create_time) 
-		VALUES
-			( ?, ?, ?, ?)`, masterUserID, slaveUserID, "expected", time.Now().UTC())
+func (s *socialRepository) CreateFriendship(tx *sql.Tx, masterUserID string, slaveUsersID []string) error {
+	sqlStr := "INSERT INTO friendship (master_user_id, slave_user_id, status, create_time) VALUES "
+	vals := make([]interface{}, 0, len(slaveUsersID)*4) // 4 - count cells: master_user_id, slave_user_id ...
+
+	for _, id := range slaveUsersID {
+		sqlStr += "( ?, ?, ?, ?),"
+		vals = append(vals, masterUserID, id, "expected", time.Now().UTC())
+	}
+
+	//trim the last ,
+	sqlStr = sqlStr[0 : len(sqlStr)-1]
+
+	//prepare the statement
+	stmt, err := tx.Prepare(sqlStr)
 	if err != nil {
+		tx.Rollback()
+
+		return err
+	}
+
+	//format all vals at once
+	if _, err = stmt.Exec(vals...); err != nil {
 		tx.Rollback()
 
 		return err
@@ -720,15 +735,49 @@ func (s *socialRepository) CreateFriendship(tx *sql.Tx, masterUserID, slaveUserI
 	return nil
 }
 
-func (s *socialRepository) ConfirmFriendship(tx *sql.Tx, userID, friendID string) error {
-	_, err := tx.Exec(`
+func (s *socialRepository) ConfirmFriendship(tx *sql.Tx, userID string, friendsID []string) error {
+	for _, friendID := range friendsID {
+		_, err := tx.Exec(`
 		UPDATE 
 			friendship
 		SET
 		    status = ?
 		WHERE
 		    master_user_id = ? AND slave_user_id = ?`, friendshipAcceptedStatus, friendID, userID)
+		if err != nil {
+			tx.Rollback()
+
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (s *socialRepository) RejectFriendship(tx *sql.Tx, userID string, friendsID []string) error {
+	sqlStr := "DELETE FROM friendship WHERE (master_user_id,slave_user_id) IN ("
+	vals := make([]interface{}, 0, len(friendsID)*2) // 4 - count cells: master_user_id, slave_user_id ...
+
+	for _, friendID := range friendsID {
+		sqlStr += "( ?, ?),"
+		vals = append(vals, friendID, userID)
+	}
+
+	//trim the last ,
+	sqlStr = sqlStr[0 : len(sqlStr)-1]
+	// add )
+	sqlStr += ")"
+
+	//prepare the statement
+	stmt, err := tx.Prepare(sqlStr)
 	if err != nil {
+		tx.Rollback()
+
+		return err
+	}
+
+	//format all vals at once
+	if _, err = stmt.Exec(vals...); err != nil {
 		tx.Rollback()
 
 		return err
@@ -737,32 +786,19 @@ func (s *socialRepository) ConfirmFriendship(tx *sql.Tx, userID, friendID string
 	return nil
 }
 
-func (s *socialRepository) RejectFriendship(tx *sql.Tx, userID, friendID string) error {
-	_, err := tx.Exec(`
-		DELETE
-			FROM friendship
-		WHERE
-		    master_user_id = ? AND slave_user_id = ?`, friendID, userID)
-	if err != nil {
-		tx.Rollback()
-
-		return err
-	}
-
-	return nil
-}
-
-func (s *socialRepository) BreakFriendship(tx *sql.Tx, userID, friendID string) error {
-	_, err := tx.Exec(`
+func (s *socialRepository) BreakFriendship(tx *sql.Tx, userID string, friendsID []string) error {
+	for _, friendID := range friendsID {
+		_, err := tx.Exec(`
 		DELETE
 			FROM friendship
 		WHERE
 		    (master_user_id = ? AND slave_user_id = ?) OR (master_user_id = ? AND slave_user_id = ?) AND status = ?`,
-		friendID, userID, userID, friendID, friendshipAcceptedStatus)
-	if err != nil {
-		tx.Rollback()
+			friendID, userID, userID, friendID, friendshipAcceptedStatus)
+		if err != nil {
+			tx.Rollback()
 
-		return err
+			return err
+		}
 	}
 
 	return nil
