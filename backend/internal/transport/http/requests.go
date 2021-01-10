@@ -35,6 +35,11 @@ type FriendshipRequest struct {
 	FriendsID []string `json:"friends_id" binding:"required"`
 }
 
+type GetNewsRequest struct {
+	Limit  *int `json:"limit" form:"limit"`
+	Offset *int `json:"offset" form:"offset"`
+}
+
 type CreateNewsRequest struct {
 	News []string `json:"news" binding:"required"`
 }

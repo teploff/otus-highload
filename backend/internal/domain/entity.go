@@ -59,6 +59,13 @@ type Questionnaire struct {
 	FriendshipStatus string    `json:"friendship_status"`
 }
 
+type News struct {
+	ID         string    `json:"id"`
+	OwnerID    string    `json:"owner_id"`
+	Content    string    `json:"content"`
+	CreateTime time.Time `json:"create_time"`
+}
+
 type ShortMessage struct {
 	Text   string `json:"text" binding:"required"`
 	Status int    `json:"status" binding:"oneof=0 1 2 3"`

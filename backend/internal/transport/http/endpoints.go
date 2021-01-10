@@ -38,6 +38,7 @@ func MakeEndpoints(auth domain.AuthService, profile domain.ProfileService, socia
 			BreakFriendship:                   makeBreakFriendshipEndpoint(auth, social),
 			GetFriends:                        makeGetFriendsEndpoint(auth, social),
 			GetFollowers:                      makeGetFollowersEndpoint(auth, social),
+			GetNews:                           makeGetNewsEndpoint(auth, social),
 			CreateNews:                        makeCreateNewsEndpoint(auth, social),
 			GetAllQuestionnaires:              makeGetAllQuestionnairesEndpoint(auth, social),
 			GetQuestionnairesByNameAndSurname: makeGetQuestionnairesByNameAndSurnameEndpoint(auth, social),
@@ -238,6 +239,7 @@ type SocialEndpoints struct {
 	BreakFriendship                   gin.HandlerFunc
 	GetFriends                        gin.HandlerFunc
 	GetFollowers                      gin.HandlerFunc
+	GetNews                           gin.HandlerFunc
 	CreateNews                        gin.HandlerFunc
 	GetAllQuestionnaires              gin.HandlerFunc
 	GetQuestionnairesByNameAndSurname gin.HandlerFunc
@@ -470,6 +472,65 @@ func makeGetFollowersEndpoint(authSvc domain.AuthService, socialSvc domain.Socia
 		}
 
 		c.JSON(http.StatusOK, GetFollowersResponse{Followers: followers})
+	}
+}
+
+func makeGetNewsEndpoint(authSvc domain.AuthService, socialSvc domain.SocialService) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var header AuthorizationHeader
+		if err := c.ShouldBindHeader(&header); err != nil {
+			c.JSON(http.StatusUnauthorized, ErrorResponse{
+				Message: err.Error(),
+			})
+
+			return
+		}
+
+		var request GetNewsRequest
+		if err := c.BindQuery(&request); err != nil {
+			c.JSON(http.StatusBadRequest, ErrorResponse{
+				Message: err.Error(),
+			})
+
+			return
+		}
+
+		userID, err := authSvc.Authenticate(c, header.AccessToken)
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, ErrorResponse{
+				Message: err.Error(),
+			})
+
+			return
+		}
+
+		const (
+			defaultLimit  = 10
+			defaultOffset = 0
+		)
+
+		if request.Limit == nil {
+			request.Limit = new(int)
+			*request.Limit = defaultLimit
+		}
+		if request.Offset == nil {
+			request.Offset = new(int)
+			*request.Offset = defaultOffset
+		}
+
+		news, count, err := socialSvc.RetrieveNews(c, userID, *request.Limit, *request.Offset)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, ErrorResponse{
+				Message: err.Error(),
+			})
+
+			return
+		}
+
+		c.JSON(http.StatusOK, GetNewsResponse{
+			News:  news,
+			Count: count,
+		})
 	}
 }
 

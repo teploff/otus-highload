@@ -22,6 +22,7 @@ type SocialService interface {
 	BreakFriendship(ctx context.Context, userID string, friendsID []string) error
 	GetFriends(ctx context.Context, userID string) ([]*Questionnaire, error)
 	GetFollowers(ctx context.Context, userID string) ([]*Questionnaire, error)
+	RetrieveNews(ctx context.Context, userID string, limit, offset int) ([]*News, int, error)
 	PublishNews(ctx context.Context, userID string, news []string) error
 	GetQuestionnaires(ctx context.Context, userID string, limit, offset int) ([]*Questionnaire, int, error)
 	GetQuestionnairesByNameAndSurname(ctx context.Context, prefix string) ([]*Questionnaire, error)

@@ -31,6 +31,11 @@ type GetFollowersResponse struct {
 	Followers []*domain.Questionnaire `json:"followers"`
 }
 
+type GetNewsResponse struct {
+	News  []*domain.News `json:"news"`
+	Count int            `json:"count"`
+}
+
 type CreateChatResponse struct {
 	ChatID string `json:"chat_id"`
 }

@@ -33,6 +33,7 @@ type SocialRepository interface {
 	BreakFriendship(tx *sql.Tx, userID string, friendsID []string) error
 	GetFriends(tx *sql.Tx, userID string) ([]*User, error)
 	GetFollowers(tx *sql.Tx, userID string) ([]*User, error)
+	GetNews(tx *sql.Tx, userID string, limit, offset int) ([]*News, int, error)
 	PublishNews(tx *sql.Tx, userID string, news []string) error
 }
 

@@ -805,14 +805,9 @@ func (s *socialRepository) BreakFriendship(tx *sql.Tx, userID string, friendsID 
 }
 
 func (s *socialRepository) GetFriends(tx *sql.Tx, userID string) ([]*domain.User, error) {
-	var (
-		rows *sql.Rows
-		err  error
-	)
-
 	users := make([]*domain.User, 0, 100)
 
-	rows, err = tx.Query(`
+	rows, err := tx.Query(`
 		SELECT
 			user.id, user.email, user.password, user.name, user.surname, user.sex, user.birthday, user.city, user.interests, user.access_token, user.refresh_token
 		FROM
@@ -854,14 +849,9 @@ func (s *socialRepository) GetFriends(tx *sql.Tx, userID string) ([]*domain.User
 }
 
 func (s *socialRepository) GetFollowers(tx *sql.Tx, userID string) ([]*domain.User, error) {
-	var (
-		rows *sql.Rows
-		err  error
-	)
-
 	users := make([]*domain.User, 0, 100)
 
-	rows, err = tx.Query(`
+	rows, err := tx.Query(`
 		SELECT
 			user.id, user.email, user.password, user.name, user.surname, user.sex, user.birthday, user.city, user.interests, user.access_token, user.refresh_token
 		FROM
@@ -891,6 +881,72 @@ func (s *socialRepository) GetFollowers(tx *sql.Tx, userID string) ([]*domain.Us
 	}
 
 	return users, nil
+}
+
+func (s *socialRepository) GetNews(tx *sql.Tx, userID string, limit, offset int) ([]*domain.News, int, error) {
+	friends, err := s.GetFriends(tx, userID)
+	if err != nil && err != sql.ErrNoRows {
+		return nil, 0, err
+	}
+
+	ids := make([]string, 0, len(friends)+1)
+	for _, friend := range friends {
+		ids = append(ids, friend.ID)
+	}
+	ids = append(ids, userID)
+
+	var count int
+	news := make([]*domain.News, 0, 100)
+
+	sqlStr := "SELECT SQL_CALC_FOUND_ROWS id, owner_id, content, create_time FROM news WHERE owner_id IN ("
+	vals := make([]interface{}, 0, len(ids))
+
+	for _, id := range ids {
+		sqlStr += "?,"
+		vals = append(vals, id)
+	}
+	vals = append(vals, limit, offset)
+
+	//trim the last ,
+	sqlStr = sqlStr[0 : len(sqlStr)-1]
+	// add ) with limit and offset
+	sqlStr += ") LIMIT ? OFFSET ?"
+
+	//prepare the statement
+	stmt, err := tx.Prepare(sqlStr)
+	if err != nil {
+		tx.Rollback()
+
+		return nil, 0, err
+	}
+
+	rows, err := stmt.Query(vals...)
+	if err != nil {
+		tx.Rollback()
+
+		return nil, 0, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		n := new(domain.News)
+
+		if err = rows.Scan(&n.ID, &n.OwnerID, &n.Content, &n.CreateTime); err != nil {
+			tx.Rollback()
+
+			return nil, 0, err
+		}
+
+		news = append(news, n)
+	}
+
+	if err = tx.QueryRow(`SELECT FOUND_ROWS()`).Scan(&count); err != nil {
+		tx.Rollback()
+
+		return nil, 0, err
+	}
+
+	return news, count, nil
 }
 
 func (s *socialRepository) PublishNews(tx *sql.Tx, userID string, news []string) error {
