@@ -9,4 +9,4 @@ RUN apk --no-cache add ca-certificates
 WORKDIR /app
 COPY --from=builder /app/ ./
 
-CMD ["./backend", "--config=./configs/config.yaml"]
+CMD ["./backend", "--config=./configs/config_stage.yaml"]

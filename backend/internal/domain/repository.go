@@ -50,6 +50,14 @@ type MessengerRepository interface {
 	GetMessages(tx *sql.Tx, chatID string, limit, offset int) ([]*Message, error)
 }
 
+type SocialCacheRepository interface {
+	PersistFriend(ctx context.Context, userID, friendID string) error
+	DeleteFriend(ctx context.Context, userID, friendID string) error
+	RetrieveFriendsID(ctx context.Context, userID string) ([]string, error)
+	PersistNews(ctx context.Context, userID string, news *News) error
+	RetrieveNews(ctx context.Context, userID string) ([]*News, error)
+}
+
 type WSPoolRepository interface {
 	AddConnection(userID string, conn net.Conn)
 	RemoveConnection(userID string, conn net.Conn)

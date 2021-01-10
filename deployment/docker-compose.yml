@@ -87,9 +87,6 @@ services:
     environment:
       - ADDR=0.0.0.0:9999
       - STORAGE_DSN=user:password@tcp(mysql-storage:3306)/social-network?parseTime=true
-      - CACHE_ADDR=redis-cache:6379
-      - CACHE_PASSWORD=password
-      - CACHE_DB=0
       - STAN_CLUSTER_ID=stan-cluster
       - STAN_ADDR=nats://nats-streaming:4222
       - JWT_SECRET=secret

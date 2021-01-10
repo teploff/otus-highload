@@ -12,7 +12,7 @@ import (
 type Config struct {
 	Addr    string        `mapstructure:"addr"`
 	Storage StorageConfig `mapstructure:"storage"`
-	Cache   CacheConfig   `mapstructure:"cache"`
+	Cache   []CacheConfig `mapstructure:"cache"`
 	Stan    StanConfig    `mapstructure:"stan"`
 	JWT     JWTConfig     `mapstructure:"jwt"`
 	Logger  LoggerConfig  `mapstructure:"logger"`

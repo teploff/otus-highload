@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"social-network/internal/config"
 	"social-network/internal/implementation"
+	"social-network/internal/infrastructure/cache"
 	httptransport "social-network/internal/transport/http"
 	wstransport "social-network/internal/transport/ws"
 	"time"
@@ -48,7 +49,7 @@ func NewApp(cfg *config.Config, opts ...Option) *App {
 }
 
 // Run lunch application.
-func (a *App) Run(mysqlConn *sql.DB) {
+func (a *App) Run(mysqlConn *sql.DB, redisPool *cache.Pool) {
 	authSvc := implementation.NewAuthService(implementation.NewUserRepository(mysqlConn), a.cfg.JWT)
 	profileSvc := implementation.NewProfileService(implementation.NewUserRepository(mysqlConn))
 	socialSvc := implementation.NewSocialService(

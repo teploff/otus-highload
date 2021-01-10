@@ -3,9 +3,13 @@ package implementation
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
+	"fmt"
+	"github.com/go-redis/redis/v8"
 	uuid "github.com/satori/go.uuid"
 	"net"
 	"social-network/internal/domain"
+	"social-network/internal/infrastructure/cache"
 	wstransport "social-network/internal/transport/ws"
 	"strings"
 	"time"
@@ -977,6 +981,164 @@ func (s *socialRepository) PublishNews(tx *sql.Tx, userID string, news []string)
 	}
 
 	return nil
+}
+
+type socialCacheRepository struct {
+	pool           *cache.Pool
+	friendsDBIndex int
+	NewsDBIndex    int
+}
+
+func NewCacheRepository(pool *cache.Pool) *socialCacheRepository {
+	return &socialCacheRepository{
+		pool:           pool,
+		friendsDBIndex: 1,
+		NewsDBIndex:    2,
+	}
+}
+
+func (s *socialCacheRepository) PersistFriend(ctx context.Context, userID, friendID string) error {
+	conn, err := s.pool.GetConnByIndexDB(s.friendsDBIndex)
+	if err != nil {
+		return err
+	}
+
+	var friendsID []string
+	result, err := conn.Get(ctx, userID).Result()
+	switch err {
+	case nil:
+		if err = json.Unmarshal([]byte(result), &friendsID); err != nil {
+			return fmt.Errorf("cannot unmarshal friends id, %w", err)
+		}
+	case redis.Nil:
+		friendsID = make([]string, 0, 1)
+	default:
+		return err
+	}
+	friendsID = append(friendsID, friendID)
+
+	data, err := json.Marshal(friendsID)
+	if err != nil {
+		return fmt.Errorf("cannot marshal friends id, %w", err)
+	}
+
+	return conn.Set(ctx, userID, data, 0).Err()
+}
+
+func (s *socialCacheRepository) DeleteFriend(ctx context.Context, userID, friendID string) error {
+	conn, err := s.pool.GetConnByIndexDB(s.friendsDBIndex)
+	if err != nil {
+		return err
+	}
+
+	var friendsID []string
+	result, err := conn.Get(ctx, userID).Result()
+	switch err {
+	case nil:
+		if err = json.Unmarshal([]byte(result), &friendsID); err != nil {
+			return fmt.Errorf("cannot unmarshal friends id, %w", err)
+		}
+	case redis.Nil:
+		return fmt.Errorf("friendID %s doesn't exist", friendID)
+	default:
+		return err
+	}
+
+	var friendExist bool
+	for index, fi := range friendsID {
+		if fi == friendID {
+			friendsID[index] = friendsID[len(friendsID)-1]
+			friendsID[len(friendsID)-1] = ""
+			friendsID = friendsID[:len(friendsID)-1]
+
+			friendExist = true
+
+			break
+		}
+	}
+
+	if !friendExist {
+		return fmt.Errorf("friendID %s doesn't exist", friendID)
+	}
+
+	data, err := json.Marshal(friendsID)
+	if err != nil {
+		return fmt.Errorf("cannot marshal friends id, %w", err)
+	}
+
+	return conn.Set(ctx, userID, data, 0).Err()
+}
+
+func (s *socialCacheRepository) RetrieveFriendsID(ctx context.Context, userID string) ([]string, error) {
+	conn, err := s.pool.GetConnByIndexDB(s.friendsDBIndex)
+	if err != nil {
+		return nil, err
+	}
+
+	var friendsID []string
+	result, err := conn.Get(ctx, userID).Result()
+	switch err {
+	case nil:
+		if err = json.Unmarshal([]byte(result), &friendsID); err != nil {
+			return nil, fmt.Errorf("cannot unmarshal friends id, %w", err)
+		}
+	case redis.Nil:
+		friendsID = make([]string, 0, 1)
+	default:
+		return nil, err
+	}
+
+	return friendsID, nil
+}
+
+func (s *socialCacheRepository) PersistNews(ctx context.Context, userID string, news *domain.News) error {
+	conn, err := s.pool.GetConnByIndexDB(s.NewsDBIndex)
+	if err != nil {
+		return err
+	}
+
+	var n []*domain.News
+	result, err := conn.Get(ctx, userID).Result()
+	switch err {
+	case nil:
+		if err = json.Unmarshal([]byte(result), &n); err != nil {
+			return fmt.Errorf("cannot unmarshal news, %w", err)
+		}
+	case redis.Nil:
+		n = make([]*domain.News, 0, 1)
+	default:
+		return err
+	}
+	n = append(n, news)
+
+	data, err := json.Marshal(n)
+	if err != nil {
+		return fmt.Errorf("cannot marshal news, %w", err)
+	}
+
+	return conn.Set(ctx, userID, data, 0).Err()
+}
+
+func (s *socialCacheRepository) RetrieveNews(ctx context.Context, userID string) ([]*domain.News, error) {
+	conn, err := s.pool.GetConnByIndexDB(s.NewsDBIndex)
+	if err != nil {
+		return nil, err
+	}
+
+	var news []*domain.News
+	result, err := conn.Get(ctx, userID).Result()
+	switch err {
+	case nil:
+		if err = json.Unmarshal([]byte(result), &news); err != nil {
+			return nil, fmt.Errorf("cannot news, %w", err)
+		}
+	case redis.Nil:
+		news = make([]*domain.News, 0, 1)
+	default:
+		return nil, err
+	}
+
+	return news, nil
 }
 
 type wsPoolRepository struct {

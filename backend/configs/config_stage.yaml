@@ -8,10 +8,10 @@ storage:
   conn_attempt_count: 10
 
 cache:
-  - addr: "localhost:6379"
+  - addr: "redis-cache:6379"
     password: "password"
     db: 1
-  - addr: "localhost:6379"
+  - addr: "redis-cache:6379"
     password: "password"
     db: 2
 

@@ -1,15 +1,14 @@
 package main
 
 import (
-	"context"
 	"database/sql"
 	"flag"
 	"fmt"
-	"github.com/go-redis/redis/v8"
 	"os"
 	"os/signal"
 	"social-network/internal/app"
 	"social-network/internal/config"
+	"social-network/internal/infrastructure/cache"
 	zaplogger "social-network/internal/infrastructure/logger"
 	"social-network/internal/infrastructure/stan"
 	"syscall"
@@ -47,18 +46,13 @@ func main() {
 	}
 	logger.Info("connection with MySQL is established")
 
-	redisConn := redis.NewClient(&redis.Options{
-		Addr:     cfg.Cache.Addr,
-		Password: cfg.Cache.Password,
-		DB:       cfg.Cache.DB,
-	})
-
 	logger.Info("try establish connection with Redis...")
-	if _, err = redisConn.Ping(context.TODO()).Result(); err != nil {
-		logger.Fatal("redis ping fail, ", zap.Error(err))
+	redisPool, err := cache.NewPool(cfg.Cache)
+	if err != nil {
+		logger.Fatal("redis connection fail, ", zap.Error(err))
 	}
 	logger.Info("connection with Redis is established")
-	defer redisConn.Close()
+	defer redisPool.Close()
 
 	client, err := stan.NewClient(cfg.Stan, logger)
 	if err != nil {
@@ -69,7 +63,7 @@ func main() {
 	application := app.NewApp(cfg,
 		app.WithLogger(logger),
 	)
-	go application.Run(mysqlConn)
+	go application.Run(mysqlConn, redisPool)
 
 	done := make(chan os.Signal, 1)
 	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
