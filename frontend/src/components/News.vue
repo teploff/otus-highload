@@ -54,7 +54,41 @@
       </md-app-drawer>
 
       <md-app-content>
-        Home payload!
+        <md-table v-show="cards.count !== 0">
+          <md-table-row>
+            <div class="card-expansion">
+        <md-card v-for="card in cards.news" v-bind:key="card.id">
+          <md-card-header>
+            <md-card-header-text>
+              <div class="md-title">{{ card.owner.name }} {{ card.owner.surname }}</div>
+              <div class="md-subhead">{{ card.content }}</div>
+            </md-card-header-text>
+
+            <md-card-media>
+              <img v-if="card.owner.sex === 'male'" src="../assets/boy.png" alt="People">
+              <img v-else src="../assets/girl.png" alt="People">
+            </md-card-media>
+          </md-card-header>
+        </md-card>
+
+            </div>
+          </md-table-row>
+          <md-table-row class="pagination-row">
+            <div>
+              <paginate
+                  v-model="page"
+                  :page-count="Math.ceil(cards.count / countCardsInWindow)"
+                  :click-handler="paginatorClick"
+                  :prev-text="'Prev'"
+                  :next-text="'Next'"
+                  :container-class="'pagination'"
+                  :page-class="'page-item'"
+                  :first-last-button="true"
+              >
+              </paginate>
+            </div>
+          </md-table-row>
+        </md-table>
       </md-app-content>
     </md-app>
     <FlashMessage :position="'right top'"></FlashMessage>
@@ -62,7 +96,8 @@
 </template>
 
 <script>
-import {debounce} from "@/const";
+import {apiUrl, debounce, headers} from "@/const";
+import axios from "axios";
 
 export default {
   name: 'Home',
@@ -74,11 +109,21 @@ export default {
     searchPayload: {
       anthroponym: null,
     },
+    cards: {
+      news: null,
+      count: 0,
+    },
+    countCardsInWindow: 10,
+    offset: 0,
+    page: 1,
   }),
   beforeCreate() {
     if (this.$store.getters.accessToken === null) {
       this.$router.push({ name: 'SignIn' });
     }
+  },
+  created() {
+    this.getNews();
   },
   methods: {
     followHomePage() {
@@ -97,6 +142,77 @@ export default {
       this.$store.commit("changeAnthroponym", this.searchPayload.anthroponym);
       this.$router.push({ name: 'People' })
     }, 1000),
+    paginatorClick(pageNum) {
+      this.offset = (pageNum - 1) * this.countCardsInWindow;
+
+      this.getNews()
+    },
+    getNews() {
+      const path = `${apiUrl}/social/news`;
+      const camelcaseKeys = require('camelcase-keys');
+
+      headers.Authorization = this.$store.getters.accessToken
+
+      axios.get(path, {
+        headers: headers,
+        params: {offset: this.offset},
+        transformResponse: [(data) => {
+          return camelcaseKeys(JSON.parse(data), { deep: true })}
+        ]
+      })
+          .then((response) => {
+            this.cards = response.data;
+          })
+          .catch((error) => {
+            const err = error.response;
+
+            if (err.status === 401) {
+              this.refreshToken();
+            }
+
+            this.flashMessage.error({
+              title: 'Error Message Title',
+              message: err.data.message,
+              position: 'center',
+              icon: '../assets/error.svg',
+            });
+          });
+    },
+    refreshToken() {
+      const path = `${apiUrl}/auth/token`;
+      const camelcaseKeys = require('camelcase-keys');
+
+      if (this.$store.getters.refreshToken === null) {
+        this.$router.push({ name: 'SignIn' });
+      }
+
+      const payload = {
+        refresh_token: this.$store.getters.refreshToken,
+      };
+      axios.put(path, payload, {transformResponse: [(data) => {
+          return camelcaseKeys(JSON.parse(data), { deep: true })}
+        ]})
+          .then((response) => {
+            this.tokenPair = response.data;
+
+            this.$store.commit("changeAccessToken", this.tokenPair.accessToken);
+            this.$store.commit("changeRefreshToken", this.tokenPair.refreshToken);
+
+            this.$router.push({ name: 'People' });
+          })
+          .catch((error) => {
+            const err = JSON.parse(JSON.stringify(error.response));
+            if (err.status === 401) {
+              this.$router.push({ name: 'SignIn' });
+            }
+            this.flashMessage.error({
+              title: 'Error Message Title',
+              message: err.data.message,
+              position: 'center',
+              icon: '../assets/error.svg',
+            });
+          });
+    },
     logOut() {
       this.$store.commit("changeAccessToken", null);
       this.$store.commit("changeRefreshToken", null);
@@ -126,5 +242,23 @@ export default {
 .md-toolbar {
   height: 50px;
   padding: inherit;
+}
+
+
+.card-expansion {
+  margin: 0 175px 10px 175px;
+  text-align: center;
+}
+
+.md-card {
+  width: 250px;
+  margin: 4px;
+  display: inline-block;
+  vertical-align: top;
+}
+
+.pagination-row {
+  text-align: center;
+  margin-bottom: 75px;
 }
 </style>
