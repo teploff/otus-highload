@@ -38,6 +38,7 @@ func MakeEndpoints(auth domain.AuthService, profile domain.ProfileService, socia
 			BreakFriendship:                   makeBreakFriendshipEndpoint(auth, social),
 			GetFriends:                        makeGetFriendsEndpoint(auth, social),
 			GetFollowers:                      makeGetFollowersEndpoint(auth, social),
+			CreateNews:                        makeCreateNewsEndpoint(auth, social),
 			GetAllQuestionnaires:              makeGetAllQuestionnairesEndpoint(auth, social),
 			GetQuestionnairesByNameAndSurname: makeGetQuestionnairesByNameAndSurnameEndpoint(auth, social),
 		},
@@ -237,6 +238,7 @@ type SocialEndpoints struct {
 	BreakFriendship                   gin.HandlerFunc
 	GetFriends                        gin.HandlerFunc
 	GetFollowers                      gin.HandlerFunc
+	CreateNews                        gin.HandlerFunc
 	GetAllQuestionnaires              gin.HandlerFunc
 	GetQuestionnairesByNameAndSurname gin.HandlerFunc
 }
@@ -468,6 +470,47 @@ func makeGetFollowersEndpoint(authSvc domain.AuthService, socialSvc domain.Socia
 		}
 
 		c.JSON(http.StatusOK, GetFollowersResponse{Followers: followers})
+	}
+}
+
+func makeCreateNewsEndpoint(authSvc domain.AuthService, socialSvc domain.SocialService) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var header AuthorizationHeader
+		if err := c.ShouldBindHeader(&header); err != nil {
+			c.JSON(http.StatusUnauthorized, ErrorResponse{
+				Message: err.Error(),
+			})
+
+			return
+		}
+
+		var request CreateNewsRequest
+		if err := c.Bind(&request); err != nil {
+			c.JSON(http.StatusBadRequest, ErrorResponse{
+				Message: err.Error(),
+			})
+
+			return
+		}
+
+		userID, err := authSvc.Authenticate(c, header.AccessToken)
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, ErrorResponse{
+				Message: err.Error(),
+			})
+
+			return
+		}
+
+		if err = socialSvc.PublishNews(c, userID, request.News); err != nil {
+			c.JSON(http.StatusInternalServerError, ErrorResponse{
+				Message: err.Error(),
+			})
+
+			return
+		}
+
+		c.JSON(http.StatusOK, EmptyResponse{})
 	}
 }
 

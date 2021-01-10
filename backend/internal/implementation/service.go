@@ -351,6 +351,19 @@ func (s *socialService) GetFollowers(ctx context.Context, userID string) ([]*dom
 	return questionnaires, s.socialRepository.CommitTx(tx)
 }
 
+func (s *socialService) PublishNews(ctx context.Context, userID string, news []string) error {
+	tx, err := s.socialRepository.GetTx(ctx)
+	if err != nil {
+		return err
+	}
+
+	if err = s.socialRepository.PublishNews(tx, userID, news); err != nil {
+		return err
+	}
+
+	return s.socialRepository.CommitTx(tx)
+}
+
 func (s *socialService) GetQuestionnaires(ctx context.Context, userID string, limit, offset int) ([]*domain.Questionnaire, int, error) {
 	tx, err := s.userRepository.GetTx(ctx)
 	if err != nil {

@@ -893,6 +893,36 @@ func (s *socialRepository) GetFollowers(tx *sql.Tx, userID string) ([]*domain.Us
 	return users, nil
 }
 
+func (s *socialRepository) PublishNews(tx *sql.Tx, userID string, news []string) error {
+	sqlStr := "INSERT INTO news (owner_id, content, create_time) VALUES "
+	vals := make([]interface{}, 0, len(news)*3) // 3 - count cells: owner_id, content, create_time
+
+	for _, n := range news {
+		sqlStr += "( ?, ?, ?),"
+		vals = append(vals, userID, n, time.Now().UTC())
+	}
+
+	//trim the last ,
+	sqlStr = sqlStr[0 : len(sqlStr)-1]
+
+	//prepare the statement
+	stmt, err := tx.Prepare(sqlStr)
+	if err != nil {
+		tx.Rollback()
+
+		return err
+	}
+
+	//format all vals at once
+	if _, err = stmt.Exec(vals...); err != nil {
+		tx.Rollback()
+
+		return err
+	}
+
+	return nil
+}
+
 type wsPoolRepository struct {
 	conns *wstransport.Conns
 }
