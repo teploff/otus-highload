@@ -30,24 +30,24 @@
         <md-list>
           <md-list-item @click="followHomePage">
             <md-icon>assignment_ind</md-icon>
-            <span class="md-list-item-text">Моя страница</span>
+            <span class="md-list-item-text">My profile</span>
           </md-list-item>
 
           <md-list-item @click="followNewsPage">
             <md-icon>fiber_new</md-icon>
-            <span class="md-list-item-text">Новости</span>
+            <span class="md-list-item-text">News</span>
             <md-badge v-if="countNewsNotify > 0" class="md-primary" v-bind:md-content="countNewsNotify" />
           </md-list-item>
 
           <md-list-item @click="followMessengerPage">
             <md-icon>chat</md-icon>
-            <span class="md-list-item-text">Мессенджер</span>
+            <span class="md-list-item-text">Messenger</span>
             <md-badge v-if="countMsgNotify > 0" class="md-primary" v-bind:md-content="countMsgNotify" />
           </md-list-item>
 
           <md-list-item @click="followFriendsPage">
             <md-icon>supervisor_account</md-icon>
-            <span class="md-list-item-text">Друзья</span>
+            <span class="md-list-item-text">Friends</span>
             <md-badge v-if="countFriendsNotify > 0" class="md-primary" v-bind:md-content="countFriendsNotify" />
           </md-list-item>
         </md-list>

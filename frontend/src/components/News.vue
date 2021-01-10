@@ -30,24 +30,24 @@
         <md-list>
           <md-list-item @click="followHomePage">
             <md-icon>assignment_ind</md-icon>
-            <span class="md-list-item-text">Моя страница</span>
+            <span class="md-list-item-text">My profile</span>
           </md-list-item>
 
           <md-list-item @click="followNewsPage">
             <md-icon>fiber_new</md-icon>
-            <span class="md-list-item-text">Новости</span>
+            <span class="md-list-item-text">News</span>
             <md-badge v-if="countNewsNotify > 0" class="md-primary" v-bind:md-content="countNewsNotify" />
           </md-list-item>
 
           <md-list-item @click="followMessengerPage">
             <md-icon>chat</md-icon>
-            <span class="md-list-item-text">Мессенджер</span>
+            <span class="md-list-item-text">Messenger</span>
             <md-badge v-if="countMsgNotify > 0" class="md-primary" v-bind:md-content="countMsgNotify" />
           </md-list-item>
 
           <md-list-item @click="followFriendsPage">
             <md-icon>supervisor_account</md-icon>
-            <span class="md-list-item-text">Друзья</span>
+            <span class="md-list-item-text">Friends</span>
             <md-badge v-if="countFriendsNotify > 0" class="md-primary" v-bind:md-content="countFriendsNotify" />
           </md-list-item>
         </md-list>
@@ -60,15 +60,16 @@
         <md-card v-for="card in cards.news" v-bind:key="card.id">
           <md-card-header>
             <md-card-header-text>
-              <div class="md-title">{{ card.owner.name }} {{ card.owner.surname }}</div>
-              <div class="md-subhead">{{ card.content }}</div>
+              <div class="md-title" id="news-card-title">{{ card.owner.name }} {{ card.owner.surname }}</div>
+              <div class="md-subhead">{{ $moment(card.createTime).format('MMMM Do YYYY kk:mm:ss') }}</div>
             </md-card-header-text>
-
             <md-card-media>
-              <img v-if="card.owner.sex === 'male'" src="../assets/boy.png" alt="People">
-              <img v-else src="../assets/girl.png" alt="People">
+              <img src="../assets/news.png" alt="People">
             </md-card-media>
           </md-card-header>
+          <md-card-content>
+            {{ card.content }}
+          </md-card-content>
         </md-card>
 
             </div>
@@ -113,7 +114,7 @@ export default {
       news: null,
       count: 0,
     },
-    countCardsInWindow: 10,
+    countCardsInWindow: 40,
     offset: 0,
     page: 1,
   }),
@@ -155,7 +156,10 @@ export default {
 
       axios.get(path, {
         headers: headers,
-        params: {offset: this.offset},
+        params: {
+          limit: this.countCardsInWindow,
+          offset: this.offset
+        },
         transformResponse: [(data) => {
           return camelcaseKeys(JSON.parse(data), { deep: true })}
         ]
@@ -261,4 +265,10 @@ export default {
   text-align: center;
   margin-bottom: 75px;
 }
+
+#news-card-title {
+  font-style: italic;
+  font-size: medium;
+}
+
 </style>
