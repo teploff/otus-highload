@@ -898,7 +898,7 @@ func (s *socialRepository) GetNews(tx *sql.Tx, userID string, limit, offset int)
 	var count int
 	news := make([]*domain.News, 0, 100)
 
-	sqlStr := "SELECT SQL_CALC_FOUND_ROWS id, owner_id, content, create_time FROM news WHERE owner_id IN ("
+	sqlStr := "SELECT SQL_CALC_FOUND_ROWS news.id, user.name, user.surname, user.sex, content, news.create_time FROM news JOIN user ON news.owner_id = user.id WHERE owner_id IN ("
 	vals := make([]interface{}, 0, len(ids))
 
 	for _, id := range ids {
@@ -910,7 +910,7 @@ func (s *socialRepository) GetNews(tx *sql.Tx, userID string, limit, offset int)
 	//trim the last ,
 	sqlStr = sqlStr[0 : len(sqlStr)-1]
 	// add ) with limit and offset
-	sqlStr += ") LIMIT ? OFFSET ?"
+	sqlStr += ") ORDER BY news.create_time DESC LIMIT ? OFFSET ?"
 
 	//prepare the statement
 	stmt, err := tx.Prepare(sqlStr)
@@ -931,7 +931,7 @@ func (s *socialRepository) GetNews(tx *sql.Tx, userID string, limit, offset int)
 	for rows.Next() {
 		n := new(domain.News)
 
-		if err = rows.Scan(&n.ID, &n.OwnerID, &n.Content, &n.CreateTime); err != nil {
+		if err = rows.Scan(&n.ID, &n.Owner.Name, &n.Owner.Surname, &n.Owner.Sex, &n.Content, &n.CreateTime); err != nil {
 			tx.Rollback()
 
 			return nil, 0, err

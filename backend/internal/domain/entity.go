@@ -60,8 +60,12 @@ type Questionnaire struct {
 }
 
 type News struct {
-	ID         string    `json:"id"`
-	OwnerID    string    `json:"owner_id"`
+	ID    string `json:"id"`
+	Owner struct {
+		Name    string `json:"name"`
+		Surname string `json:"surname"`
+		Sex     string `json:"sex"`
+	} `json:"owner"`
 	Content    string    `json:"content"`
 	CreateTime time.Time `json:"create_time"`
 }
