@@ -260,7 +260,7 @@ func (s *socialService) ConfirmFriendship(ctx context.Context, userID string, fr
 		return err
 	}
 
-	if err = s.socialRepository.CreateFriendship(tx, userID, friendsID); err != nil {
+	if err = s.socialRepository.ConfirmFriendship(tx, userID, friendsID); err != nil {
 		return err
 	}
 
@@ -273,7 +273,7 @@ func (s *socialService) RejectFriendship(ctx context.Context, userID string, fri
 		return err
 	}
 
-	if err = s.socialRepository.CreateFriendship(tx, userID, friendsID); err != nil {
+	if err = s.socialRepository.RejectFriendship(tx, userID, friendsID); err != nil {
 		return err
 	}
 
