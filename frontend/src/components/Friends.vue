@@ -83,7 +83,8 @@
                   <md-table-cell md-label="Name" md-sort-by="name">{{ item.name }} {{ item.surname }}</md-table-cell>
                   <md-table-cell md-label="Email" md-sort-by="email">{{ item.email }}</md-table-cell>
                   <md-table-cell md-label="Sex" md-sort-by="sex">{{ item.sex }}</md-table-cell>
-                  <md-table-cell md-label="Birthday" md-sort-by="birthday">{{ item.birthday }}</md-table-cell>
+                  <md-table-cell md-label="Birthday" md-sort-by="birthday">{{ $moment(item.birthday).format('MMMM Do YYYY') }}</md-table-cell>
+                  <md-table-cell md-label="City" md-sort-by="city">{{ item.city }}</md-table-cell>
                 </md-table-row>
               </md-table>
             </div>
@@ -107,10 +108,10 @@
                   <div class="md-toolbar-section-start">{{ getAlternateLabel() }}</div>
 
                   <div class="md-toolbar-section-end">
-                    <md-button class="md-icon-button">
+                    <md-button class="md-icon-button" @click="acceptFollowers">
                       <md-icon>add</md-icon>
                     </md-button>
-                    <md-button class="md-icon-button">
+                    <md-button class="md-icon-button" @click="removeFollowers">
                       <md-icon>delete</md-icon>
                     </md-button>
                   </div>
@@ -326,10 +327,80 @@ export default {
           });
     },
     acceptFollowers() {
+      const path = `${apiUrl}/social/confirm-friendship`;
+      const camelcaseKeys = require('camelcase-keys');
 
+      if (this.$store.getters.refreshToken === null) {
+        this.$router.push({ name: 'SignIn' });
+      }
+
+      let followers_id = [];
+      for (let i in this.selectedFollowers) {
+        followers_id.push(this.selectedFollowers[i].id)
+      }
+
+      const payload = {
+        friends_id: followers_id,
+      };
+
+      axios.post(path, payload, {headers: headers, transformResponse: [(data) => {
+          return camelcaseKeys(JSON.parse(data), { deep: true })}
+        ]})
+          .then(() => {
+            this.followers = this.followers.filter(function(item) {
+              return !followers_id.some(function(s) { return s === item.id && s.lines === item.lines })
+            });
+          })
+          .catch((error) => {
+            const err = JSON.parse(JSON.stringify(error.response));
+            if (err.status === 401) {
+              this.$router.push({ name: 'SignIn' });
+            }
+            this.flashMessage.error({
+              title: 'Error Message Title',
+              message: err.data.message,
+              position: 'center',
+              icon: '../assets/error.svg',
+            });
+          });
     },
     removeFollowers() {
+      const path = `${apiUrl}/social/reject-friendship`;
+      const camelcaseKeys = require('camelcase-keys');
 
+      if (this.$store.getters.refreshToken === null) {
+        this.$router.push({ name: 'SignIn' });
+      }
+
+      let followers_id = [];
+      for (let i in this.selectedFollowers) {
+        followers_id.push(this.selectedFollowers[i].id)
+      }
+
+      const payload = {
+        friends_id: followers_id,
+      };
+
+      axios.post(path, payload, {headers: headers, transformResponse: [(data) => {
+          return camelcaseKeys(JSON.parse(data), { deep: true })}
+        ]})
+          .then(() => {
+            this.followers = this.followers.filter(function(item) {
+              return !followers_id.some(function(s) { return s === item.id && s.lines === item.lines })
+            });
+          })
+          .catch((error) => {
+            const err = JSON.parse(JSON.stringify(error.response));
+            if (err.status === 401) {
+              this.$router.push({ name: 'SignIn' });
+            }
+            this.flashMessage.error({
+              title: 'Error Message Title',
+              message: err.data.message,
+              position: 'center',
+              icon: '../assets/error.svg',
+            });
+          });
     },
   },
 };
