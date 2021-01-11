@@ -28,6 +28,12 @@ type SocialService interface {
 	GetQuestionnairesByNameAndSurname(ctx context.Context, prefix string) ([]*Questionnaire, error)
 }
 
+type CacheService interface {
+	AddFriends(ctx context.Context, userID string, friendsID []string) error
+	DeleteFriends(ctx context.Context, userID string, friendsID []string) error
+	AddNews(ctx context.Context, userID string, news []string) error
+}
+
 type MessengerService interface {
 	CreateChat(ctx context.Context, masterID, slaveID string) (string, error)
 	GetChat(ctx context.Context, masterID, slaveID string) (*Chat, error)

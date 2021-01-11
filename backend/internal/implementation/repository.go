@@ -997,27 +997,27 @@ func NewCacheRepository(pool *cache.Pool) *socialCacheRepository {
 	}
 }
 
-func (s *socialCacheRepository) PersistFriend(ctx context.Context, userID, friendID string) error {
+func (s *socialCacheRepository) PersistFriend(ctx context.Context, userID string, friendsID []string) error {
 	conn, err := s.pool.GetConnByIndexDB(s.friendsDBIndex)
 	if err != nil {
 		return err
 	}
 
-	var friendsID []string
+	var friends []string
 	result, err := conn.Get(ctx, userID).Result()
 	switch err {
 	case nil:
-		if err = json.Unmarshal([]byte(result), &friendsID); err != nil {
+		if err = json.Unmarshal([]byte(result), &friends); err != nil {
 			return fmt.Errorf("cannot unmarshal friends id, %w", err)
 		}
 	case redis.Nil:
-		friendsID = make([]string, 0, 1)
+		friends = make([]string, 0, 1)
 	default:
 		return err
 	}
-	friendsID = append(friendsID, friendID)
+	friends = append(friends, friendsID...)
 
-	data, err := json.Marshal(friendsID)
+	data, err := json.Marshal(friends)
 	if err != nil {
 		return fmt.Errorf("cannot marshal friends id, %w", err)
 	}
@@ -1025,43 +1025,37 @@ func (s *socialCacheRepository) PersistFriend(ctx context.Context, userID, frien
 	return conn.Set(ctx, userID, data, 0).Err()
 }
 
-func (s *socialCacheRepository) DeleteFriend(ctx context.Context, userID, friendID string) error {
+func (s *socialCacheRepository) DeleteFriend(ctx context.Context, userID string, friendsID []string) error {
 	conn, err := s.pool.GetConnByIndexDB(s.friendsDBIndex)
 	if err != nil {
 		return err
 	}
 
-	var friendsID []string
+	var friends []string
 	result, err := conn.Get(ctx, userID).Result()
 	switch err {
 	case nil:
-		if err = json.Unmarshal([]byte(result), &friendsID); err != nil {
+		if err = json.Unmarshal([]byte(result), &friends); err != nil {
 			return fmt.Errorf("cannot unmarshal friends id, %w", err)
 		}
 	case redis.Nil:
-		return fmt.Errorf("friendID %s doesn't exist", friendID)
+		return fmt.Errorf("friends are absent")
 	default:
 		return err
 	}
 
-	var friendExist bool
-	for index, fi := range friendsID {
-		if fi == friendID {
-			friendsID[index] = friendsID[len(friendsID)-1]
-			friendsID[len(friendsID)-1] = ""
-			friendsID = friendsID[:len(friendsID)-1]
-
-			friendExist = true
-
-			break
+	for i := 0; i < len(friends); i++ {
+		friend := friends[i]
+		for _, remFriend := range friendsID {
+			if friend == remFriend {
+				friends = append(friends[:i], friends[i+1:]...)
+				i-- // Important: decrease index
+				break
+			}
 		}
 	}
 
-	if !friendExist {
-		return fmt.Errorf("friendID %s doesn't exist", friendID)
-	}
-
-	data, err := json.Marshal(friendsID)
+	data, err := json.Marshal(friends)
 	if err != nil {
 		return fmt.Errorf("cannot marshal friends id, %w", err)
 	}

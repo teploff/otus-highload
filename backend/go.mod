@@ -13,11 +13,11 @@ require (
 	github.com/gobwas/ws v1.0.4
 	github.com/golang-migrate/migrate v3.5.4+incompatible
 	github.com/gorilla/websocket v1.4.2
+	github.com/mailru/easyjson v0.7.6
 	github.com/nats-io/stan.go v0.7.0
 	github.com/pressly/goose v2.6.0+incompatible // indirect
 	github.com/satori/go.uuid v1.2.0
 	github.com/spf13/viper v1.7.1
-	github.com/tarantool/go-tarantool v0.0.0-20200816172506-a535b8e0224a // indirect
 	go.uber.org/zap v1.16.0
 	golang.org/x/crypto v0.0.0-20201002170205-7f63de1d35b0
 )

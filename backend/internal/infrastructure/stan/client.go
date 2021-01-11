@@ -33,7 +33,7 @@ func NewClient(cfg config.StanConfig, logger *zap.Logger) (*Client, error) {
 	return &Client{conn: conn}, nil
 }
 
-// Publish measurement nats-streaming.
+// Publish message into nats-streaming.
 func (c *Client) Publish(subject string, message json.Marshaler) error {
 	payload, err := message.MarshalJSON()
 	if err != nil {
@@ -43,6 +43,11 @@ func (c *Client) Publish(subject string, message json.Marshaler) error {
 	_, err = c.conn.PublishAsync(subject, payload, func(_ string, _ error) {})
 
 	return err
+}
+
+// Subscribe message from nats-streaming.
+func (c *Client) Subscribe(subject string, cb stan.MsgHandler, opts ...stan.SubscriptionOption) (stan.Subscription, error) {
+	return c.conn.Subscribe(subject, cb, opts...)
 }
 
 // Close connection.

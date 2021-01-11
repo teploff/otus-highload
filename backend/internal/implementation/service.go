@@ -8,6 +8,8 @@ import (
 	"github.com/dgrijalva/jwt-go"
 	"social-network/internal/config"
 	"social-network/internal/domain"
+	"social-network/internal/infrastructure/stan"
+	stantransport "social-network/internal/transport/stan"
 	"time"
 )
 
@@ -230,14 +232,18 @@ func (p *profileService) SearchByAnthroponym(ctx context.Context, anthroponym, u
 }
 
 type socialService struct {
-	userRepository   domain.UserRepository
-	socialRepository domain.SocialRepository
+	userRepository        domain.UserRepository
+	socialRepository      domain.SocialRepository
+	socialCacheRepository domain.SocialCacheRepository
+	stanClient            *stan.Client
 }
 
-func NewSocialService(userRep domain.UserRepository, socialRep domain.SocialRepository) *socialService {
+func NewSocialService(userRep domain.UserRepository, socialRep domain.SocialRepository, socialCacheRep domain.SocialCacheRepository, stanClient *stan.Client) *socialService {
 	return &socialService{
-		userRepository:   userRep,
-		socialRepository: socialRep,
+		userRepository:        userRep,
+		socialRepository:      socialRep,
+		socialCacheRepository: socialCacheRep,
+		stanClient:            stanClient,
 	}
 }
 
@@ -264,7 +270,29 @@ func (s *socialService) ConfirmFriendship(ctx context.Context, userID string, fr
 		return err
 	}
 
-	return s.socialRepository.CommitTx(tx)
+	if err = s.socialRepository.CommitTx(tx); err != nil {
+		return err
+	}
+
+	if err = s.stanClient.Publish("friends", stantransport.FriendsActionRequest{
+		Action:    "persist",
+		UserID:    userID,
+		FriendsID: friendsID,
+	}); err != nil {
+		return err
+	}
+
+	for _, friendID := range friendsID {
+		if err = s.stanClient.Publish("friends", stantransport.FriendsActionRequest{
+			Action:    "persist",
+			UserID:    friendID,
+			FriendsID: []string{userID},
+		}); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (s *socialService) RejectFriendship(ctx context.Context, userID string, friendsID []string) error {
@@ -290,7 +318,29 @@ func (s *socialService) BreakFriendship(ctx context.Context, userID string, frie
 		return err
 	}
 
-	return s.socialRepository.CommitTx(tx)
+	if err = s.socialRepository.CommitTx(tx); err != nil {
+		return err
+	}
+
+	if err = s.stanClient.Publish("friends", stantransport.FriendsActionRequest{
+		Action:    "delete",
+		UserID:    userID,
+		FriendsID: friendsID,
+	}); err != nil {
+		return err
+	}
+
+	for _, friendID := range friendsID {
+		if err = s.stanClient.Publish("friends", stantransport.FriendsActionRequest{
+			Action:    "delete",
+			UserID:    friendID,
+			FriendsID: []string{userID},
+		}); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (s *socialService) GetFriends(ctx context.Context, userID string) ([]*domain.Questionnaire, error) {
@@ -436,6 +486,26 @@ func (s *socialService) GetQuestionnairesByNameAndSurname(ctx context.Context, p
 	}
 
 	return questionnaires, s.userRepository.CommitTx(tx)
+}
+
+type cacheService struct {
+	repository domain.SocialCacheRepository
+}
+
+func NewCacheService(repository domain.SocialCacheRepository) *cacheService {
+	return &cacheService{repository: repository}
+}
+
+func (c *cacheService) AddFriends(ctx context.Context, userID string, friendsID []string) error {
+	return c.repository.PersistFriend(ctx, userID, friendsID)
+}
+
+func (c *cacheService) DeleteFriends(ctx context.Context, userID string, friendsID []string) error {
+	return c.repository.DeleteFriend(ctx, userID, friendsID)
+}
+
+func (c *cacheService) AddNews(ctx context.Context, userID string, news []string) error {
+	panic("implement me")
 }
 
 type messengerService struct {

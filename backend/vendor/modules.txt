@@ -78,12 +78,20 @@ github.com/hashicorp/hcl/hcl/token
 github.com/hashicorp/hcl/json/parser
 github.com/hashicorp/hcl/json/scanner
 github.com/hashicorp/hcl/json/token
+# github.com/josharian/intern v1.0.0
+github.com/josharian/intern
 # github.com/json-iterator/go v1.1.9
 github.com/json-iterator/go
 # github.com/leodido/go-urn v1.2.0
 github.com/leodido/go-urn
 # github.com/magiconair/properties v1.8.1
 github.com/magiconair/properties
+# github.com/mailru/easyjson v0.7.6
+## explicit
+github.com/mailru/easyjson
+github.com/mailru/easyjson/buffer
+github.com/mailru/easyjson/jlexer
+github.com/mailru/easyjson/jwriter
 # github.com/mattn/go-isatty v0.0.12
 github.com/mattn/go-isatty
 # github.com/mitchellh/mapstructure v1.1.2
@@ -127,8 +135,6 @@ github.com/spf13/pflag
 github.com/spf13/viper
 # github.com/subosito/gotenv v1.2.0
 github.com/subosito/gotenv
-# github.com/tarantool/go-tarantool v0.0.0-20200816172506-a535b8e0224a
-## explicit
 # github.com/ugorji/go/codec v1.1.7
 github.com/ugorji/go/codec
 # go.opentelemetry.io/otel v0.15.0

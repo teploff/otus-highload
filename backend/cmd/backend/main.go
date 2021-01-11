@@ -54,16 +54,16 @@ func main() {
 	logger.Info("connection with Redis is established")
 	defer redisPool.Close()
 
-	client, err := stan.NewClient(cfg.Stan, logger)
+	stanClient, err := stan.NewClient(cfg.Stan, logger)
 	if err != nil {
 		logger.Fatal("stan connection fail", zap.Error(err))
 	}
-	defer client.Close()
+	defer stanClient.Close()
 
 	application := app.NewApp(cfg,
 		app.WithLogger(logger),
 	)
-	go application.Run(mysqlConn, redisPool)
+	go application.Run(mysqlConn, redisPool, stanClient)
 
 	done := make(chan os.Signal, 1)
 	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)

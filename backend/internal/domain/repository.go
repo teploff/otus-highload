@@ -51,8 +51,8 @@ type MessengerRepository interface {
 }
 
 type SocialCacheRepository interface {
-	PersistFriend(ctx context.Context, userID, friendID string) error
-	DeleteFriend(ctx context.Context, userID, friendID string) error
+	PersistFriend(ctx context.Context, userID string, friendsID []string) error
+	DeleteFriend(ctx context.Context, userID string, friendsID []string) error
 	RetrieveFriendsID(ctx context.Context, userID string) ([]string, error)
 	PersistNews(ctx context.Context, userID string, news *News) error
 	RetrieveNews(ctx context.Context, userID string) ([]*News, error)
