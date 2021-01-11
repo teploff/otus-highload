@@ -953,13 +953,13 @@ func (s *socialRepository) GetNews(tx *sql.Tx, userID string, limit, offset int)
 	return news, count, nil
 }
 
-func (s *socialRepository) PublishNews(tx *sql.Tx, userID string, news []string) error {
-	sqlStr := "INSERT INTO news (owner_id, content, create_time) VALUES "
-	vals := make([]interface{}, 0, len(news)*3) // 3 - count cells: owner_id, content, create_time
+func (s *socialRepository) PublishNews(tx *sql.Tx, userID string, news []*domain.News) error {
+	sqlStr := "INSERT INTO news (id, owner_id, content, create_time) VALUES "
+	vals := make([]interface{}, 0, len(news)*4) // 4 - count cells: id, owner_id, content, create_time
 
 	for _, n := range news {
-		sqlStr += "( ?, ?, ?),"
-		vals = append(vals, userID, n, time.Now().UTC())
+		sqlStr += "( ?, ?, ?, ?),"
+		vals = append(vals, n.ID, userID, n.Content, n.CreateTime)
 	}
 
 	//trim the last ,
@@ -1085,7 +1085,7 @@ func (s *socialCacheRepository) RetrieveFriendsID(ctx context.Context, userID st
 	return friendsID, nil
 }
 
-func (s *socialCacheRepository) PersistNews(ctx context.Context, userID string, news *domain.News) error {
+func (s *socialCacheRepository) PersistNews(ctx context.Context, userID string, news []*domain.News) error {
 	conn, err := s.pool.GetConnByIndexDB(s.NewsDBIndex)
 	if err != nil {
 		return err
@@ -1103,7 +1103,7 @@ func (s *socialCacheRepository) PersistNews(ctx context.Context, userID string, 
 	default:
 		return err
 	}
-	n = append(n, news)
+	n = append(n, news...)
 
 	data, err := json.Marshal(n)
 	if err != nil {

@@ -6,10 +6,12 @@ import (
 	"errors"
 	"fmt"
 	"github.com/dgrijalva/jwt-go"
+	uuid "github.com/satori/go.uuid"
 	"social-network/internal/config"
 	"social-network/internal/domain"
 	"social-network/internal/infrastructure/stan"
 	stantransport "social-network/internal/transport/stan"
+	"sort"
 	"time"
 )
 
@@ -402,30 +404,101 @@ func (s *socialService) GetFollowers(ctx context.Context, userID string) ([]*dom
 }
 
 func (s *socialService) RetrieveNews(ctx context.Context, userID string, limit, offset int) ([]*domain.News, int, error) {
-	tx, err := s.socialRepository.GetTx(ctx)
+	usersID := []string{userID}
+
+	ids, err := s.socialCacheRepository.RetrieveFriendsID(ctx, userID)
 	if err != nil {
 		return nil, 0, err
 	}
 
-	news, count, err := s.socialRepository.GetNews(tx, userID, limit, offset)
-	if err != nil {
-		return nil, 0, err
+	usersID = append(usersID, ids...)
+
+	news := make([]*domain.News, 0, 1)
+	for _, id := range usersID {
+		n, err := s.socialCacheRepository.RetrieveNews(ctx, id)
+		if err != nil {
+			return nil, 0, err
+		}
+
+		news = append(news, n...)
 	}
 
-	return news, count, s.socialRepository.CommitTx(tx)
+	count := len(news)
+
+	// Sort by age, keeping original order or equal elements.
+	sort.SliceStable(news, func(i, j int) bool {
+		return news[i].CreateTime.Unix() > news[j].CreateTime.Unix()
+	})
+
+	return s.paginate(news, offset, limit), count, nil
+	//tx, err := s.socialRepository.GetTx(ctx)
+	//if err != nil {
+	//	return nil, 0, err
+	//}
+	//
+	//news, count, err := s.socialRepository.GetNews(tx, userID, limit, offset)
+	//if err != nil {
+	//	return nil, 0, err
+	//}
+	//
+	//return news, count, s.socialRepository.CommitTx(tx)
 }
 
-func (s *socialService) PublishNews(ctx context.Context, userID string, news []string) error {
+func (s *socialService) paginate(n []*domain.News, skip int, size int) []*domain.News {
+	if skip > len(n) {
+		skip = len(n)
+	}
+
+	end := skip + size
+	if end > len(n) {
+		end = len(n)
+	}
+
+	return n[skip:end]
+}
+
+func (s *socialService) PublishNews(ctx context.Context, userID string, newsContent []string) error {
 	tx, err := s.socialRepository.GetTx(ctx)
 	if err != nil {
 		return err
+	}
+
+	user, err := s.userRepository.GetByID(tx, userID)
+	if err != nil {
+		return err
+	}
+
+	news := make([]*domain.News, 0, len(newsContent))
+	for _, content := range newsContent {
+		news = append(news, &domain.News{
+			ID: uuid.NewV4().String(),
+			Owner: struct {
+				Name    string `json:"name"`
+				Surname string `json:"surname"`
+				Sex     string `json:"sex"`
+			}{
+				user.Name,
+				user.Surname,
+				user.Sex,
+			},
+			Content:    content,
+			CreateTime: time.Now().UTC(),
+		})
 	}
 
 	if err = s.socialRepository.PublishNews(tx, userID, news); err != nil {
 		return err
 	}
 
-	return s.socialRepository.CommitTx(tx)
+	if err = s.socialRepository.CommitTx(tx); err != nil {
+		return err
+	}
+
+	if err = s.stanClient.Publish("news", &stantransport.NewsPersistRequest{OwnerID: userID, News: news}); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (s *socialService) GetQuestionnaires(ctx context.Context, userID string, limit, offset int) ([]*domain.Questionnaire, int, error) {
@@ -504,8 +577,8 @@ func (c *cacheService) DeleteFriends(ctx context.Context, userID string, friends
 	return c.repository.DeleteFriend(ctx, userID, friendsID)
 }
 
-func (c *cacheService) AddNews(ctx context.Context, userID string, news []string) error {
-	panic("implement me")
+func (c *cacheService) AddNews(ctx context.Context, userID string, news []*domain.News) error {
+	return c.repository.PersistNews(ctx, userID, news)
 }
 
 type messengerService struct {

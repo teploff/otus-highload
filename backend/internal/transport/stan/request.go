@@ -1,5 +1,7 @@
 package stan
 
+import "social-network/internal/domain"
+
 // FriendsActionRequest request for AddFriends or DeleteFriends endpoints.
 // easyjson:json
 type FriendsActionRequest struct {
@@ -8,7 +10,9 @@ type FriendsActionRequest struct {
 	FriendsID []string
 }
 
-// NewsActionRequest request for PublishNews endpoint.
+// NewsPersistRequest request for PublishNews endpoint.
 // easyjson:json
-type NewsActionRequest struct {
+type NewsPersistRequest struct {
+	OwnerID string         `json:"owner_id"`
+	News    []*domain.News `json:"news"`
 }

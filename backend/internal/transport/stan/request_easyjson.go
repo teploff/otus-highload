@@ -7,6 +7,7 @@ import (
 	easyjson "github.com/mailru/easyjson"
 	jlexer "github.com/mailru/easyjson/jlexer"
 	jwriter "github.com/mailru/easyjson/jwriter"
+	domain "social-network/internal/domain"
 )
 
 // suppress unused package warning
@@ -17,7 +18,7 @@ var (
 	_ easyjson.Marshaler
 )
 
-func easyjson3c9d2b01DecodeSocialNetworkInternalTransportStan(in *jlexer.Lexer, out *NewsActionRequest) {
+func easyjson3c9d2b01DecodeSocialNetworkInternalTransportStan(in *jlexer.Lexer, out *NewsPersistRequest) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -36,6 +37,39 @@ func easyjson3c9d2b01DecodeSocialNetworkInternalTransportStan(in *jlexer.Lexer, 
 			continue
 		}
 		switch key {
+		case "owner_id":
+			out.OwnerID = string(in.String())
+		case "news":
+			if in.IsNull() {
+				in.Skip()
+				out.News = nil
+			} else {
+				in.Delim('[')
+				if out.News == nil {
+					if !in.IsDelim(']') {
+						out.News = make([]*domain.News, 0, 8)
+					} else {
+						out.News = []*domain.News{}
+					}
+				} else {
+					out.News = (out.News)[:0]
+				}
+				for !in.IsDelim(']') {
+					var v1 *domain.News
+					if in.IsNull() {
+						in.Skip()
+						v1 = nil
+					} else {
+						if v1 == nil {
+							v1 = new(domain.News)
+						}
+						easyjson3c9d2b01DecodeSocialNetworkInternalDomain(in, v1)
+					}
+					out.News = append(out.News, v1)
+					in.WantComma()
+				}
+				in.Delim(']')
+			}
 		default:
 			in.SkipRecursive()
 		}
@@ -46,35 +80,189 @@ func easyjson3c9d2b01DecodeSocialNetworkInternalTransportStan(in *jlexer.Lexer, 
 		in.Consumed()
 	}
 }
-func easyjson3c9d2b01EncodeSocialNetworkInternalTransportStan(out *jwriter.Writer, in NewsActionRequest) {
+func easyjson3c9d2b01EncodeSocialNetworkInternalTransportStan(out *jwriter.Writer, in NewsPersistRequest) {
 	out.RawByte('{')
 	first := true
 	_ = first
+	{
+		const prefix string = ",\"owner_id\":"
+		out.RawString(prefix[1:])
+		out.String(string(in.OwnerID))
+	}
+	{
+		const prefix string = ",\"news\":"
+		out.RawString(prefix)
+		if in.News == nil && (out.Flags&jwriter.NilSliceAsEmpty) == 0 {
+			out.RawString("null")
+		} else {
+			out.RawByte('[')
+			for v2, v3 := range in.News {
+				if v2 > 0 {
+					out.RawByte(',')
+				}
+				if v3 == nil {
+					out.RawString("null")
+				} else {
+					easyjson3c9d2b01EncodeSocialNetworkInternalDomain(out, *v3)
+				}
+			}
+			out.RawByte(']')
+		}
+	}
 	out.RawByte('}')
 }
 
 // MarshalJSON supports json.Marshaler interface
-func (v NewsActionRequest) MarshalJSON() ([]byte, error) {
+func (v NewsPersistRequest) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
 	easyjson3c9d2b01EncodeSocialNetworkInternalTransportStan(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalEasyJSON supports easyjson.Marshaler interface
-func (v NewsActionRequest) MarshalEasyJSON(w *jwriter.Writer) {
+func (v NewsPersistRequest) MarshalEasyJSON(w *jwriter.Writer) {
 	easyjson3c9d2b01EncodeSocialNetworkInternalTransportStan(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
-func (v *NewsActionRequest) UnmarshalJSON(data []byte) error {
+func (v *NewsPersistRequest) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
 	easyjson3c9d2b01DecodeSocialNetworkInternalTransportStan(&r, v)
 	return r.Error()
 }
 
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
-func (v *NewsActionRequest) UnmarshalEasyJSON(l *jlexer.Lexer) {
+func (v *NewsPersistRequest) UnmarshalEasyJSON(l *jlexer.Lexer) {
 	easyjson3c9d2b01DecodeSocialNetworkInternalTransportStan(l, v)
+}
+func easyjson3c9d2b01DecodeSocialNetworkInternalDomain(in *jlexer.Lexer, out *domain.News) {
+	isTopLevel := in.IsStart()
+	if in.IsNull() {
+		if isTopLevel {
+			in.Consumed()
+		}
+		in.Skip()
+		return
+	}
+	in.Delim('{')
+	for !in.IsDelim('}') {
+		key := in.UnsafeFieldName(false)
+		in.WantColon()
+		if in.IsNull() {
+			in.Skip()
+			in.WantComma()
+			continue
+		}
+		switch key {
+		case "id":
+			out.ID = string(in.String())
+		case "owner":
+			easyjson3c9d2b01Decode(in, &out.Owner)
+		case "content":
+			out.Content = string(in.String())
+		case "create_time":
+			if data := in.Raw(); in.Ok() {
+				in.AddError((out.CreateTime).UnmarshalJSON(data))
+			}
+		default:
+			in.SkipRecursive()
+		}
+		in.WantComma()
+	}
+	in.Delim('}')
+	if isTopLevel {
+		in.Consumed()
+	}
+}
+func easyjson3c9d2b01EncodeSocialNetworkInternalDomain(out *jwriter.Writer, in domain.News) {
+	out.RawByte('{')
+	first := true
+	_ = first
+	{
+		const prefix string = ",\"id\":"
+		out.RawString(prefix[1:])
+		out.String(string(in.ID))
+	}
+	{
+		const prefix string = ",\"owner\":"
+		out.RawString(prefix)
+		easyjson3c9d2b01Encode(out, in.Owner)
+	}
+	{
+		const prefix string = ",\"content\":"
+		out.RawString(prefix)
+		out.String(string(in.Content))
+	}
+	{
+		const prefix string = ",\"create_time\":"
+		out.RawString(prefix)
+		out.Raw((in.CreateTime).MarshalJSON())
+	}
+	out.RawByte('}')
+}
+func easyjson3c9d2b01Decode(in *jlexer.Lexer, out *struct {
+	Name    string `json:"name"`
+	Surname string `json:"surname"`
+	Sex     string `json:"sex"`
+}) {
+	isTopLevel := in.IsStart()
+	if in.IsNull() {
+		if isTopLevel {
+			in.Consumed()
+		}
+		in.Skip()
+		return
+	}
+	in.Delim('{')
+	for !in.IsDelim('}') {
+		key := in.UnsafeFieldName(false)
+		in.WantColon()
+		if in.IsNull() {
+			in.Skip()
+			in.WantComma()
+			continue
+		}
+		switch key {
+		case "name":
+			out.Name = string(in.String())
+		case "surname":
+			out.Surname = string(in.String())
+		case "sex":
+			out.Sex = string(in.String())
+		default:
+			in.SkipRecursive()
+		}
+		in.WantComma()
+	}
+	in.Delim('}')
+	if isTopLevel {
+		in.Consumed()
+	}
+}
+func easyjson3c9d2b01Encode(out *jwriter.Writer, in struct {
+	Name    string `json:"name"`
+	Surname string `json:"surname"`
+	Sex     string `json:"sex"`
+}) {
+	out.RawByte('{')
+	first := true
+	_ = first
+	{
+		const prefix string = ",\"name\":"
+		out.RawString(prefix[1:])
+		out.String(string(in.Name))
+	}
+	{
+		const prefix string = ",\"surname\":"
+		out.RawString(prefix)
+		out.String(string(in.Surname))
+	}
+	{
+		const prefix string = ",\"sex\":"
+		out.RawString(prefix)
+		out.String(string(in.Sex))
+	}
+	out.RawByte('}')
 }
 func easyjson3c9d2b01DecodeSocialNetworkInternalTransportStan1(in *jlexer.Lexer, out *FriendsActionRequest) {
 	isTopLevel := in.IsStart()
@@ -115,9 +303,9 @@ func easyjson3c9d2b01DecodeSocialNetworkInternalTransportStan1(in *jlexer.Lexer,
 					out.FriendsID = (out.FriendsID)[:0]
 				}
 				for !in.IsDelim(']') {
-					var v1 string
-					v1 = string(in.String())
-					out.FriendsID = append(out.FriendsID, v1)
+					var v4 string
+					v4 = string(in.String())
+					out.FriendsID = append(out.FriendsID, v4)
 					in.WantComma()
 				}
 				in.Delim(']')
@@ -153,11 +341,11 @@ func easyjson3c9d2b01EncodeSocialNetworkInternalTransportStan1(out *jwriter.Writ
 			out.RawString("null")
 		} else {
 			out.RawByte('[')
-			for v2, v3 := range in.FriendsID {
-				if v2 > 0 {
+			for v5, v6 := range in.FriendsID {
+				if v5 > 0 {
 					out.RawByte(',')
 				}
-				out.String(string(v3))
+				out.String(string(v6))
 			}
 			out.RawByte(']')
 		}

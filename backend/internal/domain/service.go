@@ -23,7 +23,7 @@ type SocialService interface {
 	GetFriends(ctx context.Context, userID string) ([]*Questionnaire, error)
 	GetFollowers(ctx context.Context, userID string) ([]*Questionnaire, error)
 	RetrieveNews(ctx context.Context, userID string, limit, offset int) ([]*News, int, error)
-	PublishNews(ctx context.Context, userID string, news []string) error
+	PublishNews(ctx context.Context, userID string, newsContent []string) error
 	GetQuestionnaires(ctx context.Context, userID string, limit, offset int) ([]*Questionnaire, int, error)
 	GetQuestionnairesByNameAndSurname(ctx context.Context, prefix string) ([]*Questionnaire, error)
 }
@@ -31,7 +31,7 @@ type SocialService interface {
 type CacheService interface {
 	AddFriends(ctx context.Context, userID string, friendsID []string) error
 	DeleteFriends(ctx context.Context, userID string, friendsID []string) error
-	AddNews(ctx context.Context, userID string, news []string) error
+	AddNews(ctx context.Context, userID string, news []*News) error
 }
 
 type MessengerService interface {

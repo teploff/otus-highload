@@ -34,7 +34,7 @@ type SocialRepository interface {
 	GetFriends(tx *sql.Tx, userID string) ([]*User, error)
 	GetFollowers(tx *sql.Tx, userID string) ([]*User, error)
 	GetNews(tx *sql.Tx, userID string, limit, offset int) ([]*News, int, error)
-	PublishNews(tx *sql.Tx, userID string, news []string) error
+	PublishNews(tx *sql.Tx, userID string, news []*News) error
 }
 
 type MessengerRepository interface {
@@ -54,7 +54,7 @@ type SocialCacheRepository interface {
 	PersistFriend(ctx context.Context, userID string, friendsID []string) error
 	DeleteFriend(ctx context.Context, userID string, friendsID []string) error
 	RetrieveFriendsID(ctx context.Context, userID string) ([]string, error)
-	PersistNews(ctx context.Context, userID string, news *News) error
+	PersistNews(ctx context.Context, userID string, news []*News) error
 	RetrieveNews(ctx context.Context, userID string) ([]*News, error)
 }
 
