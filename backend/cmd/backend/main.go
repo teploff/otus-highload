@@ -60,6 +60,13 @@ func main() {
 	}
 	defer stanClient.Close()
 
+	logger.Info("cache heater is starting...")
+	cacheHeater := cache.NewHeater(redisPool, mysqlConn, stanClient, logger)
+	if err = cacheHeater.Start(); err != nil {
+		logger.Fatal("fail to start cache heater, ", zap.Error(err))
+	}
+	logger.Info("cache heater work is over")
+
 	application := app.NewApp(cfg,
 		app.WithLogger(logger),
 	)
@@ -70,6 +77,7 @@ func main() {
 	<-done
 
 	application.Stop()
+	cacheHeater.Stop()
 }
 
 func establishConnection(conn *sql.DB, attemptCount int) error {
