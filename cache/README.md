@@ -84,7 +84,7 @@ curl -X POST -H "Content-Type: application/json" \
     -d '{"email": "holmes@gmail.com", "password": "12345678", "name": "Sherlock", "surname": "Holmes", "birthday": "1854-01-09T20:21:25+00:00", "sex": "male", "city": "London", "interests": "the violin, smoking, investigation"}' \
     http://localhost:9999/auth/sign-up
 curl -X POST -H "Content-Type: application/json" \
-    -d '{"email": "watson@gmail.com", "password": "12345678", "name": "John", "surname": "Watson", "birthday": "1852-08-7T20:21:25+00:00", "sex": "male", "city": "London", "interests": "to heal people, investigation"}' \
+    -d '{"email": "watson@gmail.com", "password": "12345678", "name": "John", "surname": "Watson", "birthday": "1852-08-07T20:21:25+00:00", "sex": "male", "city": "London", "interests": "to heal people, investigation"}' \
     http://localhost:9999/auth/sign-up
 curl -X POST -H "Content-Type: application/json" \
     -d '{"email": "moriarty@gmail.com", "password": "12345678", "name": "James", "surname": "Moriarty", "birthday": "1835-05-01T20:21:25+00:00", "sex": "male", "city": "London", "interests": "the crime"}' \
