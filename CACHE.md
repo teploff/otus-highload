@@ -264,7 +264,12 @@ curl -X GET -H "Content-Type: application/json" -H "Authorization: ${WATSON_ACCE
 
 Должны получить нечто следующее:</br>
 <p align="center">
-    <img src="static/algorithm_chose_shard.png">
+    <img src="static/cache/api-news-watson.png">
+</p>
+
+В WebUI должны увидеть следующее:</br>
+<p align="center">
+    <img src="static/cache/webui-friends.png">
 </p>
 
 Джеймсом Мориарти:
@@ -275,7 +280,12 @@ curl -X GET -H "Content-Type: application/json" -H "Authorization: ${MORIARTY_AC
 
 Должны получить нечто следующее:</br>
 <p align="center">
-    <img src="static/algorithm_chose_shard.png">
+    <img src="static/cache/api-news-moriarty.png">
+</p>
+
+В WebUI должны увидеть следующее:</br>
+<p align="center">
+    <img src="static/cache/webui-news-moriarty.png">
 </p>
 
 И Шерлоком Холмсом:
@@ -286,7 +296,12 @@ curl -X GET -H "Content-Type: application/json" -H "Authorization: ${HOLMES_ACCE
 
 Должны получить нечто следующее:</br>
 <p align="center">
-    <img src="static/algorithm_chose_shard.png">
+    <img src="static/cache/api-news-holmes.png">
+</p>
+
+В WebUI должны увидеть следующее:</br>
+<p align="center">
+    <img src="static/cache/webui-news-holmes.png">
 </p>
 
 > Для того, чтобы просмотреть свои новости и новости своих друзей, необходимо перейти на страницу 
@@ -318,7 +333,7 @@ exit
 
 Теперь пересоберем backend:
 ```shell script
- make reload_backend
+make reload_backend
 ```
 
 После того, как backend пересобрался, перейдем в Redis и проверим BD 1 и 2 (1 - Друзья, 2 - Новости).
@@ -329,11 +344,12 @@ SELECT 1
 KEYS *
 SELECT 2
 KEYS *
+exit
 ```
 
 Должны получить нечто следующее:</br>
 <p align="center">
-    <img src="static/algorithm_chose_shard.png">
+    <img src="static/cache/full-cache.png">
 </p>
 Видим, что кеш при старте системы прогревается.
 
@@ -366,9 +382,9 @@ SELECT 2
 KEYS *
 ```
 
-Должны получить нечто следующее:</br>
+Должны увидеть аналогичную картину:</br>
 <p align="center">
-    <img src="static/algorithm_chose_shard.png">
+    <img src="static/cache/full-cache.png">
 </p>
 Видим, что кеш при отправке сообщения в очередь прогревается.
 
