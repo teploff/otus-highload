@@ -63,7 +63,7 @@
 
 Склонируем наш проект:
 ```shell
-git clone https://github.com/teploff/otus-highload.git
+git clone https://github.com/teploff/otus-highload.git && cd otus-highload
 ```
 
 Поднимем всю инфраструктуру и применим миграции:
@@ -111,19 +111,24 @@ echo $WATSON_ACCESS_TOKEN
 echo $MORIARTY_ACCESS_TOKEN
 ```
 
-Теперь давайте со стороны Доктора Ватсона и Джеймса Мориарти отправим заявки в друзья Шерлоку Холмсу.
-Но перед этим необходимо получить ID Шерлока Холмса:
+Получим ID-шники созданных пользователей, они нам пригодятся для отправки заявок в друзья и их подтверждении.
 ```shell script
 export HOLMES_ID=$(curl -X GET -H "Content-Type: application/json" -H "Authorization: ${WATSON_ACCESS_TOKEN}" \
     http://localhost:9999/auth/user?email=holmes@gmail.com | jq -r '.user_id')
+export WATSON_ID=$(curl -X GET -H "Content-Type: application/json" -H "Authorization: ${HOLMES_ACCESS_TOKEN}" \
+  http://localhost:9999/auth/user?email=holmes@gmail.com | jq -r '.user_id')
+export MORIARTY_ID=$(curl -X GET -H "Content-Type: application/json" -H "Authorization: ${HOLMES_ACCESS_TOKEN}" \
+  http://localhost:9999/auth/user?email=holmes@gmail.com | jq -r '.user_id') 
 ```
 
 Проверим, что запрос успешно выполнился, применив команду:
 ```shell script
 echo $HOLMES_ID
+echo $WATSON_ID
+echo $MORIARTY_ID
 ```
 
-Теперь отправим заявки в друзья:
+Теперь давайте со стороны Доктора Ватсона и Джеймса Мориарти отправим заявки в друзья Шерлоку Холмсу:
 ```shell script
 curl -X POST -H "Content-Type: application/json" -H "Authorization: ${WATSON_ACCESS_TOKEN}" \
     -d '{
