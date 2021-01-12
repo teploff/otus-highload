@@ -167,6 +167,16 @@ curl -X GET -H "Content-Type: application/json" -H "Authorization: ${HOLMES_ACCE
     http://localhost:9999/social/followers
 ```
 
+Должны получить нечто следующее:</br>
+<p align="center">
+    <img src="static/cache/api-followers.png">
+</p>
+
+В WebUI должны увидеть следующее:</br>
+<p align="center">
+    <img src="static/cache/webui-followers.png">
+</p>
+
 > Для отправки заявки в друзья необходимо после входа в систему (http://localhost:8081/sign-in) набрать имя пользователя
 > или его фамилию (или все вместе) в поисковой строке, расположенной в верхней части страницы (**Search people...**). 
 > После ввода пользователя будут доступны анкеты пользователей, которым можно отправить заявку в друзья, нажав на кнопку
@@ -187,6 +197,16 @@ curl -X GET -H "Content-Type: application/json" -H "Authorization: ${HOLMES_ACCE
     http://localhost:9999/social/friends
 ```
 
+Должны получить нечто следующее:</br>
+<p align="center">
+    <img src="static/cache/api-friends.png">
+</p>
+
+В WebUI должны увидеть следующее:</br>
+<p align="center">
+    <img src="static/cache/webui-friends.png">
+</p>
+
 > Для того, чтобы подтвердить заявки в друзья и сделать пользователей своими друзями, необходимо перейти на страницу 
 > http://localhost:8081/friends или выбрав пункт выпадающего меню слева **Friends**. Затем клацнуть на вкладку **Friend 
 > Requests**. После этого будет доступна таблица подписчиков, заявки которых в друзья можно отклонить или добавить.
@@ -205,19 +225,28 @@ curl -X POST -H "Content-Type: application/json" -H "Authorization: ${WATSON_ACC
          "news": ["I am getting married!"]
         }' \
     http://localhost:9999/social/create-news
+
 curl -X POST -H "Content-Type: application/json" -H "Authorization: ${WATSON_ACCESS_TOKEN}" \
     -d '{
          "news": ["Merry is a pretty woman!"]
         }' \
     http://localhost:9999/social/create-news
+
 curl -X POST -H "Content-Type: application/json" -H "Authorization: ${MORIARTY_ACCESS_TOKEN}" \
     -d '{
-         "news": ["I am a nightmare!", "Holmes, you are lost!"]
+         "news": ["I am a nightmare!"]
         }' \
     http://localhost:9999/social/create-news
+    
+curl -X POST -H "Content-Type: application/json" -H "Authorization: ${MORIARTY_ACCESS_TOKEN}" \
+    -d '{
+         "news": ["Holmes, you are lost!"]
+        }' \
+    http://localhost:9999/social/create-news
+
 curl -X POST -H "Content-Type: application/json" -H "Authorization: ${HOLMES_ACCESS_TOKEN}" \
     -d '{
-         "news": ["Greate news!"]
+         "news": ["Great news!"]
         }' \
     http://localhost:9999/social/create-news
 ```
