@@ -3,7 +3,16 @@
 Инвалидация по событию
 Удаляем данные из кеша при изменении в базе 
 
-<img align="right" width="160" src="static/title-page.png">
+docker exec -it redis-cache redis-cli
+AUTH password
+FLUSHALL
+
+```shell
+cd backend/tools/cache-heater-enabler
+go run main.go --addr="localhost:4222" --cluster_id="stan-cluster" --subject="cache-reload"
+```
+
+<img align="right" width="320" src="static/title-page.png">
 
 It's Otus's homework for **Highload Architect** course, which is a basic social network.
 The project consists of two parts: *Backend* and *Frontend*.
