@@ -75,7 +75,7 @@ git clone https://github.com/teploff/otus-highload.git && cd otus-highload
 
 Поднимем всю инфраструктуру и применим миграции:
 ```shell
-make up && make migrate
+make db && make migrate && make up
 ```
 
 <a name="work-functionality"></a>

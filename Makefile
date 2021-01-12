@@ -1,4 +1,7 @@
-.PHONY: up migrate reload_backend reload_frontend down
+.PHONY: db up migrate reload_backend reload_frontend down
+
+db:
+	docker-compose -f deployment/docker-compose.yml up -d storage
 
 up:
 	docker-compose -f deployment/docker-compose.yml up --build -d storage adminer backend frontend ;\
