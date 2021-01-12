@@ -21,6 +21,7 @@ func NewHTTPServer(addr string, endpoints *Endpoints) *http.Server {
 		authGroup.POST("/sign-up", endpoints.Auth.SignUp)
 		authGroup.POST("/sign-in", endpoints.Auth.SignIn)
 		authGroup.PUT("/token", endpoints.Auth.RefreshToken)
+		authGroup.GET("/user", endpoints.Auth.GetUserIDByEmail)
 	}
 
 	profileGroup := router.Group("/profile")

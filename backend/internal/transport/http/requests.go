@@ -25,6 +25,10 @@ type RefreshTokenRequest struct {
 	RefreshToken string `json:"refresh_token" binding:"required"`
 }
 
+type GetUserIDByEmailRequest struct {
+	Email string `json:"email" form:"email" binding:"required"`
+}
+
 type SearchProfileByAnthroponymRequest struct {
 	Anthroponym string `json:"anthroponym" form:"anthroponym" binding:"required"`
 	Limit       *int   `json:"limit" form:"limit"`
