@@ -94,13 +94,13 @@ curl -X POST -H "Content-Type: application/json" \
 Получим access token'ы от системы для наших пользователей и запишем их в переменные окружения:
 ```shell script
 export HOLMES_ACCESS_TOKEN=$(curl -X POST -H "Content-Type: application/json" \
--d '{"email": "holmes@gmail.com", "password": "1234567890"}' \
+-d '{"email": "holmes@gmail.com", "password": "12345678"}' \
 http://localhost:9999/auth/sign-in | jq -r '.access_token')
 export WATSON_ACCESS_TOKEN=$(curl -X POST -H "Content-Type: application/json" \
--d '{"email": "watson@gmail.com", "password": "1234567890"}' \
+-d '{"email": "watson@gmail.com", "password": "12345678"}' \
 http://localhost:9999/auth/sign-in | jq -r '.access_token')
 export MORIARTY_ACCESS_TOKEN=$(curl -X POST -H "Content-Type: application/json" \
--d '{"email": "moriarty@gmail.com", "password": "1234567890"}' \
+-d '{"email": "moriarty@gmail.com", "password": "12345678"}' \
 http://localhost:9999/auth/sign-in | jq -r '.access_token')
 ```
 
