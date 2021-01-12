@@ -116,9 +116,9 @@ echo $MORIARTY_ACCESS_TOKEN
 export HOLMES_ID=$(curl -X GET -H "Content-Type: application/json" -H "Authorization: ${WATSON_ACCESS_TOKEN}" \
     http://localhost:9999/auth/user?email=holmes@gmail.com | jq -r '.user_id')
 export WATSON_ID=$(curl -X GET -H "Content-Type: application/json" -H "Authorization: ${HOLMES_ACCESS_TOKEN}" \
-  http://localhost:9999/auth/user?email=holmes@gmail.com | jq -r '.user_id')
+  http://localhost:9999/auth/user?email=watson@gmail.com | jq -r '.user_id')
 export MORIARTY_ID=$(curl -X GET -H "Content-Type: application/json" -H "Authorization: ${HOLMES_ACCESS_TOKEN}" \
-  http://localhost:9999/auth/user?email=holmes@gmail.com | jq -r '.user_id') 
+  http://localhost:9999/auth/user?email=moriarty@gmail.com | jq -r '.user_id') 
 ```
 
 Проверим, что запрос успешно выполнился, применив команду:
