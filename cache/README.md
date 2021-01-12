@@ -169,7 +169,7 @@ curl -X GET -H "Content-Type: application/json" -H "Authorization: ${HOLMES_ACCE
 ```shell script
 curl -X POST -H "Content-Type: application/json" -H "Authorization: ${WATSON_ACCESS_TOKEN}" \
     -d '{
-         "news": ["I'm getting married!"]
+         "news": ["I am getting married!"]
         }' \
     http://localhost:9999/social/create-news
 curl -X POST -H "Content-Type: application/json" -H "Authorization: ${WATSON_ACCESS_TOKEN}" \
@@ -179,7 +179,7 @@ curl -X POST -H "Content-Type: application/json" -H "Authorization: ${WATSON_ACC
     http://localhost:9999/social/create-news
 curl -X POST -H "Content-Type: application/json" -H "Authorization: ${MORIARTY_ACCESS_TOKEN}" \
     -d '{
-         "news": ["I'm a nightmare!", "Holmes, you are lost!"]
+         "news": ["I am a nightmare!", "Holmes, you are lost!"]
         }' \
     http://localhost:9999/social/create-news
 curl -X POST -H "Content-Type: application/json" -H "Authorization: ${HOLMES_ACCESS_TOKEN}" \
