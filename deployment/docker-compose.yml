@@ -18,7 +18,7 @@ services:
     volumes:
       - mysql-storage-data:/var/lib/mysql
     networks:
-      - stage-network
+      - otus-highload-network
 
   cache:
     build:
@@ -31,7 +31,7 @@ services:
     volumes:
       - redis-cache-data:/data
     networks:
-      - stage-network
+      - otus-highload-network
 
   nats-streaming:
     image: nats-streaming
@@ -47,7 +47,7 @@ services:
       - "--max_age=1h"
       - "--max_inactivity=1h"
     networks:
-      - stage-network
+      - otus-highload-network
 
   adminer:
     image: adminer
@@ -57,7 +57,7 @@ services:
     depends_on:
       - storage
     networks:
-      - stage-network
+      - otus-highload-network
 
   migrator:
     build:
@@ -74,7 +74,7 @@ services:
     depends_on:
       - storage
     networks:
-      - stage-network
+      - otus-highload-network
 
   backend:
     build:
@@ -97,7 +97,7 @@ services:
       - cache
       - nats-streaming
     networks:
-      - stage-network
+      - otus-highload-network
 
   frontend:
     build:
@@ -110,13 +110,13 @@ services:
     depends_on:
       - backend
     networks:
-      - stage-network
+      - otus-highload-network
 
 volumes:
   mysql-storage-data:
   redis-cache-data:
 
 networks:
-  stage-network:
-    name: stage-network
+  otus-highload-network:
+    name: otus-highload-network
     driver: bridge
