@@ -13,9 +13,9 @@
       - [ Регистрация пользователей ](#work-functionality-sing-up)
       - [ Отправка заявок в друзья и добавление друзей ](#work-functionality-followers-and-friends)
       - [ Публикация новостей ](#work-functionality-news)
-   - [ Технические моменты ](#work-functionality-technical-moments)
+   - [ Технические моменты ](#work-technical-moments)
       - [ Первый случай прогрева кеша ](#work-technical-moments-first-heat)
-      - [ Второй случай прогрева кеша ](#work-technical-moments-second-heat>)
+      - [ Второй случай прогрева кеша ](#work-technical-moments-second-heat)
 4. [ Итоги ](#results)
 
 <img align="right" width="480" src="static/title-page.png">
