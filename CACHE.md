@@ -269,7 +269,7 @@ curl -X GET -H "Content-Type: application/json" -H "Authorization: ${WATSON_ACCE
 
 В WebUI должны увидеть следующее:</br>
 <p align="center">
-    <img src="static/cache/webui-friends.png">
+    <img src="static/cache/webui-news-watson.png">
 </p>
 
 Джеймсом Мориарти:
