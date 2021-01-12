@@ -9,6 +9,13 @@
     - [ Используемые инструменты ](#information-tools)
     - [ Характеристики железа ](#information-computer)
 3. [ Ход работы ](#work)
+   - [ Демонстрация работы функционала ](#work-functionality)
+      - [ Регистрация пользователей ](#work-functionality-sing-up)
+      - [ Отправка заявок в друзья и добавление друзей ](#work-functionality-followers-and-friends)
+      - [ Публикация новостей ](#work-functionality-news)
+   - [ Технические моменты ](#work-functionality-technical-moments)
+      - [ Первый случай прогрева кеша ](#work-technical-moments-first-heat)
+      - [ Второй случай прогрева кеша ](#work-technical-moments-second-heat>)
 4. [ Итоги ](#results)
 
 <img align="right" width="480" src="static/title-page.png">
@@ -58,7 +65,7 @@
 
 <a name="work"></a>
 ## Ход работы
-В ходе выполнения домашнего задания в качестве кеша выступает [Redis](https://redis.io/), а в качетве очереди 
+В ходе выполнения домашнего задания в качестве кеша выступает [Redis](https://redis.io/), а в качестве очереди 
 [Nats-Streaming](https://docs.nats.io/nats-streaming-concepts/intro).
 
 Склонируем наш проект:
@@ -71,8 +78,16 @@ git clone https://github.com/teploff/otus-highload.git && cd otus-highload
 make up && make migrate
 ```
 
-Далее необходимо зарегистрировать пользоватейлей. Это можно сделать с помощью WebUI, расположенного по адресу: 
-http://localhost:8081/sign-up или же curl-ом. В данном случае для эффективности воспольюсь именно curl-ом.
+<a name="work-functionality"></a>
+### Демонстрация работы функционала
+В данной демонстрации будет использован метод API (все запросы будут осуществляться утилитой [curl](https://curl.se/)).
+в силу своей эффективности и наглядности. 
+
+> Однако в каждом пункте будет дана вот такая ремарка, как это сделать при помощи WebUI.
+
+<a name="work-functionality-sing-up"></a>
+### Регистрация пользователей
+Прежде всего необходимо зарегистрировать пользователей.
 
 Зарегистрируем трех пользователей в системе:
 - Шерлока Холмса,
@@ -111,7 +126,7 @@ echo $WATSON_ACCESS_TOKEN
 echo $MORIARTY_ACCESS_TOKEN
 ```
 
-Получим ID-шники созданных пользователей, они нам пригодятся для отправки заявок в друзья и их подтверждении.
+Получим ID-шники созданных пользователей, они нам пригодятся для отправки заявок в друзья и их подтверждении:
 ```shell script
 export HOLMES_ID=$(curl -X GET -H "Content-Type: application/json" -H "Authorization: ${WATSON_ACCESS_TOKEN}" \
     http://localhost:9999/auth/user?email=holmes@gmail.com | jq -r '.user_id')
@@ -128,6 +143,10 @@ echo $WATSON_ID
 echo $MORIARTY_ID
 ```
 
+> Регистрация пользователей, расположена по адресу: http://localhost:8081/sign-up
+
+<a name="work-functionality-followers-and-friends"></a>
+### Отправка заявок в друзья и добавление друзей
 Теперь давайте со стороны Доктора Ватсона и Джеймса Мориарти отправим заявки в друзья Шерлоку Холмсу:
 ```shell script
 curl -X POST -H "Content-Type: application/json" -H "Authorization: ${WATSON_ACCESS_TOKEN}" \
@@ -148,6 +167,11 @@ curl -X GET -H "Content-Type: application/json" -H "Authorization: ${HOLMES_ACCE
     http://localhost:9999/social/followers
 ```
 
+> Для отправки заявки в друзья необходимо после входа в систему (http://localhost:8081/sign-in) набрать имя пользователя
+> или его фамилию (или все вместе) в поисковой строке, расположенной в верхней части страницы (**Search people...**). 
+> После ввода пользователя будут доступны анкеты пользователей, которым можно отправить заявку в друзья, нажав на кнопку
+> **Add Friend**.
+
 Подтвердим заявки в друзья, сделав follower-ов своими друзьями:
 ```shell script
 curl -X POST -H "Content-Type: application/json" -H "Authorization: ${HOLMES_ACCESS_TOKEN}" \
@@ -163,6 +187,15 @@ curl -X GET -H "Content-Type: application/json" -H "Authorization: ${HOLMES_ACCE
     http://localhost:9999/social/friends
 ```
 
+> Для того, чтобы подтвердить заявки в друзья и сделать пользователей своими друзями, необходимо перейти на страницу 
+> http://localhost:8081/friends или выбрав пункт выпадающего меню слева **Friends**. Затем клацнуть на вкладку **Friend 
+> Requests**. После этого будет доступна таблица подписчиков, заявки которых в друзья можно отклонить или добавить.
+
+> Для того, чтобы просмотреть своих друзей, необходимо оставаться на вкладке **My Friends** страницы 
+> http://localhost:8081/friends
+
+<a name="work-functionality-news"></a>
+### Публикация новостей
 Теперь необходимо проверить функционал новостей.
 Под новостью понимаем маленькое сообщение или твит о том, что нового у пользователя:)
 Создадим пару новостей от Доктора Ватсона и пару новостей Джеймса Мориарти, также одну новость от Шерлока Холмса.
@@ -188,6 +221,9 @@ curl -X POST -H "Content-Type: application/json" -H "Authorization: ${HOLMES_ACC
         }' \
     http://localhost:9999/social/create-news
 ```
+
+> Для того, чтобы создать новость, необходимо перейти на страницу http://localhost:8081/. Затем ввести в поле с надписью
+> **What's a new?** новость, которую вы хотите опубликовать.
 
 Теперь запросим все доступные новости для трех наших персонажей.
 
@@ -224,18 +260,24 @@ curl -X GET -H "Content-Type: application/json" -H "Authorization: ${HOLMES_ACCE
     <img src="static/algorithm_chose_shard.png">
 </p>
 
-Технические моменты
+> Для того, чтобы просмотреть свои новости и новости своих друзей, необходимо перейти на страницу 
+> http://localhost:8081/news.
+
+<a name="work-technical-moments"></a>
+### Технические моменты
 Инвалидация кеша осуществляется по событию. Какое-либо изменение в базе данных влечет за собой валидацию, а именно:
-- добавление, удалиление друзей;
+- добавление, удаление друзей;
 - добавление новостей.
 
 Прогрев кеша осуществляется в двух случаях:
 - при старте системы (запускается джоба на прогрев кеша и только после успеха система запускается);
-- при получение события из очереди (если по каким-то причинам, мы понимаем, что кеша невалидный запускаем его прогрев).
+- при получении события из очереди (если по каким-то причинам, мы понимаем, что кеша невалидный запускаем его прогрев).
 
 Давайте проверим это.
 
-Первый способ
+<a name="work-technical-moments-first-heat"></a>
+### Первый случай прогрева кеша
+Рассмотрим подробнее случай прогрева кеша при запуске системы.
 
 Зайдем в Redis и полностью сброим кеш:
 ```shell script
@@ -266,7 +308,9 @@ KEYS *
 </p>
 Видим, что кеш при старте системы прогревается.
 
-Второй способ
+<a name="work-technical-moments-second-heat"></a>
+### Второй случай прогрева кеша
+Рассмотрим подробнее случай прогрева кеша при получении события из очереди.
 
 Зайдем в Redis и полностью сброим кеш:
 ```shell script
@@ -277,7 +321,7 @@ exit
 ```
 
 Теперь не трогая backend, запустим простенькую tool'зу, которая в очередь шлет уведомление, на основе которого
-система понимает, что необходимо заново прогресть кеш:
+система понимает, что необходимо заново прогреть кеш:
 ```shell script
 cd backend/tools/cache-heater-enabler
 go run main.go --addr="localhost:4222" --cluster_id="stan-cluster" --subject="cache-reload"
@@ -293,16 +337,6 @@ SELECT 2
 KEYS *
 ```
 
-
-docker exec -it redis-cache redis-cli
-AUTH password
-FLUSHALL
-
-```shell
-cd backend/tools/cache-heater-enabler
-go run main.go --addr="localhost:4222" --cluster_id="stan-cluster" --subject="cache-reload"
-```
-
 Должны получить нечто следующее:</br>
 <p align="center">
     <img src="static/algorithm_chose_shard.png">
@@ -312,3 +346,8 @@ go run main.go --addr="localhost:4222" --cluster_id="stan-cluster" --subject="ca
 <a name="results"></a>
 ## Итоги
 В ходе выполнения домашнего задания:
+- был описан процесс сборки и конфигурирования программного комплекса;
+- была реализована кешируемая подсистема новостей;
+- была реализована подсистема друзей и подписчиков;
+- было реализовано обновление кеша через очередь, что может помочь сгладить нагрузку при пиковых запросах;
+- были реализованы процедуры валидации и прогрева кеша.
