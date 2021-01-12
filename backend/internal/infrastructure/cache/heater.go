@@ -5,10 +5,12 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"github.com/nats-io/stan.go"
-	"go.uber.org/zap"
+	"social-network/internal/domain"
 	staninfrastructure "social-network/internal/infrastructure/stan"
 	"time"
+
+	"github.com/nats-io/stan.go"
+	"go.uber.org/zap"
 )
 
 const (
@@ -36,7 +38,7 @@ func NewHeater(redisPool *Pool, mysqlConn *sql.DB, stanClient *staninfrastructur
 	}
 }
 
-func (h *Heater) Start() (err error) {
+func (h *Heater) Heat() error {
 	ctx := context.Background()
 	tx, err := h.mysqlConn.BeginTx(ctx, nil)
 	if err != nil {
@@ -55,10 +57,10 @@ func (h *Heater) Start() (err error) {
 		return err
 	}
 
-	if err = tx.Commit(); err != nil {
-		return err
-	}
+	return tx.Commit()
+}
 
+func (h *Heater) Listening() (err error) {
 	subscriptionOptions := []stan.SubscriptionOption{
 		stan.SetManualAckMode(),
 		stan.AckWait(time.Second * 1),
@@ -134,43 +136,50 @@ func (h *Heater) heatFriends(ctx context.Context, tx *sql.Tx) error {
 }
 
 func (h *Heater) heatNews(ctx context.Context, tx *sql.Tx) error {
-	_, err := h.redisPool.GetConnByIndexDB(NewsDBIndex)
+	usersNews := make(map[string][]*domain.News, 1)
+
+	rows, err := tx.Query(`
+		SELECT
+			news.id, user.id, user.name, user.surname, user.sex, content, news.create_time
+		FROM
+			news
+		JOIN user ON news.owner_id = user.id
+		ORDER BY news.create_time DESC
+		`)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var userID string
+		news := new(domain.News)
+
+		if err = rows.Scan(&news.ID, &userID, &news.Owner.Name, &news.Owner.Surname, &news.Owner.Sex, &news.Content, &news.CreateTime); err != nil {
+			return err
+		}
+
+		if _, ok := usersNews[userID]; !ok {
+			usersNews[userID] = make([]*domain.News, 0, 1)
+		}
+		usersNews[userID] = append(usersNews[userID], news)
+	}
+
+	conn, err := h.redisPool.GetConnByIndexDB(NewsDBIndex)
 	if err != nil {
 		return err
 	}
 
-	// TODO
-	//rows, err := tx.Query(`
-	//	SELECT
-	//		news.id, user.name, user.surname, user.sex, content, news.create_time
-	//	FROM
-	//		news
-	//	JOIN user ON news.owner_id = user.id`)
-	//if err != nil {
-	//	return err
-	//}
-	//defer rows.Close()
-	//
-	//var n []*domain.News
-	//result, err := conn.Get(ctx, userID).Result()
-	//switch err {
-	//case nil:
-	//	if err = json.Unmarshal([]byte(result), &n); err != nil {
-	//		return fmt.Errorf("cannot unmarshal news, %w", err)
-	//	}
-	//case redis.Nil:
-	//	n = make([]*domain.News, 0, 1)
-	//default:
-	//	return err
-	//}
-	//n = append(n, news...)
-	//
-	//data, err := json.Marshal(n)
-	//if err != nil {
-	//	return fmt.Errorf("cannot marshal news, %w", err)
-	//}
-	//
-	//return conn.Set(ctx, userID, data, 0).Err()
+	for key, value := range usersNews {
+		data, err := json.Marshal(value)
+		if err != nil {
+			return fmt.Errorf("cannot marshal friends id, %w", err)
+		}
+
+		if err = conn.Set(ctx, key, data, 0).Err(); err != nil {
+			return err
+		}
+	}
 
 	return nil
 }
