@@ -1,6 +1,6 @@
 # Otus Highload. Social network
 
-<img align="right" width="160" src="front/static/images/preview.png">
+<img align="right" width="160" src="static/preview.png">
 
 It's Otus's homework for **Highload Architect** course, which is a basic social network.
 The project consists of two parts: *Backend* and *Frontend*.
@@ -20,7 +20,7 @@ Authorization result represents of two JWT's: access & refresh.
 
 ### Up infrastructure
 ```shell script
-make up
+make db && make migrate && make up
 ```
 
 ### Shutting down infrastructure
