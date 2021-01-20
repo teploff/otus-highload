@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/gobwas/ws"
-	"github.com/gobwas/ws/wsutil"
-	"log"
 	"net/http"
 	"social-network/internal/domain"
 )
@@ -19,7 +17,7 @@ type Endpoints struct {
 	Ws        *WsEndpoints
 }
 
-func MakeEndpoints(auth domain.AuthService, profile domain.ProfileService, social domain.SocialService, messenger domain.MessengerService) *Endpoints {
+func MakeEndpoints(auth domain.AuthService, profile domain.ProfileService, social domain.SocialService, messenger domain.MessengerService, ws domain.WSService) *Endpoints {
 	return &Endpoints{
 		Auth: &AuthEndpoints{
 			SignUp:           makeSignUpEndpoint(auth),
@@ -53,7 +51,7 @@ func MakeEndpoints(auth domain.AuthService, profile domain.ProfileService, socia
 			SendMessage: makeSendMessageEndpoint(auth, messenger),
 		},
 		Ws: &WsEndpoints{
-			Connect: makeWsConnectEndpoint(auth),
+			Connect: makeWsConnectEndpoint(auth, ws),
 		},
 	}
 }
@@ -997,10 +995,11 @@ type WsEndpoints struct {
 	Connect gin.HandlerFunc
 }
 
-func makeWsConnectEndpoint(authSvc domain.AuthService) gin.HandlerFunc {
+func makeWsConnectEndpoint(authSvc domain.AuthService, wsSvc domain.WSService) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		var header AuthorizationHeader
-		if err := c.ShouldBindHeader(&header); err != nil {
+		var request WSRequest
+
+		if err := c.BindQuery(&request); err != nil {
 			c.JSON(http.StatusUnauthorized, ErrorResponse{
 				Message: err.Error(),
 			})
@@ -1008,7 +1007,7 @@ func makeWsConnectEndpoint(authSvc domain.AuthService) gin.HandlerFunc {
 			return
 		}
 
-		userID, err := authSvc.Authenticate(c, header.AccessToken)
+		userID, err := authSvc.Authenticate(c, request.AccessToken)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized, ErrorResponse{
 				Message: err.Error(),
@@ -1026,30 +1025,6 @@ func makeWsConnectEndpoint(authSvc domain.AuthService) gin.HandlerFunc {
 			return
 		}
 
-		//messenger.AddConnection(userID, conn)
-
-		go func() {
-			defer conn.Close()
-
-			for {
-				msg, op, err := wsutil.ReadClientData(conn)
-				if err != nil {
-					//messenger.RemoveConnection(userID, conn)
-					return
-				}
-
-				log.Println(msg)
-				//messenger.CreateMessage(msg)
-
-				err = wsutil.WriteServerMessage(conn, op, []byte(fmt.Sprintf("Pong to %s", userID)))
-				if err != nil {
-					//c.JSON(http.StatusUnauthorized, ErrorResponse{
-					//	Message: err.Error(),
-					//})
-					return
-				}
-			}
-		}()
-
+		wsSvc.EstablishConn(c, userID, conn)
 	}
 }

@@ -2,6 +2,7 @@ package domain
 
 import (
 	"context"
+	"net"
 )
 
 type AuthService interface {
@@ -33,6 +34,12 @@ type CacheService interface {
 	AddFriends(ctx context.Context, userID string, friendsID []string) error
 	DeleteFriends(ctx context.Context, userID string, friendsID []string) error
 	AddNews(ctx context.Context, userID string, news []*News) error
+}
+
+type WSService interface {
+	EstablishConn(ctx context.Context, userID string, coon net.Conn)
+	SendNews(ctx context.Context, ownerID string, news []*News) error
+	Close()
 }
 
 type MessengerService interface {

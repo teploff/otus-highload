@@ -59,6 +59,7 @@ type Questionnaire struct {
 	FriendshipStatus string    `json:"friendship_status"`
 }
 
+// easyjson:json
 type News struct {
 	ID    string `json:"id"`
 	Owner struct {

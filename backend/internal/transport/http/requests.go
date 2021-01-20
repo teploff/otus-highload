@@ -84,3 +84,7 @@ type GetMessagesRequest struct {
 	Limit  *int   `json:"limit" form:"limit"`
 	Offset *int   `json:"offset" form:"offset"`
 }
+
+type WSRequest struct {
+	AccessToken string `json:"access_token"  binding:"required" form:"access_token"`
+}

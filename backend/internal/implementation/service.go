@@ -6,7 +6,11 @@ import (
 	"errors"
 	"fmt"
 	"github.com/dgrijalva/jwt-go"
+	"github.com/gobwas/ws"
+	"github.com/gobwas/ws/wsutil"
 	uuid "github.com/satori/go.uuid"
+	"go.uber.org/zap"
+	"net"
 	"social-network/internal/config"
 	"social-network/internal/domain"
 	"social-network/internal/infrastructure/stan"
@@ -418,17 +422,15 @@ func (s *socialService) GetFollowers(ctx context.Context, userID string) ([]*dom
 }
 
 func (s *socialService) RetrieveNews(ctx context.Context, userID string, limit, offset int) ([]*domain.News, int, error) {
-	usersID := []string{userID}
-
 	ids, err := s.socialCacheRepository.RetrieveFriendsID(ctx, userID)
 	if err != nil {
 		return nil, 0, err
 	}
 
-	usersID = append(usersID, ids...)
+	ids = append(ids, userID)
 
 	news := make([]*domain.News, 0, 1)
-	for _, id := range usersID {
+	for _, id := range ids {
 		n, err := s.socialCacheRepository.RetrieveNews(ctx, id)
 		if err != nil {
 			return nil, 0, err
@@ -445,17 +447,6 @@ func (s *socialService) RetrieveNews(ctx context.Context, userID string, limit, 
 	})
 
 	return s.paginate(news, offset, limit), count, nil
-	//tx, err := s.socialRepository.GetTx(ctx)
-	//if err != nil {
-	//	return nil, 0, err
-	//}
-	//
-	//news, count, err := s.socialRepository.GetNews(tx, userID, limit, offset)
-	//if err != nil {
-	//	return nil, 0, err
-	//}
-	//
-	//return news, count, s.socialRepository.CommitTx(tx)
 }
 
 func (s *socialService) paginate(n []*domain.News, skip int, size int) []*domain.News {
@@ -593,6 +584,144 @@ func (c *cacheService) DeleteFriends(ctx context.Context, userID string, friends
 
 func (c *cacheService) AddNews(ctx context.Context, userID string, news []*domain.News) error {
 	return c.repository.PersistNews(ctx, userID, news)
+}
+
+// easyjson:json
+type WSRequest struct {
+	Topic   string `json:"topic"`
+	Payload string `json:"payload"`
+}
+
+// easyjson:json
+type WSNewsRequest struct {
+	Content string `json:"content"`
+}
+
+type wsService struct {
+	userRep    domain.UserRepository
+	socialRep  domain.SocialCacheRepository
+	wsPoolRep  domain.WSPoolRepository
+	stanClient *stan.Client
+	logger     *zap.Logger
+}
+
+func NewWSService(userRep domain.UserRepository, socialRep domain.SocialCacheRepository, wsPoolRep domain.WSPoolRepository, stanClient *stan.Client, logger *zap.Logger) *wsService {
+	return &wsService{
+		userRep:    userRep,
+		socialRep:  socialRep,
+		wsPoolRep:  wsPoolRep,
+		stanClient: stanClient,
+		logger:     logger,
+	}
+}
+
+func (w *wsService) EstablishConn(ctx context.Context, userID string, conn net.Conn) {
+	w.wsPoolRep.AddConnection(userID, conn)
+
+	go func(userID string) {
+		defer conn.Close()
+		defer w.wsPoolRep.RemoveConnection(userID, conn)
+
+		tx, err := w.userRep.GetTx(ctx)
+		if err != nil {
+			w.logger.Error("can't get transaction", zap.Error(err))
+
+			return
+		}
+
+		user, err := w.userRep.GetByID(tx, userID)
+		if err != nil {
+			w.logger.Error("fail get user by id", zap.Error(err))
+
+			return
+		}
+
+		if err = tx.Commit(); err != nil {
+			w.logger.Error("fail commit transaction", zap.Error(err))
+
+			return
+		}
+
+		for {
+			msg, _, err := wsutil.ReadClientData(conn)
+			if err != nil {
+				w.logger.Error("fail read from ws", zap.Error(err))
+
+				return
+			}
+
+			if err = w.parseRequest(user, msg); err != nil {
+				w.logger.Error("", zap.Error(err))
+			}
+		}
+	}(userID)
+}
+
+func (w *wsService) parseRequest(user *domain.User, msg []byte) error {
+	var request WSRequest
+	if err := request.UnmarshalJSON(msg); err != nil {
+		return err
+	}
+
+	switch request.Topic {
+	case "news":
+		var r WSNewsRequest
+
+		if err := r.UnmarshalJSON([]byte(request.Payload)); err != nil {
+			return err
+		}
+
+		n := &domain.News{
+			ID: uuid.NewV4().String(),
+			Owner: struct {
+				Name    string `json:"name"`
+				Surname string `json:"surname"`
+				Sex     string `json:"sex"`
+			}{
+				user.Name,
+				user.Surname,
+				user.Sex,
+			},
+			Content:    r.Content,
+			CreateTime: time.Now().UTC(),
+		}
+
+		if err := w.stanClient.Publish("news", &stantransport.NewsPersistRequest{OwnerID: user.ID, News: []*domain.News{n}}); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (w *wsService) SendNews(ctx context.Context, ownerID string, news []*domain.News) error {
+	ids, err := w.socialRep.RetrieveFriendsID(ctx, ownerID)
+	if err != nil {
+		return err
+	}
+	ids = append(ids, ownerID)
+
+	for _, id := range ids {
+		conns := w.wsPoolRep.RetrieveConnByUserID(id)
+		for _, conn := range conns {
+			for _, n := range news {
+				data, err := n.MarshalJSON()
+				if err != nil {
+					return err
+				}
+
+				if err = wsutil.WriteServerMessage(conn, ws.OpText, data); err != nil {
+					return err
+				}
+			}
+		}
+	}
+
+	return nil
+}
+
+func (w *wsService) Close() {
+	w.wsPoolRep.FlushConnections()
 }
 
 type messengerService struct {

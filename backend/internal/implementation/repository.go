@@ -10,8 +10,8 @@ import (
 	"net"
 	"social-network/internal/domain"
 	"social-network/internal/infrastructure/cache"
-	wstransport "social-network/internal/transport/ws"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/go-sql-driver/mysql"
@@ -1136,19 +1136,59 @@ func (s *socialCacheRepository) RetrieveNews(ctx context.Context, userID string)
 }
 
 type wsPoolRepository struct {
-	conns *wstransport.Conns
+	conns map[string][]net.Conn
+
+	m sync.Mutex
 }
 
-func NewWSPoolRepository(conns *wstransport.Conns) *wsPoolRepository {
+func NewWSPoolRepository() *wsPoolRepository {
 	return &wsPoolRepository{
-		conns: conns,
+		conns: make(map[string][]net.Conn),
+		m:     sync.Mutex{},
 	}
 }
 
 func (w *wsPoolRepository) AddConnection(userID string, conn net.Conn) {
-	w.conns.Add(userID, conn)
+	w.m.Lock()
+	defer w.m.Unlock()
+
+	w.conns[userID] = append(w.conns[userID], conn)
 }
 
 func (w *wsPoolRepository) RemoveConnection(userID string, conn net.Conn) {
-	w.conns.Remove(userID, conn)
+	w.m.Lock()
+	defer w.m.Unlock()
+
+	for index, connection := range w.conns[userID] {
+		if connection == conn {
+			w.conns[userID][index] = w.conns[userID][len(w.conns[userID])-1]
+			w.conns[userID][len(w.conns[userID])-1] = nil
+			w.conns[userID] = w.conns[userID][:len(w.conns[userID])-1]
+
+			return
+		}
+	}
+}
+
+func (w *wsPoolRepository) FlushConnections() {
+	w.m.Lock()
+	defer w.m.Unlock()
+
+	for userID, userConns := range w.conns {
+		for _, conn := range userConns {
+			conn.Close()
+		}
+		w.conns[userID] = nil
+	}
+}
+
+func (w *wsPoolRepository) RetrieveConnByUserID(userID string) []net.Conn {
+	w.m.Lock()
+	defer w.m.Unlock()
+
+	if _, ok := w.conns[userID]; ok {
+		return w.conns[userID]
+	}
+
+	return make([]net.Conn, 0, 1)
 }

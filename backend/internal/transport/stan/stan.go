@@ -30,30 +30,36 @@ func NewStan(client *staninfrastructure.Client, logger *zap.Logger) *Stan {
 }
 
 // Serve starts listening stan.
-func (s *Stan) Serve(service domain.CacheService) error {
+func (s *Stan) Serve(cacheSvc domain.CacheService, wsSvc domain.WSService) error {
 	subscriptionOptions := []stan.SubscriptionOption{
 		stan.SetManualAckMode(),
 		stan.AckWait(time.Second * 1),
 		stan.MaxInflight(maxInFlightMsg),
 	}
 
-	compSub, err := s.client.Subscribe("friends", makeFriendsSub(service, s.logger),
+	friendsActionsSub, err := s.client.Subscribe("friends", makeFriendsSub(cacheSvc, s.logger),
 		append(subscriptionOptions, stan.DurableName("friends-actions"))...)
-
 	if err != nil {
 		return err
 	}
 
-	s.subscriptions = append(s.subscriptions, compSub)
+	s.subscriptions = append(s.subscriptions, friendsActionsSub)
 
-	forecSub, err := s.client.Subscribe("news", makeNewsSub(service, s.logger),
+	newsActionsSub, err := s.client.Subscribe("news", makeNewsSub(cacheSvc, s.logger),
 		append(subscriptionOptions, stan.DurableName("news-actions"))...)
-
 	if err != nil {
 		return err
 	}
 
-	s.subscriptions = append(s.subscriptions, forecSub)
+	s.subscriptions = append(s.subscriptions, newsActionsSub)
+
+	wsSub, err := s.client.Subscribe("news", makeNewsWSSub(wsSvc, s.logger),
+		append(subscriptionOptions, stan.DurableName("news-ws"))...)
+	if err != nil {
+		return err
+	}
+
+	s.subscriptions = append(s.subscriptions, wsSub)
 
 	for _, subscribe := range s.subscriptions {
 		if err = subscribe.SetPendingLimits(-1, -1); err != nil {

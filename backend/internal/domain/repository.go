@@ -61,4 +61,6 @@ type SocialCacheRepository interface {
 type WSPoolRepository interface {
 	AddConnection(userID string, conn net.Conn)
 	RemoveConnection(userID string, conn net.Conn)
+	RetrieveConnByUserID(userID string) []net.Conn
+	FlushConnections()
 }

@@ -6,12 +6,12 @@ import (
 	"log"
 	"net/http"
 	"social-network/internal/config"
+	"social-network/internal/domain"
 	"social-network/internal/implementation"
 	"social-network/internal/infrastructure/cache"
 	"social-network/internal/infrastructure/stan"
 	httptransport "social-network/internal/transport/http"
 	stantransport "social-network/internal/transport/stan"
-	wstransport "social-network/internal/transport/ws"
 	"time"
 
 	"go.uber.org/zap"
@@ -33,16 +33,15 @@ type App struct {
 	cfg     *config.Config
 	httpSrv *http.Server
 	stanSrv *stantransport.Stan
-	wsConns *wstransport.Conns
+	wsSvc   domain.WSService
 	logger  *zap.Logger
 }
 
 // NewApp returns instance of app.
 func NewApp(cfg *config.Config, opts ...Option) *App {
 	app := &App{
-		cfg:     cfg,
-		wsConns: wstransport.NewWSConnects(),
-		logger:  zap.NewNop(),
+		cfg:    cfg,
+		logger: zap.NewNop(),
 	}
 
 	for _, opt := range opts {
@@ -55,6 +54,13 @@ func NewApp(cfg *config.Config, opts ...Option) *App {
 // Run lunch application.
 func (a *App) Run(mysqlConn *sql.DB, redisPool *cache.Pool, stanClient *stan.Client) {
 	a.stanSrv = stantransport.NewStan(stanClient, a.logger)
+	wsPoolRep := implementation.NewWSPoolRepository()
+	a.wsSvc = implementation.NewWSService(
+		implementation.NewUserRepository(mysqlConn),
+		implementation.NewCacheRepository(redisPool),
+		wsPoolRep,
+		stanClient,
+		a.logger)
 
 	authSvc := implementation.NewAuthService(implementation.NewUserRepository(mysqlConn), a.cfg.JWT)
 	profileSvc := implementation.NewProfileService(implementation.NewUserRepository(mysqlConn))
@@ -69,7 +75,8 @@ func (a *App) Run(mysqlConn *sql.DB, redisPool *cache.Pool, stanClient *stan.Cli
 		implementation.NewMessengerRepository(mysqlConn))
 	cacheSvc := implementation.NewCacheService(implementation.NewCacheRepository(redisPool))
 
-	a.httpSrv = httptransport.NewHTTPServer(a.cfg.Addr, httptransport.MakeEndpoints(authSvc, profileSvc, socialSvc, messengerSvc))
+	a.httpSrv = httptransport.NewHTTPServer(a.cfg.Addr,
+		httptransport.MakeEndpoints(authSvc, profileSvc, socialSvc, messengerSvc, a.wsSvc))
 
 	go func() {
 		if err := a.httpSrv.ListenAndServe(); err != nil {
@@ -78,14 +85,14 @@ func (a *App) Run(mysqlConn *sql.DB, redisPool *cache.Pool, stanClient *stan.Cli
 	}()
 
 	go func() {
-		if err := a.stanSrv.Serve(cacheSvc); err != nil {
+		if err := a.stanSrv.Serve(cacheSvc, a.wsSvc); err != nil {
 			a.logger.Fatal("stan server error", zap.Error(err))
 		}
 	}()
 }
 
 func (a *App) Stop() {
-	a.wsConns.Close()
+	a.wsSvc.Close()
 
 	ctx, cancel := context.WithTimeout(context.Background(), httpTimeoutClose)
 	defer cancel()
