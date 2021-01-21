@@ -86,5 +86,5 @@ type GetMessagesRequest struct {
 }
 
 type WSRequest struct {
-	AccessToken string `json:"access_token"  binding:"required" form:"access_token"`
+	AccessToken string `json:"token"  binding:"required" form:"token"`
 }
