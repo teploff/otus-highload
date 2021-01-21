@@ -27,4 +27,7 @@ new Vue({
   render: h => h(App),
   router,
   store,
+  destroy() {
+    this.$wsDisconnect()
+  },
 }).$mount('#app')

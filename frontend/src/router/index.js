@@ -62,8 +62,10 @@ router.beforeEach((to, from, next) => {
   if (to.name !== 'SignUp' && to.name !== 'SignUpSuccess' && to.name !== 'SignIn' && !localStorage.getItem('accessToken')) {
     next({name: 'SignIn'});
   } else {
-    if (!store.getters.searchAnthroponym) {
-      this._vm.$wsConnect('ws://localhost:9999/ws?token=' + localStorage.getItem('accessToken'))
+    if (to.name !== 'SignUp' && to.name !== 'SignUpSuccess' && to.name !== 'SignIn') {
+      if (!store.getters.isWSConnected) {
+        router.app.$wsConnect('ws://localhost:9999/ws?token=' + localStorage.getItem('accessToken'))
+      }
     }
 
     next();
