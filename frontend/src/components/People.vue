@@ -155,11 +155,6 @@ export default {
       refreshToken: null
     }
   }),
-  beforeCreate() {
-    if  (this.$store.getters.accessToken === null) {
-      this.$router.push({ name: 'SignIn' });
-    }
-  },
   created: function () {
     if (this.$store.getters.searchAnthroponym !== null && this.$store.getters.searchAnthroponym !== '') {
       this.getPeopleByAnthroponym(this.$store.getters.searchAnthroponym)
@@ -186,7 +181,7 @@ export default {
       const camelcaseKeys = require('camelcase-keys');
 
       this.searchPayload.anthroponym = anthroponym
-      headers.Authorization = this.$store.getters.accessToken
+      headers.Authorization = localStorage.getItem('accessToken')
 
       axios.get(path, {
         headers: headers,
@@ -217,12 +212,8 @@ export default {
       const path = `${apiUrl}/auth/token`;
       const camelcaseKeys = require('camelcase-keys');
 
-      if (this.$store.getters.refreshToken === null) {
-        this.$router.push({ name: 'SignIn' });
-      }
-
       const payload = {
-        refresh_token: this.$store.getters.refreshToken,
+        refresh_token: localStorage.getItem('refreshToken'),
       };
       axios.put(path, payload, {transformResponse: [(data) => {
           return camelcaseKeys(JSON.parse(data), { deep: true })}
@@ -230,8 +221,8 @@ export default {
           .then((response) => {
             this.tokenPair = response.data;
 
-            this.$store.commit("changeAccessToken", this.tokenPair.accessToken);
-            this.$store.commit("changeRefreshToken", this.tokenPair.refreshToken);
+            localStorage.setItem('accessToken', this.tokenPair.accessToken);
+            localStorage.setItem('refreshToken', this.tokenPair.refreshToken);
 
             this.$router.push({ name: 'People' });
           })
@@ -262,8 +253,8 @@ export default {
       }
     }, 1000),
     logOut() {
-      this.$store.commit("changeAccessToken", null);
-      this.$store.commit("changeRefreshToken", null);
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
 
       this.$router.push({ name: 'SignIn' });
     },
@@ -271,7 +262,7 @@ export default {
       const path = `${apiUrl}/social/create-friendship`;
       const camelcaseKeys = require('camelcase-keys');
 
-      headers.Authorization = this.$store.getters.accessToken
+      headers.Authorization = localStorage.getItem('accessToken')
       const payload = {
         friends_id: [fiendID],
       };

@@ -75,11 +75,6 @@ export default {
       anthroponym: null,
     },
   }),
-  beforeCreate() {
-    if (this.$store.getters.accessToken === null) {
-      this.$router.push({ name: 'SignIn' });
-    }
-  },
   methods: {
     followHomePage() {
       this.$router.push({ name: 'Home' });
@@ -98,8 +93,8 @@ export default {
       this.$router.push({ name: 'People' })
     }, 1000),
     logOut() {
-      this.$store.commit("changeAccessToken", null);
-      this.$store.commit("changeRefreshToken", null);
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
 
       this.$router.push({ name: 'SignIn' });
     },
