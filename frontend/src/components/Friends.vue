@@ -153,11 +153,6 @@ export default {
     followers: [],
     selectedFollowers: [],
   }),
-  beforeCreate() {
-    if (this.$store.getters.accessToken === null) {
-      this.$router.push({ name: 'SignIn' });
-    }
-  },
   beforeMount() {
     this.getFriends()
   },
@@ -182,12 +177,8 @@ export default {
       const path = `${apiUrl}/auth/token`;
       const camelcaseKeys = require('camelcase-keys');
 
-      if (this.$store.getters.refreshToken === null) {
-        this.$router.push({ name: 'SignIn' });
-      }
-
       const payload = {
-        refresh_token: this.$store.getters.refreshToken,
+        refresh_token: localStorage.getItem('refreshToken'),
       };
       axios.put(path, payload, {transformResponse: [(data) => {
           return camelcaseKeys(JSON.parse(data), { deep: true })}
@@ -195,8 +186,8 @@ export default {
           .then((response) => {
             this.tokenPair = response.data;
 
-            this.$store.commit("changeAccessToken", this.tokenPair.accessToken);
-            this.$store.commit("changeRefreshToken", this.tokenPair.refreshToken);
+            localStorage.setItem('accessToken', this.tokenPair.accessToken);
+            localStorage.setItem('refreshToken', this.tokenPair.refreshToken);
 
             this.$router.push({ name: 'People' });
           })
@@ -214,8 +205,8 @@ export default {
           });
     },
     logOut() {
-      this.$store.commit("changeAccessToken", null);
-      this.$store.commit("changeRefreshToken", null);
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
 
       this.$router.push({ name: 'SignIn' });
     },
@@ -231,7 +222,7 @@ export default {
       const path = `${apiUrl}/social/friends`;
       const camelcaseKeys = require('camelcase-keys');
 
-      headers.Authorization = this.$store.getters.accessToken
+      headers.Authorization = localStorage.getItem('accessToken')
 
       axios.get(path, {
         headers: headers,
@@ -262,7 +253,7 @@ export default {
       const path = `${apiUrl}/social/followers`;
       const camelcaseKeys = require('camelcase-keys');
 
-      headers.Authorization = this.$store.getters.accessToken
+      headers.Authorization = localStorage.getItem('accessToken')
 
       axios.get(path, {
         headers: headers,
@@ -291,10 +282,6 @@ export default {
     removeFriends() {
       const path = `${apiUrl}/social/break-friendship`;
       const camelcaseKeys = require('camelcase-keys');
-
-      if (this.$store.getters.refreshToken === null) {
-        this.$router.push({ name: 'SignIn' });
-      }
 
       let friends_id = [];
       for (let i in this.selectedFriends) {
@@ -330,10 +317,6 @@ export default {
       const path = `${apiUrl}/social/confirm-friendship`;
       const camelcaseKeys = require('camelcase-keys');
 
-      if (this.$store.getters.refreshToken === null) {
-        this.$router.push({ name: 'SignIn' });
-      }
-
       let followers_id = [];
       for (let i in this.selectedFollowers) {
         followers_id.push(this.selectedFollowers[i].id)
@@ -367,10 +350,6 @@ export default {
     removeFollowers() {
       const path = `${apiUrl}/social/reject-friendship`;
       const camelcaseKeys = require('camelcase-keys');
-
-      if (this.$store.getters.refreshToken === null) {
-        this.$router.push({ name: 'SignIn' });
-      }
 
       let followers_id = [];
       for (let i in this.selectedFollowers) {

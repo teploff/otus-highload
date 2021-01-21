@@ -110,8 +110,8 @@ export default {
           .then((response) => {
             this.tokenPair = response.data;
 
-            this.$store.commit("changeAccessToken", this.tokenPair.accessToken);
-            this.$store.commit("changeRefreshToken", this.tokenPair.refreshToken);
+            localStorage.setItem('accessToken', this.tokenPair.accessToken)
+            localStorage.setItem('refreshToken', this.tokenPair.refreshToken)
 
             this.$router.push({ name: 'Home' });
           })

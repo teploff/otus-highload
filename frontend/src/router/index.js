@@ -11,7 +11,7 @@ import People from '@/components/People';
 
 Vue.use(Router);
 
-export default new Router({
+const router = new Router({
   routes: [
     {
       path: '/sign-in',
@@ -56,3 +56,13 @@ export default new Router({
   ],
   mode: 'history',
 });
+
+router.beforeEach((to, from, next) => {
+  if (to.name !== 'SignUp' && to.name !== 'SignUpSuccess' && to.name !== 'SignIn' && !localStorage.getItem('accessToken')) {
+    next({name: 'SignIn'});
+  } else {
+    next();
+  }
+});
+
+export default router;

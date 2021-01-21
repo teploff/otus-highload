@@ -85,11 +85,6 @@ export default {
     },
     news: null
   }),
-  created() {
-    if (this.$store.getters.accessToken === null) {
-      this.$router.push({ name: 'SignIn' });
-    }
-  },
   methods: {
     followHomePage() {
       this.$router.push({ name: 'Home' }).catch(() => {});
@@ -115,7 +110,7 @@ export default {
       const path = `${apiUrl}/social/create-news`;
       const camelcaseKeys = require('camelcase-keys');
 
-      headers.Authorization = this.$store.getters.accessToken
+      headers.Authorization = localStorage.getItem('accessToken')
       const payload = {
         news: [this.news],
       };
@@ -150,8 +145,8 @@ export default {
           });
     }, 1500),
     logOut() {
-      this.$store.commit("changeAccessToken", null);
-      this.$store.commit("changeRefreshToken", null);
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
 
       this.$router.push({ name: 'SignIn' });
     },
