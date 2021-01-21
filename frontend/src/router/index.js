@@ -8,6 +8,7 @@ import News from '@/components/News';
 import Messenger from '@/components/Messenger';
 import Friends from '@/components/Friends';
 import People from '@/components/People';
+import store from '@/store'
 
 Vue.use(Router);
 
@@ -61,6 +62,10 @@ router.beforeEach((to, from, next) => {
   if (to.name !== 'SignUp' && to.name !== 'SignUpSuccess' && to.name !== 'SignIn' && !localStorage.getItem('accessToken')) {
     next({name: 'SignIn'});
   } else {
+    if (!store.getters.searchAnthroponym) {
+      this._vm.$wsConnect('ws://localhost:9999/ws?token=' + localStorage.getItem('accessToken'))
+    }
+
     next();
   }
 });
