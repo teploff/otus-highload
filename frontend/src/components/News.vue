@@ -212,7 +212,7 @@ export default {
       localStorage.removeItem("accessToken");
       localStorage.removeItem("refreshToken");
 
-      this.$wsDisconnect()
+      this.$wsDisconnect();
 
       this.$router.push({ name: 'SignIn' });
     },

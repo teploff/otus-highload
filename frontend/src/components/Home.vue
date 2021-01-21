@@ -70,8 +70,7 @@
 </template>
 
 <script>
-import {apiUrl, debounce, headers} from "@/const";
-import axios from "axios";
+import {debounce} from "@/const";
 
 export default {
   name: 'Home',
@@ -83,7 +82,7 @@ export default {
     searchPayload: {
       anthroponym: null,
     },
-    news: null
+    news: []
   }),
   methods: {
     followHomePage() {
@@ -103,52 +102,27 @@ export default {
       this.$router.push({ name: 'People' })
     }, 1000),
     createNews: debounce(function (){
-      if (this.news === null || this.news === '') {
+      if (this.news.length === 0) {
         return
       }
 
-      const path = `${apiUrl}/social/create-news`;
-      const camelcaseKeys = require('camelcase-keys');
-
-      headers.Authorization = localStorage.getItem('accessToken')
       const payload = {
         news: [this.news],
       };
 
-      axios.post(path, payload, {
-        headers: headers,
-        transformResponse: [(data) => {
-          return camelcaseKeys(JSON.parse(data), { deep: true })}
-        ]
-      })
-          .then(() => {
-            this.news = null
-            this.flashMessage.setStrategy('single');
-            this.flashMessage.success({
-              title: 'Success',
-              message: 'News were published!'
-            });
-          })
-          .catch((error) => {
-            const err = error.response;
-
-            if (err.status === 401) {
-              this.refreshToken();
-            }
-
-            this.flashMessage.error({
-              title: 'Error Message Title',
-              message: err.data.message,
-              position: 'center',
-              icon: '../assets/error.svg',
-            });
-          });
+      this.$wsSend(payload)
+      this.flashMessage.setStrategy('single');
+      this.flashMessage.success({
+        title: 'Success',
+        message: 'News were published!'
+      });
+      this.news = []
     }, 1500),
     logOut() {
       localStorage.removeItem("accessToken");
       localStorage.removeItem("refreshToken");
 
-      this.$wsDisconnect()
+      this.$wsDisconnect();
 
       this.$router.push({ name: 'SignIn' });
     },
