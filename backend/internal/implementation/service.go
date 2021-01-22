@@ -598,20 +598,24 @@ type WSNewsRequest struct {
 }
 
 type wsService struct {
-	userRep    domain.UserRepository
-	socialRep  domain.SocialCacheRepository
-	wsPoolRep  domain.WSPoolRepository
-	stanClient *stan.Client
-	logger     *zap.Logger
+	userRep        domain.UserRepository
+	socialRep      domain.SocialRepository
+	socialCacheRep domain.SocialCacheRepository
+	wsPoolRep      domain.WSPoolRepository
+	stanClient     *stan.Client
+	logger         *zap.Logger
 }
 
-func NewWSService(userRep domain.UserRepository, socialRep domain.SocialCacheRepository, wsPoolRep domain.WSPoolRepository, stanClient *stan.Client, logger *zap.Logger) *wsService {
+func NewWSService(userRep domain.UserRepository, socialRep domain.SocialRepository,
+	socialCacheRep domain.SocialCacheRepository, wsPoolRep domain.WSPoolRepository,
+	stanClient *stan.Client, logger *zap.Logger) *wsService {
 	return &wsService{
-		userRep:    userRep,
-		socialRep:  socialRep,
-		wsPoolRep:  wsPoolRep,
-		stanClient: stanClient,
-		logger:     logger,
+		userRep:        userRep,
+		socialRep:      socialRep,
+		socialCacheRep: socialCacheRep,
+		wsPoolRep:      wsPoolRep,
+		stanClient:     stanClient,
+		logger:         logger,
 	}
 }
 
@@ -650,14 +654,14 @@ func (w *wsService) EstablishConn(ctx context.Context, userID string, conn net.C
 				return
 			}
 
-			if err = w.parseRequest(user, msg); err != nil {
+			if err = w.parseRequest(ctx, user, msg); err != nil {
 				w.logger.Error("", zap.Error(err))
 			}
 		}
 	}(userID)
 }
 
-func (w *wsService) parseRequest(user *domain.User, msg []byte) error {
+func (w *wsService) parseRequest(ctx context.Context, user *domain.User, msg []byte) error {
 	var request WSRequest
 	if err := request.UnmarshalJSON(msg); err != nil {
 		return err
@@ -685,6 +689,20 @@ func (w *wsService) parseRequest(user *domain.User, msg []byte) error {
 			Content:    r.Content,
 			CreateTime: time.Now().UTC(),
 		}
+		news := []*domain.News{n}
+
+		tx, err := w.userRep.GetTx(ctx)
+		if err != nil {
+			return err
+		}
+
+		if err = w.socialRep.PublishNews(tx, user.ID, news); err != nil {
+			return err
+		}
+
+		if err = tx.Commit(); err != nil {
+			return err
+		}
 
 		if err := w.stanClient.Publish("news", &stantransport.NewsPersistRequest{OwnerID: user.ID, News: []*domain.News{n}}); err != nil {
 			return err
@@ -695,7 +713,7 @@ func (w *wsService) parseRequest(user *domain.User, msg []byte) error {
 }
 
 func (w *wsService) SendNews(ctx context.Context, ownerID string, news []*domain.News) error {
-	ids, err := w.socialRep.RetrieveFriendsID(ctx, ownerID)
+	ids, err := w.socialCacheRep.RetrieveFriendsID(ctx, ownerID)
 	if err != nil {
 		return err
 	}

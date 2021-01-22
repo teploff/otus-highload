@@ -61,7 +61,7 @@ type Questionnaire struct {
 
 // easyjson:json
 type News struct {
-	ID    string `json:"id"`
+	ID    string `json:"-"`
 	Owner struct {
 		Name    string `json:"name"`
 		Surname string `json:"surname"`

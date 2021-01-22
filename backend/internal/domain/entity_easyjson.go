@@ -36,8 +36,6 @@ func easyjson163c17a9DecodeSocialNetworkInternalDomain(in *jlexer.Lexer, out *Ne
 			continue
 		}
 		switch key {
-		case "id":
-			out.ID = string(in.String())
 		case "owner":
 			easyjson163c17a9Decode(in, &out.Owner)
 		case "content":
@@ -61,13 +59,13 @@ func easyjson163c17a9EncodeSocialNetworkInternalDomain(out *jwriter.Writer, in N
 	first := true
 	_ = first
 	{
-		const prefix string = ",\"id\":"
-		out.RawString(prefix[1:])
-		out.String(string(in.ID))
-	}
-	{
 		const prefix string = ",\"owner\":"
-		out.RawString(prefix)
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
 		easyjson163c17a9Encode(out, in.Owner)
 	}
 	{

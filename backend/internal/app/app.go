@@ -57,6 +57,7 @@ func (a *App) Run(mysqlConn *sql.DB, redisPool *cache.Pool, stanClient *stan.Cli
 	wsPoolRep := implementation.NewWSPoolRepository()
 	a.wsSvc = implementation.NewWSService(
 		implementation.NewUserRepository(mysqlConn),
+		implementation.NewSocialRepository(mysqlConn),
 		implementation.NewCacheRepository(redisPool),
 		wsPoolRep,
 		stanClient,
