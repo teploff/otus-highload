@@ -41,15 +41,17 @@ wsService.install = function (Vue, options) {
 
     Vue.prototype.$wsSend = (data) => {
         // Send data to the backend - use JSON.stringify(data)
-        Vue.prototype.ws.send(JSON.stringify(data))
+        Vue.prototype.ws.send(data)
     }
 
     /*
       Here we write our custom functions to not make a mess in one function
     */
     function parseMsg (params) {
+        const camelcaseKeys = require('camelcase-keys');
+
         console.log(params)
-        options.store.commit('', params.data)
+        options.store.commit('appendNews', camelcaseKeys(JSON.parse(params.data), { deep: true }))
     }
 }
 

@@ -107,10 +107,13 @@ export default {
       }
 
       const payload = {
-        news: [this.news],
+        topic: "news",
+        payload: JSON.stringify({
+          content: this.news,
+        }),
       };
 
-      this.$wsSend(payload)
+      this.$wsSend(JSON.stringify(payload))
       this.flashMessage.setStrategy('single');
       this.flashMessage.success({
         title: 'Success',

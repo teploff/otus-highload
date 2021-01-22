@@ -12,6 +12,10 @@ export default new Vuex.Store({
         },
         searchPeople: {
             anthroponym: null,
+        },
+        news: {
+            data: [],
+            count: 0
         }
     },
     getters: {
@@ -21,6 +25,9 @@ export default new Vuex.Store({
         searchAnthroponym: state => {
             return state.searchPeople.anthroponym
         },
+        news: state => {
+            return state.news
+        }
     },
     mutations: {
         changeAnthroponym (state, anthroponym) {
@@ -34,6 +41,17 @@ export default new Vuex.Store({
         },
         setMsg(state, msg) {
             state.socket.socketMessage = msg
+        },
+        setNews(state, payload) {
+            state.news.count = payload.count
+            state.news.data = payload.news
+        },
+        appendNews(state, news) {
+            state.news.count += 1
+            state.news.data.push(news)
+            state.news.data = state.news.data.sort(function(a,b) {
+                return new Date(b.createTime) - new Date(a.createTime);
+            });
         }
     },
     actions: {},

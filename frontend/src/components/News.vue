@@ -54,10 +54,10 @@
       </md-app-drawer>
 
       <md-app-content>
-        <md-table v-show="cards.count !== 0">
+        <md-table v-show="this.$store.getters.news.count !== 0">
           <md-table-row>
             <div class="card-expansion">
-        <md-card v-for="card in cards.news" v-bind:key="card.id">
+        <md-card v-for="card in this.$store.getters.news.data" v-bind:key="card.id">
           <md-card-header>
             <md-card-header-text>
               <div class="md-title" id="news-card-title">{{ card.owner.name }} {{ card.owner.surname }}</div>
@@ -78,7 +78,7 @@
             <div>
               <paginate
                   v-model="page"
-                  :page-count="Math.ceil(cards.count / countCardsInWindow)"
+                  :page-count="Math.ceil(this.$store.getters.news.count / countCardsInWindow)"
                   :click-handler="paginatorClick"
                   :prev-text="'Prev'"
                   :next-text="'Next'"
@@ -109,10 +109,6 @@ export default {
     countFriendsNotify: 0,
     searchPayload: {
       anthroponym: null,
-    },
-    cards: {
-      news: null,
-      count: 0,
     },
     countCardsInWindow: 40,
     offset: 0,
@@ -160,7 +156,8 @@ export default {
         ]
       })
           .then((response) => {
-            this.cards = response.data;
+            console.log(response.data)
+            this.$store.commit('setNews', response.data);
           })
           .catch((error) => {
             const err = error.response;
