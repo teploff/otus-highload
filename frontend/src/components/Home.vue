@@ -70,11 +70,13 @@
 </template>
 
 <script>
-import {debounce} from "@/const";
+import {wsUrl, debounce} from "@/const";
+import WSService from "@/service/ws";
 
 export default {
   name: 'Home',
   data: () => ({
+    ws: null,
     menuVisible: false,
     countNewsNotify: 0,
     countMsgNotify: 0,
@@ -84,6 +86,13 @@ export default {
     },
     news: []
   }),
+  created() {
+    this.ws = new WSService(this.$store)
+    this.ws.connect(wsUrl + localStorage.getItem('accessToken'))
+  },
+  beforeDestroy() {
+    this.ws.disconnect()
+  },
   methods: {
     followHomePage() {
       this.$router.push({ name: 'Home' }).catch(() => {});
@@ -113,7 +122,7 @@ export default {
         }),
       };
 
-      this.$wsSend(JSON.stringify(payload))
+      this.ws.send(JSON.stringify(payload))
       this.flashMessage.setStrategy('single');
       this.flashMessage.success({
         title: 'Success',
@@ -124,8 +133,6 @@ export default {
     logOut() {
       localStorage.removeItem("accessToken");
       localStorage.removeItem("refreshToken");
-
-      this.$wsDisconnect();
 
       this.$router.push({ name: 'SignIn' });
     },

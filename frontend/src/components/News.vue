@@ -97,8 +97,9 @@
 </template>
 
 <script>
-import {apiUrl, debounce, headers} from "@/const";
+import {apiUrl, debounce, headers, wsUrl} from "@/const";
 import axios from "axios";
+import WSService from "@/service/ws";
 
 export default {
   name: 'Home',
@@ -114,7 +115,12 @@ export default {
     offset: 0,
     page: 1,
   }),
+  beforeDestroy() {
+    this.ws.disconnect()
+  },
   created() {
+    this.ws = new WSService(this.$store)
+    this.ws.connect(wsUrl + localStorage.getItem('accessToken'))
     this.getNews();
   },
   methods: {
@@ -208,8 +214,6 @@ export default {
     logOut() {
       localStorage.removeItem("accessToken");
       localStorage.removeItem("refreshToken");
-
-      this.$wsDisconnect();
 
       this.$router.push({ name: 'SignIn' });
     },

@@ -1,4 +1,5 @@
 export const apiUrl = 'http://localhost:9999';
+export const wsUrl = 'ws://localhost:9999/ws?token=';
 export const headers = {
   'Content-Type': 'application/json',
 };

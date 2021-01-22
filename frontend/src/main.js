@@ -8,17 +8,12 @@ import FlashMessage from '@smartweb/vue-flash-message';
 import Paginate from 'vuejs-paginate'
 import store from './store'
 import VueMoment from 'vue-moment';
-import wsService from "@/service/ws";
 
 Vue.config.productionTip = false
 
 Vue.use(VueMaterial)
 Vue.use(VueMoment)
 Vue.use(FlashMessage);
-
-Vue.use(wsService, {
-  store,
-})
 
 Vue.component('paginate', Paginate);
 
@@ -27,7 +22,4 @@ new Vue({
   render: h => h(App),
   router,
   store,
-  destroy() {
-    this.$wsDisconnect()
-  },
 }).$mount('#app')
