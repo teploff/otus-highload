@@ -65,7 +65,9 @@ websocket-соединения которых активны.
 ### Используемые инструменты
 Для выполнения задания понадобятся следующие инструменты:
 - [docker](https://docs.docker.com/get-docker/) (>= version 19.03.8) & [docker compose](https://docs.docker.com/compose/install/) (>= version 1.25.5);
-- [jq](https://stedolan.github.io/jq/download/) (>= version 1.5)
+- [curl](https://curl.haxx.se/download.html);
+- [websocat](https://github.com/vi/websocat/releases);
+- [jq](https://stedolan.github.io/jq/download/) (>= version 1.5).
 
 <a name="information-computer"></a>
 ### Характеристики железа
