@@ -11,6 +11,10 @@ func NewHTTPServer(addr string, endpoints *Endpoints) *http.Server {
 
 	config := cors.DefaultConfig()
 	config.AddAllowHeaders("Authorization")
+	config.AddAllowHeaders("Accept-Encoding")
+	config.AddAllowHeaders("Sec-Websocket-Extensions")
+	config.AddAllowHeaders("Sec-Websocket-Key")
+	config.AddAllowHeaders("Sec-Websocket-Version")
 	config.AllowAllOrigins = true
 	config.AllowMethods = []string{"PUT", "POST"}
 
