@@ -13,7 +13,7 @@
       - [ Регистрация пользователей ](#work-functionality-sing-up)
       - [ Отправка заявок в друзья и добавление друзей ](#work-functionality-followers-and-friends)
       - [ Публикация новостей ](#work-functionality-publish-news)
-      - [ Просмотр "горячих"-новостей через Websocket ](#work-functionality-receive-hot-news)
+      - [ Просмотр "горячих" новостей через Websocket ](#work-functionality-receive-hot-news)
       - [ Выгрузка новостей через HTTP-запрос ](#work-functionality-receive-cold-news)
    - [ Технические моменты ](#work-technical-moments)
       - [ Серверная часть ](#work-technical-moments-server)
@@ -267,7 +267,7 @@ websocat ws://localhost:9999/ws\?token=${HOLMES_ACCESS_TOKEN}
 > **What's a new?** новость, которую вы хотите опубликовать.
 
 <a name="work-functionality-receive-hot-news"></a>
-### Просмотр "горячих"-новостей через Websocket 
+### Просмотр "горячих" новостей через Websocket 
 
 Теперь перейдем в терминал Шерлока Холмса и удостоверимся, что получили все 4 новости от двух друзей. В терминале должны
 увидеть следующее: </br>
@@ -290,7 +290,7 @@ websocat ws://localhost:9999/ws\?token=${HOLMES_ACCESS_TOKEN}
 Закроем websokcet'ные соединения в каждом из терминальных окон командой **Ctrl+C**.
 
 <a name="work-functionality-receive-cold-news"></a>
-### Получение новостей через HTTP-запрос
+### Выгрузка новостей через HTTP-запрос
 
 Теперь запросим все доступные новости для трех наших персонажей используя HTTP-запрос.
 
@@ -374,7 +374,7 @@ curl -X GET -H "Content-Type: application/json" -H "Authorization: ${HOLMES_ACCE
 репозиторий всех ws-соединений, которые доступны серверу. Безусловно, чтоб сделать данный репозиторий потоко-безопасным 
 и не наткнуться на race-conditions, в репозитории присутствует механизм блокировки: Mutex. Структура данных хранения
 такого репозитория имеет вид:
-```json
+```javascript
 "user_id_1": [ws1, ..., wsN],
 ...
 "user_id_N": [ws1, ..., wsN]
