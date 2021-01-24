@@ -1,0 +1,29 @@
+addr: ":9999"
+
+storage:
+  dsn: "user:password@tcp(127.0.0.1:3306)/social-network?parseTime=true"
+  conn_max_lifetime: "3m"
+  max_open_conns: 10
+  max_idle_conns: 10
+
+ch:
+  dsn: "tcp://127.0.0.1:9000?debug=false&database=default&username=default&password=password"
+  push_timeout: "1s"
+
+cache:
+  addr: "localhost:6379"
+  password: "password"
+  db: 0
+
+jwt:
+  secret: "some_secret"
+  access_token_time_expire: "1h"
+  refresh_token_time_expire: "24h"
+
+sharding:
+  count_nodes: 2
+  lady_gaga_shard_id: 2
+  max_msg_freq: 10
+
+logger:
+  level: "info"

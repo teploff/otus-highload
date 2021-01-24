@@ -1,0 +1,13 @@
+addr: ":10000"
+
+auth:
+  addr: "localhost:10001"
+
+social:
+  addr: "localhost:10002"
+
+messenger:
+  addr: "localhost:10003"
+
+logger:
+  level: "info"

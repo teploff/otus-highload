@@ -1,0 +1,195 @@
+basePath: /
+definitions:
+  http.EmptyResponse:
+    type: object
+  http.ErrorResponse:
+    properties:
+      code:
+        type: integer
+      message:
+        type: string
+    type: object
+  http.GetUserIDByEmailResponse:
+    properties:
+      user_id:
+        type: string
+    type: object
+  http.RefreshTokenRequest:
+    properties:
+      refresh_token:
+        type: string
+    required:
+    - refresh_token
+    type: object
+  http.SignInRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  http.SignInResponse:
+    properties:
+      access_token:
+        type: string
+      refresh_token:
+        type: string
+    type: object
+  http.SignUpRequest:
+    properties:
+      birthday:
+        type: string
+      city:
+        type: string
+      email:
+        type: string
+      interests:
+        type: string
+      name:
+        type: string
+      password:
+        type: string
+      sex:
+        type: string
+      surname:
+        type: string
+    required:
+    - birthday
+    - city
+    - email
+    - interests
+    - name
+    - password
+    - sex
+    - surname
+    type: object
+host: localhost:10001
+info:
+  contact:
+    email: support@swagger.io
+    name: API Support
+    url: http://www.swagger.io/support
+  description: This is a sample server celler server.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: Auth API
+  version: "1.0"
+paths:
+  /auth/sign-in:
+    post:
+      consumes:
+      - application/json
+      description: Sign in user by credentials.
+      parameters:
+      - description: Sign in payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/http.SignInRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/http.SignInResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/http.ErrorResponse'
+      summary: Sign in user by credentials.
+      tags:
+      - auth
+  /auth/sign-up:
+    post:
+      consumes:
+      - application/json
+      description: Sign up user by credentials.
+      parameters:
+      - description: Sign up payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/http.SignUpRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/http.EmptyResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/http.ErrorResponse'
+      summary: Sign up user by credentials.
+      tags:
+      - auth
+  /auth/token:
+    put:
+      consumes:
+      - application/json
+      description: Refresh expired token on new JWT pair.
+      parameters:
+      - description: JWT refresh token
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/http.RefreshTokenRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/http.SignInResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/http.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Refresh expired token on new JWT pair.
+      tags:
+      - auth
+  /auth/user/get-by-email:
+    get:
+      consumes:
+      - application/json
+      description: Retrieving user's id by email.
+      parameters:
+      - description: User's Email
+        in: query
+        name: email
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/http.GetUserIDByEmailResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/http.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Retrieving user's id by email.
+      tags:
+      - auth
+securityDefinitions:
+  ApiKeyAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
