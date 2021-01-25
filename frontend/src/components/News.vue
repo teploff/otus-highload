@@ -97,7 +97,7 @@
 </template>
 
 <script>
-import {apiUrl, debounce, headers, wsUrl} from "@/const";
+import {apiUrl, debounce, headers, socialWSUrl} from "@/const";
 import axios from "axios";
 import WSService from "@/service/ws";
 
@@ -120,7 +120,7 @@ export default {
   },
   created() {
     this.ws = new WSService(this.$store)
-    this.ws.connect(wsUrl + localStorage.getItem('accessToken'))
+    this.ws.connect(socialWSUrl + localStorage.getItem('accessToken'))
     this.getNews();
   },
   methods: {

@@ -70,7 +70,7 @@
 </template>
 
 <script>
-import {wsUrl, debounce} from "@/const";
+import {socialWSUrl, debounce} from "@/const";
 import WSService from "@/service/ws";
 
 export default {
@@ -88,7 +88,7 @@ export default {
   }),
   created() {
     this.ws = new WSService(this.$store)
-    this.ws.connect(wsUrl + localStorage.getItem('accessToken'))
+    this.ws.connect(socialWSUrl + localStorage.getItem('accessToken'))
   },
   beforeDestroy() {
     this.ws.disconnect()
