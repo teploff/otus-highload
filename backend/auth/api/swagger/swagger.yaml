@@ -1,5 +1,15 @@
 basePath: /
 definitions:
+  http.AuthenticateRequest:
+    properties:
+      resource:
+        type: string
+    type: object
+  http.AuthenticateResponse:
+    properties:
+      is_authenticated:
+        type: boolean
+    type: object
   http.EmptyResponse:
     type: object
   http.ErrorResponse:
@@ -80,6 +90,32 @@ info:
   title: Auth API
   version: "1.0"
 paths:
+  /auth/authenticate:
+    post:
+      consumes:
+      - application/json
+      description: User's authentication by token in header.
+      parameters:
+      - description: Authentication payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/http.AuthenticateRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/http.EmptyResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/http.AuthenticateResponse'
+      summary: User's authentication by token in header.
+      tags:
+      - auth
   /auth/sign-in:
     post:
       consumes:

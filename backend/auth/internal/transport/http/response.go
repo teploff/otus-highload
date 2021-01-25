@@ -1,9 +1,5 @@
 package http
 
-import (
-	"auth/internal/domain"
-)
-
 type ErrorResponse struct {
 	Code    int    `json:"code"`
 	Message string `json:"message"`
@@ -21,7 +17,6 @@ type GetUserIDByEmailResponse struct {
 	UserID string `json:"user_id"`
 }
 
-type QuestionnairesResponse struct {
-	Questionnaires []*domain.Questionnaire `json:"questionnaires"`
-	Count          int                     `json:"count"`
+type AuthenticateResponse struct {
+	IsAuthenticated bool `json:"is_authenticated"`
 }

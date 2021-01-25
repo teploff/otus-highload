@@ -40,15 +40,3 @@ type TokenPair struct {
 	AccessToken  string `json:"access_token"`
 	RefreshToken string `json:"refresh_token"`
 }
-
-type Questionnaire struct {
-	ID               string    `json:"id"`
-	Email            string    `json:"email"`
-	Name             string    `json:"name"`
-	Surname          string    `json:"surname"`
-	Birthday         time.Time `json:"birthday"`
-	Sex              string    `json:"sex"`
-	City             string    `json:"city"`
-	Interests        string    `json:"interests"`
-	FriendshipStatus string    `json:"friendship_status"`
-}

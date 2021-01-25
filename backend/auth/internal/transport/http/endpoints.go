@@ -18,7 +18,8 @@ func MakeEndpoints(auth domain.AuthService) *Endpoints {
 			SignUp:           makeSignUpEndpoint(auth),
 			SignIn:           makeSignInEndpoint(auth),
 			RefreshToken:     makeRefreshTokenEndpoint(auth),
-			GetUserIDByEmail: makeGetUserIDByEmail(auth),
+			GetUserIDByEmail: makeGetUserIDByEmailEndpoint(auth),
+			Authenticate:     makeAuthenticateEndpoint(auth),
 		},
 	}
 }
@@ -29,6 +30,7 @@ type AuthEndpoints struct {
 	RefreshToken               gin.HandlerFunc
 	GetUserIDByEmail           gin.HandlerFunc
 	SearchProfileByAnthroponym gin.HandlerFunc
+	Authenticate               gin.HandlerFunc
 }
 
 // SignUp godoc
@@ -174,7 +176,7 @@ func makeRefreshTokenEndpoint(svc domain.AuthService) gin.HandlerFunc {
 // @Success 200 {object} GetUserIDByEmailResponse
 // @Failure 400 {object} ErrorResponse
 // @Router /auth/user/get-by-email [get].
-func makeGetUserIDByEmail(svc domain.AuthService) gin.HandlerFunc {
+func makeGetUserIDByEmailEndpoint(svc domain.AuthService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var header AuthorizationHeader
 		if err := c.ShouldBindHeader(&header); err != nil {
@@ -215,5 +217,52 @@ func makeGetUserIDByEmail(svc domain.AuthService) gin.HandlerFunc {
 		c.JSON(http.StatusOK, GetUserIDByEmailResponse{
 			UserID: userID,
 		})
+	}
+}
+
+// Authenticate godoc
+// @Summary User's authentication by token in header.
+// @Description User's authentication by token in header.
+// @Tags auth
+// @Accept  json
+// @Produce json
+// @Param payload body AuthenticateRequest true "Authentication payload"
+// @Success 200 {object} EmptyResponse
+// @Failure 400 {object} AuthenticateResponse
+// @Router /auth/authenticate [post].
+func makeAuthenticateEndpoint(svc domain.AuthService) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var request AuthenticateRequest
+		if err := c.Bind(&request); err != nil {
+			c.JSON(http.StatusBadRequest, ErrorResponse{
+				Message: err.Error(),
+			})
+
+			return
+		}
+
+		if request.Resource == "/auth/sign-up" || request.Resource == "/auth/sing-in" {
+			c.JSON(http.StatusOK, AuthenticateResponse{IsAuthenticated: true})
+		}
+
+		var header AuthorizationHeader
+		if err := c.ShouldBindHeader(&header); err != nil {
+			c.JSON(http.StatusBadRequest, ErrorResponse{
+				Message: err.Error(),
+			})
+
+			return
+		}
+
+		_, err := svc.Authenticate(c, header.AccessToken)
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, ErrorResponse{
+				Message: err.Error(),
+			})
+
+			return
+		}
+
+		c.JSON(http.StatusOK, AuthenticateResponse{IsAuthenticated: true})
 	}
 }

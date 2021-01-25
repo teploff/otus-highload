@@ -1,3 +1,13 @@
+# github.com/KyleBanks/depth v1.2.1
+github.com/KyleBanks/depth
+# github.com/PuerkitoBio/purell v1.1.1
+github.com/PuerkitoBio/purell
+# github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578
+github.com/PuerkitoBio/urlesc
+# github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751
+## explicit
+github.com/alecthomas/template
+github.com/alecthomas/template/parse
 # github.com/dgrijalva/jwt-go v3.2.0+incompatible
 ## explicit
 github.com/dgrijalva/jwt-go
@@ -13,6 +23,14 @@ github.com/gin-gonic/gin/binding
 github.com/gin-gonic/gin/internal/bytesconv
 github.com/gin-gonic/gin/internal/json
 github.com/gin-gonic/gin/render
+# github.com/go-openapi/jsonpointer v0.19.3
+github.com/go-openapi/jsonpointer
+# github.com/go-openapi/jsonreference v0.19.4
+github.com/go-openapi/jsonreference
+# github.com/go-openapi/spec v0.19.14
+github.com/go-openapi/spec
+# github.com/go-openapi/swag v0.19.11
+github.com/go-openapi/swag
 # github.com/go-playground/locales v0.13.0
 github.com/go-playground/locales
 github.com/go-playground/locales/currency
@@ -45,6 +63,10 @@ github.com/json-iterator/go
 github.com/leodido/go-urn
 # github.com/magiconair/properties v1.8.1
 github.com/magiconair/properties
+# github.com/mailru/easyjson v0.0.0-20190626092158-b2ccc519800e
+github.com/mailru/easyjson/buffer
+github.com/mailru/easyjson/jlexer
+github.com/mailru/easyjson/jwriter
 # github.com/mattn/go-isatty v0.0.12
 github.com/mattn/go-isatty
 # github.com/mitchellh/mapstructure v1.1.2
@@ -67,10 +89,11 @@ github.com/spf13/pflag
 # github.com/spf13/viper v1.7.1
 ## explicit
 github.com/spf13/viper
-# github.com/stretchr/testify v1.6.1
-## explicit
 # github.com/subosito/gotenv v1.2.0
 github.com/subosito/gotenv
+# github.com/swaggo/swag v1.7.0
+## explicit
+github.com/swaggo/swag
 # github.com/ugorji/go/codec v1.1.7
 github.com/ugorji/go/codec
 # go.uber.org/atomic v1.6.0
@@ -89,14 +112,22 @@ go.uber.org/zap/zapcore
 ## explicit
 golang.org/x/crypto/bcrypt
 golang.org/x/crypto/blowfish
+# golang.org/x/net v0.0.0-20201110031124-69a78807bb2b
+golang.org/x/net/idna
 # golang.org/x/sys v0.0.0-20200930185726-fdedc70b468f
-## explicit
 golang.org/x/sys/internal/unsafeheader
 golang.org/x/sys/unix
-# golang.org/x/text v0.3.3
-## explicit
+# golang.org/x/text v0.3.4
+golang.org/x/text/secure/bidirule
 golang.org/x/text/transform
+golang.org/x/text/unicode/bidi
 golang.org/x/text/unicode/norm
+golang.org/x/text/width
+# golang.org/x/tools v0.0.0-20201120155355-20be4ac4bd6e
+golang.org/x/tools/go/ast/astutil
+golang.org/x/tools/go/buildutil
+golang.org/x/tools/go/internal/cgo
+golang.org/x/tools/go/loader
 # google.golang.org/protobuf v1.23.0
 google.golang.org/protobuf/encoding/prototext
 google.golang.org/protobuf/encoding/protowire
@@ -128,5 +159,4 @@ google.golang.org/protobuf/runtime/protoimpl
 # gopkg.in/ini.v1 v1.51.0
 gopkg.in/ini.v1
 # gopkg.in/yaml.v2 v2.3.0
-## explicit
 gopkg.in/yaml.v2

@@ -37,3 +37,7 @@ type SearchProfileByAnthroponymRequest struct {
 type AuthorizationHeader struct {
 	AccessToken string `json:"access_token" binding:"required" header:"Authorization"`
 }
+
+type AuthenticateRequest struct {
+	Resource string `json:"resource"`
+}

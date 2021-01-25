@@ -33,6 +33,46 @@ var doc = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/auth/authenticate": {
+            "post": {
+                "description": "User's authentication by token in header.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "User's authentication by token in header.",
+                "parameters": [
+                    {
+                        "description": "Authentication payload",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/http.AuthenticateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/http.EmptyResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/http.AuthenticateResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/auth/sign-in": {
             "post": {
                 "description": "Sign in user by credentials.",
@@ -203,6 +243,22 @@ var doc = `{
         }
     },
     "definitions": {
+        "http.AuthenticateRequest": {
+            "type": "object",
+            "properties": {
+                "resource": {
+                    "type": "string"
+                }
+            }
+        },
+        "http.AuthenticateResponse": {
+            "type": "object",
+            "properties": {
+                "is_authenticated": {
+                    "type": "boolean"
+                }
+            }
+        },
         "http.EmptyResponse": {
             "type": "object"
         },
