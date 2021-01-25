@@ -66,13 +66,13 @@ var doc = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/http.EmptyResponse"
+                            "$ref": "#/definitions/http.AuthenticateResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
-                            "$ref": "#/definitions/http.AuthenticateResponse"
+                            "$ref": "#/definitions/http.EmptyResponse"
                         }
                     }
                 }
@@ -245,6 +245,40 @@ var doc = `{
                     }
                 }
             }
+        },
+        "/auth/user/get-id-by-token": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieving User's id by access token in header.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Retrieving User's id by access token in header.",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/http.GetUserIDByAccessTokenResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/http.EmptyResponse"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -274,6 +308,14 @@ var doc = `{
                     "type": "integer"
                 },
                 "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "http.GetUserIDByAccessTokenResponse": {
+            "type": "object",
+            "properties": {
+                "user_id": {
                     "type": "string"
                 }
             }

@@ -15,11 +15,12 @@ type Endpoints struct {
 func MakeEndpoints(auth domain.AuthService) *Endpoints {
 	return &Endpoints{
 		Auth: &AuthEndpoints{
-			SignUp:           makeSignUpEndpoint(auth),
-			SignIn:           makeSignInEndpoint(auth),
-			RefreshToken:     makeRefreshTokenEndpoint(auth),
-			GetUserIDByEmail: makeGetUserIDByEmailEndpoint(auth),
-			Authenticate:     makeAuthenticateEndpoint(auth),
+			SignUp:                 makeSignUpEndpoint(auth),
+			SignIn:                 makeSignInEndpoint(auth),
+			RefreshToken:           makeRefreshTokenEndpoint(auth),
+			GetUserIDByEmail:       makeGetUserIDByEmailEndpoint(auth),
+			Authenticate:           makeAuthenticateEndpoint(auth),
+			GetUserIDByAccessToken: makeGetUserIDByAccessTokenEndpoint(auth),
 		},
 	}
 }
@@ -31,6 +32,7 @@ type AuthEndpoints struct {
 	GetUserIDByEmail           gin.HandlerFunc
 	SearchProfileByAnthroponym gin.HandlerFunc
 	Authenticate               gin.HandlerFunc
+	GetUserIDByAccessToken     gin.HandlerFunc
 }
 
 // SignUp godoc
@@ -210,8 +212,8 @@ func makeGetUserIDByEmailEndpoint(svc domain.AuthService) gin.HandlerFunc {
 // @Accept  json
 // @Produce json
 // @Param payload body AuthenticateRequest true "Authentication payload"
-// @Success 200 {object} EmptyResponse
-// @Failure 400 {object} AuthenticateResponse
+// @Success 200 {object} AuthenticateResponse
+// @Failure 400 {object} EmptyResponse
 // @Router /auth/authenticate [post].
 func makeAuthenticateEndpoint(svc domain.AuthService) gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -247,5 +249,39 @@ func makeAuthenticateEndpoint(svc domain.AuthService) gin.HandlerFunc {
 		}
 
 		c.JSON(http.StatusOK, AuthenticateResponse{IsAuthenticated: true})
+	}
+}
+
+// GetUserIDByAccessToken godoc
+// @Summary Retrieving User's id by access token in header.
+// @Description Retrieving User's id by access token in header.
+// @Tags auth
+// @Security ApiKeyAuth
+// @Accept  json
+// @Produce json
+// @Success 200 {object} GetUserIDByAccessTokenResponse
+// @Failure 400 {object} EmptyResponse
+// @Router /auth/user/get-id-by-token [get].
+func makeGetUserIDByAccessTokenEndpoint(svc domain.AuthService) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var header AuthorizationHeader
+		if err := c.ShouldBindHeader(&header); err != nil {
+			c.JSON(http.StatusUnauthorized, ErrorResponse{
+				Message: err.Error(),
+			})
+
+			return
+		}
+
+		userID, err := svc.Authenticate(c, header.AccessToken)
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, ErrorResponse{
+				Message: err.Error(),
+			})
+
+			return
+		}
+
+		c.JSON(http.StatusOK, GetUserIDByAccessTokenResponse{UserID: userID})
 	}
 }

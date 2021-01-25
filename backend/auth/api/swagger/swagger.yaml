@@ -19,6 +19,11 @@ definitions:
       message:
         type: string
     type: object
+  http.GetUserIDByAccessTokenResponse:
+    properties:
+      user_id:
+        type: string
+    type: object
   http.GetUserIDByEmailResponse:
     properties:
       user_id:
@@ -108,11 +113,11 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/http.EmptyResponse'
+            $ref: '#/definitions/http.AuthenticateResponse'
         "400":
           description: Bad Request
           schema:
-            $ref: '#/definitions/http.AuthenticateResponse'
+            $ref: '#/definitions/http.EmptyResponse'
       security:
       - ApiKeyAuth: []
       summary: User's authentication by token in header.
@@ -223,6 +228,27 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Retrieving user's id by email.
+      tags:
+      - auth
+  /auth/user/get-id-by-token:
+    get:
+      consumes:
+      - application/json
+      description: Retrieving User's id by access token in header.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/http.GetUserIDByAccessTokenResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/http.EmptyResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Retrieving User's id by access token in header.
       tags:
       - auth
 securityDefinitions:

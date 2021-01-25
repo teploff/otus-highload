@@ -20,3 +20,7 @@ type GetUserIDByEmailResponse struct {
 type AuthenticateResponse struct {
 	IsAuthenticated bool `json:"is_authenticated"`
 }
+
+type GetUserIDByAccessTokenResponse struct {
+	UserID string `json:"user_id"`
+}
