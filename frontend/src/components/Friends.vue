@@ -219,7 +219,7 @@ export default {
     getAlternateLabel () {
     },
     getFriends() {
-      const path = `${apiUrl}/social/friends`;
+      const path = `${apiUrl}/social/friendship/get-friends`;
       const camelcaseKeys = require('camelcase-keys');
 
       headers.Authorization = localStorage.getItem('accessToken')
@@ -250,7 +250,7 @@ export default {
           });
     },
     getFollowers() {
-      const path = `${apiUrl}/social/followers`;
+      const path = `${apiUrl}/social/friendship/get-followers`;
       const camelcaseKeys = require('camelcase-keys');
 
       headers.Authorization = localStorage.getItem('accessToken')
@@ -280,7 +280,7 @@ export default {
           });
     },
     removeFriends() {
-      const path = `${apiUrl}/social/break-friendship`;
+      const path = `${apiUrl}/social/friendship/split-up`;
       const camelcaseKeys = require('camelcase-keys');
 
       let friends_id = [];
@@ -314,7 +314,7 @@ export default {
           });
     },
     acceptFollowers() {
-      const path = `${apiUrl}/social/confirm-friendship`;
+      const path = `${apiUrl}/social/friendship/confirm`;
       const camelcaseKeys = require('camelcase-keys');
 
       let followers_id = [];
@@ -348,7 +348,7 @@ export default {
           });
     },
     removeFollowers() {
-      const path = `${apiUrl}/social/reject-friendship`;
+      const path = `${apiUrl}/social/friendship/reject`;
       const camelcaseKeys = require('camelcase-keys');
 
       let followers_id = [];

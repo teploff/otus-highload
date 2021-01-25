@@ -177,7 +177,7 @@ export default {
       this.$router.push({ name: 'Friends' }).catch(() => {});
     },
     getPeopleByAnthroponym(anthroponym) {
-      const path = `${apiUrl}/profile/search/anthroponym`;
+      const path = `${apiUrl}/social/profile/search-by-anthroponym`;
       const camelcaseKeys = require('camelcase-keys');
 
       this.searchPayload.anthroponym = anthroponym
@@ -259,7 +259,7 @@ export default {
       this.$router.push({ name: 'SignIn' });
     },
     addFriend(fiendID) {
-      const path = `${apiUrl}/social/create-friendship`;
+      const path = `${apiUrl}/social/friendship/create`;
       const camelcaseKeys = require('camelcase-keys');
 
       headers.Authorization = localStorage.getItem('accessToken')

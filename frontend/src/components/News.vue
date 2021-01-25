@@ -146,7 +146,7 @@ export default {
       this.getNews()
     },
     getNews() {
-      const path = `${apiUrl}/social/news`;
+      const path = `${apiUrl}/social/news/get-news`;
       const camelcaseKeys = require('camelcase-keys');
 
       headers.Authorization = localStorage.getItem('accessToken')
