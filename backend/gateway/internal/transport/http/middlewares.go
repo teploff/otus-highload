@@ -51,11 +51,10 @@ func findToken(c *gin.Context) string {
 		return token
 	}
 
-	// For WS
-	var request WSRequest
-	if err := c.BindQuery(&request); err != nil {
-		return ""
+	v := c.Request.URL.Query()
+	if token, exist := v["token"]; exist {
+		return token[0]
 	}
 
-	return request.AccessToken
+	return ""
 }
