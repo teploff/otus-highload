@@ -1,4 +1,4 @@
-addr: ":9999"
+addr: ":10002"
 
 auth:
   addr: "localhost:10001"
