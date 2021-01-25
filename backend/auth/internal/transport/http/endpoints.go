@@ -178,26 +178,8 @@ func makeRefreshTokenEndpoint(svc domain.AuthService) gin.HandlerFunc {
 // @Router /auth/user/get-by-email [get].
 func makeGetUserIDByEmailEndpoint(svc domain.AuthService) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		var header AuthorizationHeader
-		if err := c.ShouldBindHeader(&header); err != nil {
-			c.JSON(http.StatusUnauthorized, ErrorResponse{
-				Message: err.Error(),
-			})
-
-			return
-		}
-
-		_, err := svc.Authenticate(c, header.AccessToken)
-		if err != nil {
-			c.JSON(http.StatusUnauthorized, ErrorResponse{
-				Message: err.Error(),
-			})
-
-			return
-		}
-
 		var request GetUserIDByEmailRequest
-		if err = c.Bind(&request); err != nil {
+		if err := c.Bind(&request); err != nil {
 			c.JSON(http.StatusBadRequest, ErrorResponse{
 				Message: err.Error(),
 			})
@@ -224,6 +206,7 @@ func makeGetUserIDByEmailEndpoint(svc domain.AuthService) gin.HandlerFunc {
 // @Summary User's authentication by token in header.
 // @Description User's authentication by token in header.
 // @Tags auth
+// @Security ApiKeyAuth
 // @Accept  json
 // @Produce json
 // @Param payload body AuthenticateRequest true "Authentication payload"

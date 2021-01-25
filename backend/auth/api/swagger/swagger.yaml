@@ -113,6 +113,8 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/http.AuthenticateResponse'
+      security:
+      - ApiKeyAuth: []
       summary: User's authentication by token in header.
       tags:
       - auth

@@ -35,6 +35,11 @@ var doc = `{
     "paths": {
         "/auth/authenticate": {
             "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
                 "description": "User's authentication by token in header.",
                 "consumes": [
                     "application/json"
