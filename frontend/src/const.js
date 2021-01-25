@@ -1,5 +1,5 @@
-export const apiUrl = 'http://localhost:9999';
-export const wsUrl = 'ws://localhost:9999/ws?token=';
+export const apiUrl = 'http://localhost:10000';
+export const wsUrl = 'ws://localhost:10000/ws?token=';
 export const headers = {
   'Content-Type': 'application/json',
 };
