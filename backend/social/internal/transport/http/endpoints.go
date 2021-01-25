@@ -1,173 +1,57 @@
 package http
 
 import (
-	"database/sql"
-	"fmt"
-	"github.com/gin-gonic/gin"
-	"github.com/gobwas/ws"
 	"net/http"
 	"social/internal/domain"
+
+	"github.com/gin-gonic/gin"
+	"github.com/gobwas/ws"
 )
 
 type Endpoints struct {
-	Auth      *AuthEndpoints
-	Profile   *ProfileEndpoints
-	Social    *SocialEndpoints
-	Messenger *MessengerEndpoints
-	Ws        *WsEndpoints
+	WS         gin.HandlerFunc
+	Profile    *ProfileEndpoints
+	Friendship *FriendshipEndpoints
+	News       *NewsEndpoints
 }
 
-func MakeEndpoints(auth domain.AuthService, profile domain.ProfileService, social domain.SocialService, messenger domain.MessengerService, ws domain.WSService) *Endpoints {
+func MakeEndpoints(auth domain.AuthService, profile domain.ProfileService, social domain.SocialService, ws domain.WSService) *Endpoints {
 	return &Endpoints{
-		Auth: &AuthEndpoints{
-			SignUp:           makeSignUpEndpoint(auth),
-			SignIn:           makeSignInEndpoint(auth),
-			RefreshToken:     makeRefreshTokenEndpoint(auth),
-			GetUserIDByEmail: makeGetUserIDByEmail(auth),
-		},
+		WS: makeWSEndpoint(auth, ws),
+
 		Profile: &ProfileEndpoints{
-			Search: &SearchEndpoints{
-				GetByAnthroponym: makeSearchProfileByAnthroponym(auth, profile),
-			},
+			SearchByAnthroponym: makeSearchProfileByAnthroponym(auth, profile),
 		},
-		Social: &SocialEndpoints{
-			CreateFriendship:                  makeCreateFriendshipEndpoint(auth, social),
-			ConfirmFriendship:                 makeConfirmFriendshipEndpoint(auth, social),
-			RejectFriendship:                  makeRejectFriendshipEndpoint(auth, social),
-			BreakFriendship:                   makeBreakFriendshipEndpoint(auth, social),
-			GetFriends:                        makeGetFriendsEndpoint(auth, social),
-			GetFollowers:                      makeGetFollowersEndpoint(auth, social),
-			GetNews:                           makeGetNewsEndpoint(auth, social),
-			CreateNews:                        makeCreateNewsEndpoint(auth, social),
-			GetAllQuestionnaires:              makeGetAllQuestionnairesEndpoint(auth, social),
-			GetQuestionnairesByNameAndSurname: makeGetQuestionnairesByNameAndSurnameEndpoint(auth, social),
+
+		Friendship: &FriendshipEndpoints{
+			Create:       makeCreateFriendshipEndpoint(auth, social),
+			Confirm:      makeConfirmFriendshipEndpoint(auth, social),
+			Reject:       makeRejectFriendshipEndpoint(auth, social),
+			SplitUp:      makeSplitUpFriendshipEndpoint(auth, social),
+			GetFriends:   makeGetFriendsEndpoint(auth, social),
+			GetFollowers: makeGetFollowersEndpoint(auth, social),
 		},
-		Messenger: &MessengerEndpoints{
-			CreateChat:  makeCreateChatEndpoint(auth, messenger),
-			GetChat:     makeGetChatEndpoint(auth, messenger),
-			DeleteChats: makeDeleteChatsEndpoint(auth, messenger),
-			GetChats:    makeGetChatsEndpoint(auth, messenger),
-			GetMessages: makeGetMessagesEndpoint(auth, messenger),
-			SendMessage: makeSendMessageEndpoint(auth, messenger),
-		},
-		Ws: &WsEndpoints{
-			Connect: makeWsConnectEndpoint(auth, ws),
+
+		News: &NewsEndpoints{
+			GetNews: makeGetNewsEndpoint(auth, social),
 		},
 	}
 }
 
-type AuthEndpoints struct {
-	SignUp           gin.HandlerFunc
-	SignIn           gin.HandlerFunc
-	RefreshToken     gin.HandlerFunc
-	GetUserIDByEmail gin.HandlerFunc
-}
-
-func makeSignUpEndpoint(svc domain.AuthService) gin.HandlerFunc {
+// WS godoc
+// @Summary Websocket handshake endpoint.
+// @Description Websocket handshake endpoint.
+// @Accept  json
+// @Produce json
+// @Param token query string true "User's Access-JWT"
+// @Success 200 {object} EmptyResponse
+// @Failure 400 {object} ErrorResponse
+// @Router /social/ws [get].
+func makeWSEndpoint(authSvc domain.AuthService, wsSvc domain.WSService) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		var request SignUpRequest
-		if err := c.Bind(&request); err != nil {
-			c.JSON(http.StatusBadRequest, ErrorResponse{
-				Message: err.Error(),
-			})
+		var request WSRequest
 
-			return
-		}
-
-		credentials, err := domain.NewCredentials(request.Email, request.Password)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, ErrorResponse{
-				Message: err.Error(),
-			})
-
-			return
-		}
-
-		if err = svc.SignUp(c, &domain.User{
-			Credentials: *credentials,
-			Name:        request.Name,
-			Surname:     request.Surname,
-			Birthday:    request.Birthday,
-			Sex:         request.Sex,
-			City:        request.City,
-			Interests:   request.Interests,
-		}); err != nil {
-			c.JSON(http.StatusInternalServerError, ErrorResponse{
-				Message: err.Error(),
-			})
-
-			return
-		}
-
-		c.JSON(http.StatusOK, EmptyResponse{})
-	}
-}
-
-func makeSignInEndpoint(svc domain.AuthService) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		var request SignInRequest
-		if err := c.Bind(&request); err != nil {
-			c.JSON(http.StatusBadRequest, ErrorResponse{
-				Message: err.Error(),
-			})
-
-			return
-		}
-
-		tokenPair, err := svc.SignIn(c, &domain.Credentials{
-			Email:    request.Email,
-			Password: request.Password,
-		})
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, ErrorResponse{
-				Message: err.Error(),
-			})
-
-			return
-		}
-
-		c.JSON(http.StatusOK, SignInResponse{
-			AccessToken:  tokenPair.AccessToken,
-			RefreshToken: tokenPair.RefreshToken,
-		})
-	}
-}
-
-func makeRefreshTokenEndpoint(svc domain.AuthService) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		var request RefreshTokenRequest
-		if err := c.Bind(&request); err != nil {
-			c.JSON(http.StatusBadRequest, ErrorResponse{
-				Message: err.Error(),
-			})
-
-			return
-		}
-
-		tokenPair, err := svc.RefreshToken(c, request.RefreshToken)
-
-		switch err {
-		case nil:
-			c.JSON(http.StatusOK, SignInResponse{
-				AccessToken:  tokenPair.AccessToken,
-				RefreshToken: tokenPair.RefreshToken,
-			})
-		case sql.ErrNoRows:
-			c.JSON(http.StatusUnauthorized, ErrorResponse{
-				Message: "token is expired",
-			})
-		default:
-			c.JSON(http.StatusInternalServerError, ErrorResponse{
-				Message: err.Error(),
-			})
-		}
-	}
-}
-
-func makeGetUserIDByEmail(svc domain.AuthService) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		var header AuthorizationHeader
-		if err := c.ShouldBindHeader(&header); err != nil {
+		if err := c.BindQuery(&request); err != nil {
 			c.JSON(http.StatusUnauthorized, ErrorResponse{
 				Message: err.Error(),
 			})
@@ -175,7 +59,7 @@ func makeGetUserIDByEmail(svc domain.AuthService) gin.HandlerFunc {
 			return
 		}
 
-		_, err := svc.Authenticate(c, header.AccessToken)
+		userID, err := authSvc.Authenticate(c, request.AccessToken)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized, ErrorResponse{
 				Message: err.Error(),
@@ -184,16 +68,7 @@ func makeGetUserIDByEmail(svc domain.AuthService) gin.HandlerFunc {
 			return
 		}
 
-		var request GetUserIDByEmailRequest
-		if err = c.Bind(&request); err != nil {
-			c.JSON(http.StatusBadRequest, ErrorResponse{
-				Message: err.Error(),
-			})
-
-			return
-		}
-
-		userID, err := svc.GetUserIDByEmail(c, request.Email)
+		conn, _, _, err := ws.UpgradeHTTP(c.Request, c.Writer)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, ErrorResponse{
 				Message: err.Error(),
@@ -202,20 +77,25 @@ func makeGetUserIDByEmail(svc domain.AuthService) gin.HandlerFunc {
 			return
 		}
 
-		c.JSON(http.StatusOK, GetUserIDByEmailResponse{
-			UserID: userID,
-		})
+		wsSvc.EstablishConn(c, userID, conn)
 	}
 }
 
 type ProfileEndpoints struct {
-	Search *SearchEndpoints
+	SearchByAnthroponym gin.HandlerFunc
 }
 
-type SearchEndpoints struct {
-	GetByAnthroponym gin.HandlerFunc
-}
-
+// SearchProfileByAnthroponym godoc
+// @Summary Search user's by some variation of name and surname.
+// @Description Search user's by some variation of name and surname.
+// @Tags Profile
+// @Security ApiKeyAuth
+// @Accept  json
+// @Produce json
+// @Param payload body SearchProfileByAnthroponymRequest true "Search payload"
+// @Success 200 {object} QuestionnairesResponse
+// @Failure 400 {object} ErrorResponse
+// @Router /social/profile/search-by-anthroponym [post].
 func makeSearchProfileByAnthroponym(authSvc domain.AuthService, profileSvc domain.ProfileService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var header AuthorizationHeader
@@ -276,19 +156,26 @@ func makeSearchProfileByAnthroponym(authSvc domain.AuthService, profileSvc domai
 	}
 }
 
-type SocialEndpoints struct {
-	CreateFriendship                  gin.HandlerFunc
-	ConfirmFriendship                 gin.HandlerFunc
-	RejectFriendship                  gin.HandlerFunc
-	BreakFriendship                   gin.HandlerFunc
-	GetFriends                        gin.HandlerFunc
-	GetFollowers                      gin.HandlerFunc
-	GetNews                           gin.HandlerFunc
-	CreateNews                        gin.HandlerFunc
-	GetAllQuestionnaires              gin.HandlerFunc
-	GetQuestionnairesByNameAndSurname gin.HandlerFunc
+type FriendshipEndpoints struct {
+	Create       gin.HandlerFunc
+	Confirm      gin.HandlerFunc
+	Reject       gin.HandlerFunc
+	SplitUp      gin.HandlerFunc
+	GetFriends   gin.HandlerFunc
+	GetFollowers gin.HandlerFunc
 }
 
+// CreateFriendship godoc
+// @Summary Create friendship between two users.
+// @Description Create friendship between two users.
+// @Tags Friendship
+// @Security ApiKeyAuth
+// @Accept  json
+// @Produce json
+// @Param payload body FriendshipRequest true "Friends' id"
+// @Success 200 {object} EmptyResponse
+// @Failure 400 {object} ErrorResponse
+// @Router /friendship/create [post].
 func makeCreateFriendshipEndpoint(authSvc domain.AuthService, socialSvc domain.SocialService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var header AuthorizationHeader
@@ -330,6 +217,17 @@ func makeCreateFriendshipEndpoint(authSvc domain.AuthService, socialSvc domain.S
 	}
 }
 
+// ConfirmFriendship godoc
+// @Summary Confirming friendship between two users.
+// @Description Confirming friendship between two users.
+// @Tags Friendship
+// @Security ApiKeyAuth
+// @Accept  json
+// @Produce json
+// @Param payload body FriendshipRequest true "Friends' id"
+// @Success 200 {object} EmptyResponse
+// @Failure 400 {object} ErrorResponse
+// @Router /friendship/confirm [post].
 func makeConfirmFriendshipEndpoint(authSvc domain.AuthService, socialSvc domain.SocialService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var header AuthorizationHeader
@@ -371,6 +269,17 @@ func makeConfirmFriendshipEndpoint(authSvc domain.AuthService, socialSvc domain.
 	}
 }
 
+// RejectFriendship godoc
+// @Summary Rejecting friendship between two users.
+// @Description Rejecting friendship between two users.
+// @Tags Friendship
+// @Security ApiKeyAuth
+// @Accept  json
+// @Produce json
+// @Param payload body FriendshipRequest true "Friends' id"
+// @Success 200 {object} EmptyResponse
+// @Failure 400 {object} ErrorResponse
+// @Router /friendship/reject [post].
 func makeRejectFriendshipEndpoint(authSvc domain.AuthService, socialSvc domain.SocialService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var header AuthorizationHeader
@@ -412,7 +321,18 @@ func makeRejectFriendshipEndpoint(authSvc domain.AuthService, socialSvc domain.S
 	}
 }
 
-func makeBreakFriendshipEndpoint(authSvc domain.AuthService, socialSvc domain.SocialService) gin.HandlerFunc {
+// SplitUpFriendship godoc
+// @Summary Splitting up friendship between two users.
+// @Description Splitting up friendship between two users.
+// @Tags Friendship
+// @Security ApiKeyAuth
+// @Accept  json
+// @Produce json
+// @Param payload body FriendshipRequest true "Friends' id"
+// @Success 200 {object} EmptyResponse
+// @Failure 400 {object} ErrorResponse
+// @Router /friendship/split-up [post].
+func makeSplitUpFriendshipEndpoint(authSvc domain.AuthService, socialSvc domain.SocialService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var header AuthorizationHeader
 		if err := c.ShouldBindHeader(&header); err != nil {
@@ -453,6 +373,16 @@ func makeBreakFriendshipEndpoint(authSvc domain.AuthService, socialSvc domain.So
 	}
 }
 
+// GetFriends godoc
+// @Summary Retrieving user's friends.
+// @Description Retrieving user's friends.
+// @Tags Friendship
+// @Security ApiKeyAuth
+// @Accept  json
+// @Produce json
+// @Success 200 {object} GetFriendsResponse
+// @Failure 400 {object} ErrorResponse
+// @Router /friendship/get-friends [get].
 func makeGetFriendsEndpoint(authSvc domain.AuthService, socialSvc domain.SocialService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var header AuthorizationHeader
@@ -486,6 +416,16 @@ func makeGetFriendsEndpoint(authSvc domain.AuthService, socialSvc domain.SocialS
 	}
 }
 
+// GetFollowers godoc
+// @Summary Retrieving user's followers.
+// @Description Retrieving user's followers.
+// @Tags Friendship
+// @Security ApiKeyAuth
+// @Accept  json
+// @Produce json
+// @Success 200 {object} GetFollowersResponse
+// @Failure 400 {object} ErrorResponse
+// @Router /friendship/get-followers [get].
 func makeGetFollowersEndpoint(authSvc domain.AuthService, socialSvc domain.SocialService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var header AuthorizationHeader
@@ -519,6 +459,20 @@ func makeGetFollowersEndpoint(authSvc domain.AuthService, socialSvc domain.Socia
 	}
 }
 
+type NewsEndpoints struct {
+	GetNews gin.HandlerFunc
+}
+
+// GetNews godoc
+// @Summary Retrieving user's news.
+// @Description Retrieving user's news.
+// @Tags News
+// @Security ApiKeyAuth
+// @Accept  json
+// @Produce json
+// @Success 200 {object} GetNewsResponse
+// @Failure 400 {object} ErrorResponse
+// @Router /news/get-news [get].
 func makeGetNewsEndpoint(authSvc domain.AuthService, socialSvc domain.SocialService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var header AuthorizationHeader
@@ -575,456 +529,5 @@ func makeGetNewsEndpoint(authSvc domain.AuthService, socialSvc domain.SocialServ
 			News:  news,
 			Count: count,
 		})
-	}
-}
-
-func makeCreateNewsEndpoint(authSvc domain.AuthService, socialSvc domain.SocialService) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		var header AuthorizationHeader
-		if err := c.ShouldBindHeader(&header); err != nil {
-			c.JSON(http.StatusUnauthorized, ErrorResponse{
-				Message: err.Error(),
-			})
-
-			return
-		}
-
-		var request CreateNewsRequest
-		if err := c.Bind(&request); err != nil {
-			c.JSON(http.StatusBadRequest, ErrorResponse{
-				Message: err.Error(),
-			})
-
-			return
-		}
-
-		userID, err := authSvc.Authenticate(c, header.AccessToken)
-		if err != nil {
-			c.JSON(http.StatusUnauthorized, ErrorResponse{
-				Message: err.Error(),
-			})
-
-			return
-		}
-
-		if err = socialSvc.PublishNews(c, userID, request.News); err != nil {
-			c.JSON(http.StatusInternalServerError, ErrorResponse{
-				Message: err.Error(),
-			})
-
-			return
-		}
-
-		c.JSON(http.StatusOK, EmptyResponse{})
-	}
-}
-
-func makeGetAllQuestionnairesEndpoint(authSvc domain.AuthService, socialSvc domain.SocialService) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		var header AuthorizationHeader
-		if err := c.ShouldBindHeader(&header); err != nil {
-			c.JSON(http.StatusUnauthorized, ErrorResponse{
-				Message: err.Error(),
-			})
-
-			return
-		}
-
-		var request GetAllQuestionnairesRequest
-		if err := c.Bind(&request); err != nil {
-			c.JSON(http.StatusBadRequest, ErrorResponse{
-				Message: err.Error(),
-			})
-
-			return
-		}
-
-		userID, err := authSvc.Authenticate(c, header.AccessToken)
-		if err != nil {
-			c.JSON(http.StatusUnauthorized, ErrorResponse{
-				Message: err.Error(),
-			})
-
-			return
-		}
-
-		quest, count, err := socialSvc.GetQuestionnaires(c, userID, *request.Limit, request.Offset)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, ErrorResponse{
-				Message: err.Error(),
-			})
-
-			return
-		}
-
-		c.JSON(http.StatusOK, QuestionnairesResponse{
-			Questionnaires: quest,
-			Count:          count,
-		})
-	}
-}
-
-func makeGetQuestionnairesByNameAndSurnameEndpoint(authSvc domain.AuthService, socialSvc domain.SocialService) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		var header AuthorizationHeader
-		if err := c.ShouldBindHeader(&header); err != nil {
-			c.JSON(http.StatusUnauthorized, ErrorResponse{
-				Message: err.Error(),
-			})
-
-			return
-		}
-
-		var request GetQuestionnairesByNameAndSurnameRequest
-		if err := c.BindQuery(&request); err != nil {
-			c.JSON(http.StatusBadRequest, ErrorResponse{
-				Message: err.Error(),
-			})
-
-			return
-		}
-
-		if _, err := authSvc.Authenticate(c, header.AccessToken); err != nil {
-			c.JSON(http.StatusUnauthorized, ErrorResponse{
-				Message: err.Error(),
-			})
-
-			return
-		}
-
-		quest, err := socialSvc.GetQuestionnairesByNameAndSurname(c, request.Prefix)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, ErrorResponse{
-				Message: err.Error(),
-			})
-
-			return
-		}
-
-		c.JSON(http.StatusOK, QuestionnairesResponse{
-			Questionnaires: quest,
-			Count:          len(quest),
-		})
-	}
-}
-
-type MessengerEndpoints struct {
-	CreateChat  gin.HandlerFunc
-	GetChat     gin.HandlerFunc
-	DeleteChats gin.HandlerFunc
-	GetChats    gin.HandlerFunc
-	GetMessages gin.HandlerFunc
-	SendMessage gin.HandlerFunc
-}
-
-func makeCreateChatEndpoint(authSvc domain.AuthService, messSvc domain.MessengerService) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		var header AuthorizationHeader
-		if err := c.ShouldBindHeader(&header); err != nil {
-			c.JSON(http.StatusUnauthorized, ErrorResponse{
-				Message: err.Error(),
-			})
-
-			return
-		}
-
-		userID, err := authSvc.Authenticate(c, header.AccessToken)
-		if err != nil {
-			c.JSON(http.StatusUnauthorized, ErrorResponse{
-				Message: err.Error(),
-			})
-
-			return
-		}
-
-		var request CreateChatRequest
-		if err = c.Bind(&request); err != nil {
-			c.JSON(http.StatusBadRequest, ErrorResponse{
-				Message: err.Error(),
-			})
-
-			return
-		}
-
-		chatID, err := messSvc.CreateChat(c, userID, request.CompanionID)
-		if err != nil {
-			c.JSON(http.StatusBadRequest, ErrorResponse{
-				Message: err.Error(),
-			})
-
-			return
-		}
-
-		c.JSON(http.StatusOK, CreateChatResponse{
-			ChatID: chatID,
-		})
-	}
-}
-
-func makeGetChatEndpoint(authSvc domain.AuthService, messSvc domain.MessengerService) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		var header AuthorizationHeader
-		if err := c.ShouldBindHeader(&header); err != nil {
-			c.JSON(http.StatusUnauthorized, ErrorResponse{
-				Message: err.Error(),
-			})
-
-			return
-		}
-
-		userID, err := authSvc.Authenticate(c, header.AccessToken)
-		if err != nil {
-			c.JSON(http.StatusUnauthorized, ErrorResponse{
-				Message: err.Error(),
-			})
-
-			return
-		}
-
-		var request GetChatRequest
-		if err = c.BindQuery(&request); err != nil {
-			c.JSON(http.StatusBadRequest, ErrorResponse{
-				Message: err.Error(),
-			})
-
-			return
-		}
-
-		chat, err := messSvc.GetChat(c, userID, request.CompanionID)
-		if err != nil {
-			c.JSON(http.StatusBadRequest, ErrorResponse{
-				Message: err.Error(),
-			})
-
-			return
-		}
-
-		c.JSON(http.StatusOK, GetChatResponse{ID: chat.ID, CreateTime: chat.CreateTime})
-	}
-}
-
-func makeDeleteChatsEndpoint(authSvc domain.AuthService, messSvc domain.MessengerService) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		var header AuthorizationHeader
-		if err := c.ShouldBindHeader(&header); err != nil {
-			c.JSON(http.StatusUnauthorized, ErrorResponse{
-				Message: err.Error(),
-			})
-
-			return
-		}
-
-		_, err := authSvc.Authenticate(c, header.AccessToken)
-		if err != nil {
-			c.JSON(http.StatusUnauthorized, ErrorResponse{
-				Message: err.Error(),
-			})
-
-			return
-		}
-	}
-}
-
-func makeGetChatsEndpoint(authSvc domain.AuthService, messSvc domain.MessengerService) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		var header AuthorizationHeader
-		if err := c.ShouldBindHeader(&header); err != nil {
-			c.JSON(http.StatusUnauthorized, ErrorResponse{
-				Message: err.Error(),
-			})
-
-			return
-		}
-
-		userID, err := authSvc.Authenticate(c, header.AccessToken)
-		if err != nil {
-			c.JSON(http.StatusUnauthorized, ErrorResponse{
-				Message: err.Error(),
-			})
-
-			return
-		}
-
-		var request GetChatsRequest
-		if err = c.BindQuery(&request); err != nil {
-			c.JSON(http.StatusBadRequest, ErrorResponse{
-				Message: err.Error(),
-			})
-
-			return
-		}
-
-		const (
-			defaultLimit  = 10
-			defaultOffset = 0
-		)
-
-		if request.Limit == nil {
-			request.Limit = new(int)
-			*request.Limit = defaultLimit
-		}
-		if request.Offset == nil {
-			request.Offset = new(int)
-			*request.Offset = defaultOffset
-		}
-
-		chats, total, err := messSvc.GetChats(c, userID, *request.Limit, *request.Offset)
-		if err != nil {
-			c.JSON(http.StatusBadRequest, ErrorResponse{
-				Message: err.Error(),
-			})
-
-			return
-		}
-
-		c.JSON(http.StatusOK, GetChatsResponse{
-			Total:  total,
-			Limit:  request.Limit,
-			Offset: request.Offset,
-			Chats:  chats,
-		})
-	}
-}
-
-func makeGetMessagesEndpoint(authSvc domain.AuthService, messSvc domain.MessengerService) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		var header AuthorizationHeader
-		if err := c.ShouldBindHeader(&header); err != nil {
-			c.JSON(http.StatusUnauthorized, ErrorResponse{
-				Message: err.Error(),
-			})
-
-			return
-		}
-
-		userID, err := authSvc.Authenticate(c, header.AccessToken)
-		if err != nil {
-			c.JSON(http.StatusUnauthorized, ErrorResponse{
-				Message: err.Error(),
-			})
-
-			return
-		}
-
-		var request GetMessagesRequest
-		if err = c.BindQuery(&request); err != nil {
-			c.JSON(http.StatusBadRequest, ErrorResponse{
-				Message: err.Error(),
-			})
-
-			return
-		}
-
-		const (
-			defaultLimit  = 10
-			defaultOffset = 0
-		)
-
-		if request.Limit == nil {
-			request.Limit = new(int)
-			*request.Limit = defaultLimit
-		}
-		if request.Offset == nil {
-			request.Offset = new(int)
-			*request.Offset = defaultOffset
-		}
-
-		messages, total, err := messSvc.GetMessages(c, userID, request.ChatID, *request.Limit, *request.Offset)
-		switch err {
-		case nil:
-			c.JSON(http.StatusOK, GetMessagesResponse{
-				Total:    total,
-				Limit:    request.Limit,
-				Offset:   request.Offset,
-				Messages: messages,
-			})
-		case sql.ErrNoRows:
-			c.JSON(http.StatusNotFound, ErrorResponse{
-				Message: fmt.Sprintf("chat id [%s] not found", request.ChatID),
-			})
-		default:
-			c.JSON(http.StatusBadRequest, ErrorResponse{
-				Message: err.Error(),
-			})
-		}
-	}
-}
-
-func makeSendMessageEndpoint(authSvc domain.AuthService, messSvc domain.MessengerService) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		var header AuthorizationHeader
-		if err := c.ShouldBindHeader(&header); err != nil {
-			c.JSON(http.StatusUnauthorized, ErrorResponse{
-				Message: err.Error(),
-			})
-
-			return
-		}
-
-		userID, err := authSvc.Authenticate(c, header.AccessToken)
-		if err != nil {
-			c.JSON(http.StatusUnauthorized, ErrorResponse{
-				Message: err.Error(),
-			})
-
-			return
-		}
-
-		var request SendMessagesRequest
-		if err = c.Bind(&request); err != nil {
-			c.JSON(http.StatusBadRequest, ErrorResponse{
-				Message: err.Error(),
-			})
-
-			return
-		}
-
-		if err = messSvc.SendMessages(c, userID, request.ChatID, request.Messages); err != nil {
-			c.JSON(http.StatusBadRequest, ErrorResponse{
-				Message: err.Error(),
-			})
-
-			return
-		}
-
-		c.JSON(http.StatusOK, EmptyResponse{})
-	}
-}
-
-type WsEndpoints struct {
-	Connect gin.HandlerFunc
-}
-
-func makeWsConnectEndpoint(authSvc domain.AuthService, wsSvc domain.WSService) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		var request WSRequest
-
-		if err := c.BindQuery(&request); err != nil {
-			c.JSON(http.StatusUnauthorized, ErrorResponse{
-				Message: err.Error(),
-			})
-
-			return
-		}
-
-		userID, err := authSvc.Authenticate(c, request.AccessToken)
-		if err != nil {
-			c.JSON(http.StatusUnauthorized, ErrorResponse{
-				Message: err.Error(),
-			})
-
-			return
-		}
-
-		conn, _, _, err := ws.UpgradeHTTP(c.Request, c.Writer)
-		if err != nil {
-			c.JSON(http.StatusBadRequest, ErrorResponse{
-				Message: err.Error(),
-			})
-
-			return
-		}
-
-		wsSvc.EstablishConn(c, userID, conn)
 	}
 }

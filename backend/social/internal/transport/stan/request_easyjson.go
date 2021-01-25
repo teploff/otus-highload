@@ -18,7 +18,7 @@ var (
 	_ easyjson.Marshaler
 )
 
-func easyjson3c9d2b01DecodeSocialNetworkInternalTransportStan(in *jlexer.Lexer, out *NewsPersistRequest) {
+func easyjson3c9d2b01DecodeSocialInternalTransportStan(in *jlexer.Lexer, out *NewsPersistRequest) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -63,7 +63,7 @@ func easyjson3c9d2b01DecodeSocialNetworkInternalTransportStan(in *jlexer.Lexer, 
 						if v1 == nil {
 							v1 = new(domain.News)
 						}
-						easyjson3c9d2b01DecodeSocialNetworkInternalDomain(in, v1)
+						(*v1).UnmarshalEasyJSON(in)
 					}
 					out.News = append(out.News, v1)
 					in.WantComma()
@@ -80,7 +80,7 @@ func easyjson3c9d2b01DecodeSocialNetworkInternalTransportStan(in *jlexer.Lexer, 
 		in.Consumed()
 	}
 }
-func easyjson3c9d2b01EncodeSocialNetworkInternalTransportStan(out *jwriter.Writer, in NewsPersistRequest) {
+func easyjson3c9d2b01EncodeSocialInternalTransportStan(out *jwriter.Writer, in NewsPersistRequest) {
 	out.RawByte('{')
 	first := true
 	_ = first
@@ -103,7 +103,7 @@ func easyjson3c9d2b01EncodeSocialNetworkInternalTransportStan(out *jwriter.Write
 				if v3 == nil {
 					out.RawString("null")
 				} else {
-					easyjson3c9d2b01EncodeSocialNetworkInternalDomain(out, *v3)
+					(*v3).MarshalEasyJSON(out)
 				}
 			}
 			out.RawByte(']')
@@ -115,156 +115,27 @@ func easyjson3c9d2b01EncodeSocialNetworkInternalTransportStan(out *jwriter.Write
 // MarshalJSON supports json.Marshaler interface
 func (v NewsPersistRequest) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
-	easyjson3c9d2b01EncodeSocialNetworkInternalTransportStan(&w, v)
+	easyjson3c9d2b01EncodeSocialInternalTransportStan(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalEasyJSON supports easyjson.Marshaler interface
 func (v NewsPersistRequest) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjson3c9d2b01EncodeSocialNetworkInternalTransportStan(w, v)
+	easyjson3c9d2b01EncodeSocialInternalTransportStan(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
 func (v *NewsPersistRequest) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
-	easyjson3c9d2b01DecodeSocialNetworkInternalTransportStan(&r, v)
+	easyjson3c9d2b01DecodeSocialInternalTransportStan(&r, v)
 	return r.Error()
 }
 
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
 func (v *NewsPersistRequest) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjson3c9d2b01DecodeSocialNetworkInternalTransportStan(l, v)
+	easyjson3c9d2b01DecodeSocialInternalTransportStan(l, v)
 }
-func easyjson3c9d2b01DecodeSocialNetworkInternalDomain(in *jlexer.Lexer, out *domain.News) {
-	isTopLevel := in.IsStart()
-	if in.IsNull() {
-		if isTopLevel {
-			in.Consumed()
-		}
-		in.Skip()
-		return
-	}
-	in.Delim('{')
-	for !in.IsDelim('}') {
-		key := in.UnsafeFieldName(false)
-		in.WantColon()
-		if in.IsNull() {
-			in.Skip()
-			in.WantComma()
-			continue
-		}
-		switch key {
-		case "id":
-			out.ID = string(in.String())
-		case "owner":
-			easyjson3c9d2b01Decode(in, &out.Owner)
-		case "content":
-			out.Content = string(in.String())
-		case "create_time":
-			if data := in.Raw(); in.Ok() {
-				in.AddError((out.CreateTime).UnmarshalJSON(data))
-			}
-		default:
-			in.SkipRecursive()
-		}
-		in.WantComma()
-	}
-	in.Delim('}')
-	if isTopLevel {
-		in.Consumed()
-	}
-}
-func easyjson3c9d2b01EncodeSocialNetworkInternalDomain(out *jwriter.Writer, in domain.News) {
-	out.RawByte('{')
-	first := true
-	_ = first
-	{
-		const prefix string = ",\"id\":"
-		out.RawString(prefix[1:])
-		out.String(string(in.ID))
-	}
-	{
-		const prefix string = ",\"owner\":"
-		out.RawString(prefix)
-		easyjson3c9d2b01Encode(out, in.Owner)
-	}
-	{
-		const prefix string = ",\"content\":"
-		out.RawString(prefix)
-		out.String(string(in.Content))
-	}
-	{
-		const prefix string = ",\"create_time\":"
-		out.RawString(prefix)
-		out.Raw((in.CreateTime).MarshalJSON())
-	}
-	out.RawByte('}')
-}
-func easyjson3c9d2b01Decode(in *jlexer.Lexer, out *struct {
-	Name    string `json:"name"`
-	Surname string `json:"surname"`
-	Sex     string `json:"sex"`
-}) {
-	isTopLevel := in.IsStart()
-	if in.IsNull() {
-		if isTopLevel {
-			in.Consumed()
-		}
-		in.Skip()
-		return
-	}
-	in.Delim('{')
-	for !in.IsDelim('}') {
-		key := in.UnsafeFieldName(false)
-		in.WantColon()
-		if in.IsNull() {
-			in.Skip()
-			in.WantComma()
-			continue
-		}
-		switch key {
-		case "name":
-			out.Name = string(in.String())
-		case "surname":
-			out.Surname = string(in.String())
-		case "sex":
-			out.Sex = string(in.String())
-		default:
-			in.SkipRecursive()
-		}
-		in.WantComma()
-	}
-	in.Delim('}')
-	if isTopLevel {
-		in.Consumed()
-	}
-}
-func easyjson3c9d2b01Encode(out *jwriter.Writer, in struct {
-	Name    string `json:"name"`
-	Surname string `json:"surname"`
-	Sex     string `json:"sex"`
-}) {
-	out.RawByte('{')
-	first := true
-	_ = first
-	{
-		const prefix string = ",\"name\":"
-		out.RawString(prefix[1:])
-		out.String(string(in.Name))
-	}
-	{
-		const prefix string = ",\"surname\":"
-		out.RawString(prefix)
-		out.String(string(in.Surname))
-	}
-	{
-		const prefix string = ",\"sex\":"
-		out.RawString(prefix)
-		out.String(string(in.Sex))
-	}
-	out.RawByte('}')
-}
-func easyjson3c9d2b01DecodeSocialNetworkInternalTransportStan1(in *jlexer.Lexer, out *FriendsActionRequest) {
+func easyjson3c9d2b01DecodeSocialInternalTransportStan1(in *jlexer.Lexer, out *FriendsActionRequest) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -320,7 +191,7 @@ func easyjson3c9d2b01DecodeSocialNetworkInternalTransportStan1(in *jlexer.Lexer,
 		in.Consumed()
 	}
 }
-func easyjson3c9d2b01EncodeSocialNetworkInternalTransportStan1(out *jwriter.Writer, in FriendsActionRequest) {
+func easyjson3c9d2b01EncodeSocialInternalTransportStan1(out *jwriter.Writer, in FriendsActionRequest) {
 	out.RawByte('{')
 	first := true
 	_ = first
@@ -356,23 +227,23 @@ func easyjson3c9d2b01EncodeSocialNetworkInternalTransportStan1(out *jwriter.Writ
 // MarshalJSON supports json.Marshaler interface
 func (v FriendsActionRequest) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
-	easyjson3c9d2b01EncodeSocialNetworkInternalTransportStan1(&w, v)
+	easyjson3c9d2b01EncodeSocialInternalTransportStan1(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalEasyJSON supports easyjson.Marshaler interface
 func (v FriendsActionRequest) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjson3c9d2b01EncodeSocialNetworkInternalTransportStan1(w, v)
+	easyjson3c9d2b01EncodeSocialInternalTransportStan1(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
 func (v *FriendsActionRequest) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
-	easyjson3c9d2b01DecodeSocialNetworkInternalTransportStan1(&r, v)
+	easyjson3c9d2b01DecodeSocialInternalTransportStan1(&r, v)
 	return r.Error()
 }
 
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
 func (v *FriendsActionRequest) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjson3c9d2b01DecodeSocialNetworkInternalTransportStan1(l, v)
+	easyjson3c9d2b01DecodeSocialInternalTransportStan1(l, v)
 }

@@ -6,11 +6,7 @@ import (
 )
 
 type AuthService interface {
-	SignUp(ctx context.Context, user *User) error
-	SignIn(ctx context.Context, credentials *Credentials) (*TokenPair, error)
-	RefreshToken(ctx context.Context, token string) (*TokenPair, error)
 	Authenticate(ctx context.Context, token string) (string, error)
-	GetUserIDByEmail(ctx context.Context, email string) (string, error)
 }
 
 type ProfileService interface {
@@ -26,8 +22,6 @@ type SocialService interface {
 	GetFollowers(ctx context.Context, userID string) ([]*Questionnaire, error)
 	RetrieveNews(ctx context.Context, userID string, limit, offset int) ([]*News, int, error)
 	PublishNews(ctx context.Context, userID string, newsContent []string) error
-	GetQuestionnaires(ctx context.Context, userID string, limit, offset int) ([]*Questionnaire, int, error)
-	GetQuestionnairesByNameAndSurname(ctx context.Context, prefix string) ([]*Questionnaire, error)
 }
 
 type CacheService interface {
@@ -40,12 +34,4 @@ type WSService interface {
 	EstablishConn(ctx context.Context, userID string, coon net.Conn)
 	SendNews(ctx context.Context, ownerID string, news []*News) error
 	Close()
-}
-
-type MessengerService interface {
-	CreateChat(ctx context.Context, masterID, slaveID string) (string, error)
-	GetChat(ctx context.Context, masterID, slaveID string) (*Chat, error)
-	SendMessages(ctx context.Context, userID, chatID string, messages []*ShortMessage) error
-	GetChats(ctx context.Context, userID string, limit, offset int) ([]*Chat, int, error)
-	GetMessages(ctx context.Context, userID, chatID string, limit, offset int) ([]*Message, int, error)
 }

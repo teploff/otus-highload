@@ -11,11 +11,19 @@ import (
 
 type Config struct {
 	Addr    string        `mapstructure:"addr"`
+	Auth    AuthConfig    `mapstructure:"auth"`
 	Storage StorageConfig `mapstructure:"storage"`
 	Cache   []CacheConfig `mapstructure:"cache"`
 	Stan    StanConfig    `mapstructure:"stan"`
 	JWT     JWTConfig     `mapstructure:"jwt"`
 	Logger  LoggerConfig  `mapstructure:"logger"`
+}
+
+// AuthConfig authorization service address.
+//
+// Addr - socket address (host + port).
+type AuthConfig struct {
+	Addr string `mapstructure:"addr"`
 }
 
 type StorageConfig struct {

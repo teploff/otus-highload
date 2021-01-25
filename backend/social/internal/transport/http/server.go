@@ -1,36 +1,37 @@
 package http
 
 import (
-	"github.com/gin-gonic/gin"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
 )
 
 func NewHTTPServer(addr string, endpoints *Endpoints) *http.Server {
 	router := gin.Default()
 
-	profileGroup := router.Group("/profile")
-	{
-		profileSearchGroup := profileGroup.Group("/search")
-		{
-			profileSearchGroup.GET("/anthroponym", endpoints.Profile.Search.GetByAnthroponym)
-		}
-	}
-
 	socialGroup := router.Group("/social")
 	{
-		socialGroup.GET("/ws", endpoints.Ws.Connect)
+		socialGroup.GET("/ws", endpoints.WS)
+
+		profileGroup := socialGroup.Group("/profile")
+		{
+			profileGroup.GET("/search-by-anthroponym", endpoints.Profile.SearchByAnthroponym)
+		}
 
 		friendshipGroup := socialGroup.Group("/friendship")
 		{
-			friendshipGroup.POST("/create", endpoints.Social.CreateFriendship)
-			friendshipGroup.POST("/confirm", endpoints.Social.ConfirmFriendship)
-			friendshipGroup.POST("/reject", endpoints.Social.RejectFriendship)
-			friendshipGroup.POST("/split-up", endpoints.Social.BreakFriendship)
+			friendshipGroup.POST("/create", endpoints.Friendship.Create)
+			friendshipGroup.POST("/confirm", endpoints.Friendship.Confirm)
+			friendshipGroup.POST("/reject", endpoints.Friendship.Reject)
+			friendshipGroup.POST("/split-up", endpoints.Friendship.SplitUp)
+			friendshipGroup.GET("/get-friends", endpoints.Friendship.GetFriends)
+			friendshipGroup.GET("/get-followers", endpoints.Friendship.GetFollowers)
 		}
 
-		socialGroup.GET("/friends", endpoints.Social.GetFriends)
-		socialGroup.GET("/followers", endpoints.Social.GetFollowers)
-		socialGroup.GET("/news", endpoints.Social.GetNews)
+		newsGroup := socialGroup.Group("/news")
+		{
+			newsGroup.GET("/get-news", endpoints.News.GetNews)
+		}
 	}
 
 	return &http.Server{

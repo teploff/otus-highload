@@ -1,0 +1,346 @@
+basePath: /
+definitions:
+  domain.News:
+    properties:
+      content:
+        type: string
+      create_time:
+        type: string
+      owner:
+        properties:
+          name:
+            type: string
+          sex:
+            type: string
+          surname:
+            type: string
+        type: object
+    type: object
+  domain.Questionnaire:
+    properties:
+      birthday:
+        type: string
+      city:
+        type: string
+      email:
+        type: string
+      friendship_status:
+        type: string
+      id:
+        type: string
+      interests:
+        type: string
+      name:
+        type: string
+      sex:
+        type: string
+      surname:
+        type: string
+    type: object
+  http.EmptyResponse:
+    type: object
+  http.ErrorResponse:
+    properties:
+      code:
+        type: integer
+      message:
+        type: string
+    type: object
+  http.FriendshipRequest:
+    properties:
+      friends_id:
+        items:
+          type: string
+        type: array
+    required:
+    - friends_id
+    type: object
+  http.GetFollowersResponse:
+    properties:
+      followers:
+        items:
+          $ref: '#/definitions/domain.Questionnaire'
+        type: array
+    type: object
+  http.GetFriendsResponse:
+    properties:
+      friends:
+        items:
+          $ref: '#/definitions/domain.Questionnaire'
+        type: array
+    type: object
+  http.GetNewsResponse:
+    properties:
+      count:
+        type: integer
+      news:
+        items:
+          $ref: '#/definitions/domain.News'
+        type: array
+    type: object
+  http.QuestionnairesResponse:
+    properties:
+      count:
+        type: integer
+      questionnaires:
+        items:
+          $ref: '#/definitions/domain.Questionnaire'
+        type: array
+    type: object
+  http.SearchProfileByAnthroponymRequest:
+    properties:
+      anthroponym:
+        type: string
+      limit:
+        type: integer
+      offset:
+        type: integer
+    required:
+    - anthroponym
+    type: object
+host: localhost:10002
+info:
+  contact:
+    email: support@swagger.io
+    name: API Support
+    url: http://www.swagger.io/support
+  description: This is a sample server celler server.
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  termsOfService: http://swagger.io/terms/
+  title: Social API
+  version: "1.0"
+paths:
+  /friendship/confirm:
+    post:
+      consumes:
+      - application/json
+      description: Confirming friendship between two users.
+      parameters:
+      - description: Friends' id
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/http.FriendshipRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/http.EmptyResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/http.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Confirming friendship between two users.
+      tags:
+      - Friendship
+  /friendship/create:
+    post:
+      consumes:
+      - application/json
+      description: Create friendship between two users.
+      parameters:
+      - description: Friends' id
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/http.FriendshipRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/http.EmptyResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/http.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Create friendship between two users.
+      tags:
+      - Friendship
+  /friendship/get-followers:
+    get:
+      consumes:
+      - application/json
+      description: Retrieving user's followers.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/http.GetFollowersResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/http.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Retrieving user's followers.
+      tags:
+      - Friendship
+  /friendship/get-friends:
+    get:
+      consumes:
+      - application/json
+      description: Retrieving user's friends.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/http.GetFriendsResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/http.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Retrieving user's friends.
+      tags:
+      - Friendship
+  /friendship/reject:
+    post:
+      consumes:
+      - application/json
+      description: Rejecting friendship between two users.
+      parameters:
+      - description: Friends' id
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/http.FriendshipRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/http.EmptyResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/http.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Rejecting friendship between two users.
+      tags:
+      - Friendship
+  /friendship/split-up:
+    post:
+      consumes:
+      - application/json
+      description: Splitting up friendship between two users.
+      parameters:
+      - description: Friends' id
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/http.FriendshipRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/http.EmptyResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/http.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Splitting up friendship between two users.
+      tags:
+      - Friendship
+  /news/get-news:
+    get:
+      consumes:
+      - application/json
+      description: Retrieving user's news.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/http.GetNewsResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/http.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Retrieving user's news.
+      tags:
+      - News
+  /social/profile/search-by-anthroponym:
+    post:
+      consumes:
+      - application/json
+      description: Search user's by some variation of name and surname.
+      parameters:
+      - description: Search payload
+        in: body
+        name: payload
+        required: true
+        schema:
+          $ref: '#/definitions/http.SearchProfileByAnthroponymRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/http.QuestionnairesResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/http.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Search user's by some variation of name and surname.
+      tags:
+      - Profile
+  /social/ws:
+    get:
+      consumes:
+      - application/json
+      description: Websocket handshake endpoint.
+      parameters:
+      - description: User's Access-JWT
+        in: query
+        name: token
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/http.EmptyResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/http.ErrorResponse'
+      summary: Websocket handshake endpoint.
+securityDefinitions:
+  ApiKeyAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

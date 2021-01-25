@@ -1,5 +1,8 @@
 addr: ":9999"
 
+auth:
+  addr: "localhost:10001"
+
 storage:
   dsn: "user:password@tcp(127.0.0.1:3306)/social-network?parseTime=true"
   conn_max_lifetime: "3m"
