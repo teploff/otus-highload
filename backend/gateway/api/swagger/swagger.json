@@ -1,0 +1,909 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "description": "This is a sample server celler server.",
+    "title": "Auth API",
+    "termsOfService": "http://swagger.io/terms/",
+    "contact": {
+      "name": "API Support",
+      "url": "http://www.swagger.io/support",
+      "email": "support@swagger.io"
+    },
+    "license": {
+      "name": "Apache 2.0",
+      "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+    },
+    "version": "1.0"
+  },
+  "host": "localhost:10000",
+  "basePath": "/",
+  "paths": {
+    "/auth/authenticate": {
+      "post": {
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "description": "User's authentication by token in header.",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "auth"
+        ],
+        "summary": "User's authentication by token in header.",
+        "parameters": [
+          {
+            "description": "Authentication payload",
+            "name": "payload",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/http.AuthenticateRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/http.AuthenticateResponse"
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/http.EmptyResponse"
+            }
+          }
+        }
+      }
+    },
+    "/auth/sign-in": {
+      "post": {
+        "description": "Sign in user by credentials.",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "auth"
+        ],
+        "summary": "Sign in user by credentials.",
+        "parameters": [
+          {
+            "description": "Sign in payload",
+            "name": "payload",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/http.SignInRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/http.SignInResponse"
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/http.ErrorResponse"
+            }
+          }
+        }
+      }
+    },
+    "/auth/sign-up": {
+      "post": {
+        "description": "Sign up user by credentials.",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "auth"
+        ],
+        "summary": "Sign up user by credentials.",
+        "parameters": [
+          {
+            "description": "Sign up payload",
+            "name": "payload",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/http.SignUpRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/http.EmptyResponse"
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/http.ErrorResponse"
+            }
+          }
+        }
+      }
+    },
+    "/auth/token": {
+      "put": {
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "description": "Refresh expired token on new JWT pair.",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "auth"
+        ],
+        "summary": "Refresh expired token on new JWT pair.",
+        "parameters": [
+          {
+            "description": "JWT refresh token",
+            "name": "payload",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/http.RefreshTokenRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/http.SignInResponse"
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/http.ErrorResponse"
+            }
+          }
+        }
+      }
+    },
+    "/auth/user/get-by-email": {
+      "get": {
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "description": "Retrieving user's id by email.",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "auth"
+        ],
+        "summary": "Retrieving user's id by email.",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "User's Email",
+            "name": "email",
+            "in": "query",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/http.GetUserIDByEmailResponse"
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/http.ErrorResponse"
+            }
+          }
+        }
+      }
+    },
+    "/auth/user/get-id-by-token": {
+      "get": {
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "description": "Retrieving User's id by access token in header.",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "auth"
+        ],
+        "summary": "Retrieving User's id by access token in header.",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/http.GetUserIDByAccessTokenResponse"
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/http.EmptyResponse"
+            }
+          }
+        }
+      }
+    },
+    "/friendship/confirm": {
+      "post": {
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "description": "Confirming friendship between two users.",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Friendship"
+        ],
+        "summary": "Confirming friendship between two users.",
+        "operationId": "Mixin0",
+        "parameters": [
+          {
+            "description": "Friends' id",
+            "name": "payload",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/http.FriendshipRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/http.EmptyResponse"
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/http.ErrorResponse"
+            }
+          }
+        }
+      }
+    },
+    "/friendship/create": {
+      "post": {
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "description": "Create friendship between two users.",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Friendship"
+        ],
+        "summary": "Create friendship between two users.",
+        "operationId": "Mixin0",
+        "parameters": [
+          {
+            "description": "Friends' id",
+            "name": "payload",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/http.FriendshipRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/http.EmptyResponse"
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/http.ErrorResponse"
+            }
+          }
+        }
+      }
+    },
+    "/friendship/get-followers": {
+      "get": {
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "description": "Retrieving user's followers.",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Friendship"
+        ],
+        "summary": "Retrieving user's followers.",
+        "operationId": "Mixin0",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/http.GetFollowersResponse"
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/http.ErrorResponse"
+            }
+          }
+        }
+      }
+    },
+    "/friendship/get-friends": {
+      "get": {
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "description": "Retrieving user's friends.",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Friendship"
+        ],
+        "summary": "Retrieving user's friends.",
+        "operationId": "Mixin0",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/http.GetFriendsResponse"
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/http.ErrorResponse"
+            }
+          }
+        }
+      }
+    },
+    "/friendship/reject": {
+      "post": {
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "description": "Rejecting friendship between two users.",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Friendship"
+        ],
+        "summary": "Rejecting friendship between two users.",
+        "operationId": "Mixin0",
+        "parameters": [
+          {
+            "description": "Friends' id",
+            "name": "payload",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/http.FriendshipRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/http.EmptyResponse"
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/http.ErrorResponse"
+            }
+          }
+        }
+      }
+    },
+    "/friendship/split-up": {
+      "post": {
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "description": "Splitting up friendship between two users.",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Friendship"
+        ],
+        "summary": "Splitting up friendship between two users.",
+        "operationId": "Mixin0",
+        "parameters": [
+          {
+            "description": "Friends' id",
+            "name": "payload",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/http.FriendshipRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/http.EmptyResponse"
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/http.ErrorResponse"
+            }
+          }
+        }
+      }
+    },
+    "/news/get-news": {
+      "get": {
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "description": "Retrieving user's news.",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "News"
+        ],
+        "summary": "Retrieving user's news.",
+        "operationId": "Mixin0",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/http.GetNewsResponse"
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/http.ErrorResponse"
+            }
+          }
+        }
+      }
+    },
+    "/social/profile/search-by-anthroponym": {
+      "post": {
+        "security": [
+          {
+            "ApiKeyAuth": []
+          }
+        ],
+        "description": "Search user's by some variation of name and surname.",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Profile"
+        ],
+        "summary": "Search user's by some variation of name and surname.",
+        "operationId": "Mixin0",
+        "parameters": [
+          {
+            "description": "Search payload",
+            "name": "payload",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/http.SearchProfileByAnthroponymRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/http.QuestionnairesResponse"
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/http.ErrorResponse"
+            }
+          }
+        }
+      }
+    },
+    "/social/ws": {
+      "get": {
+        "description": "Websocket handshake endpoint.",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "summary": "Websocket handshake endpoint.",
+        "operationId": "Mixin0",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "User's Access-JWT",
+            "name": "token",
+            "in": "query",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "$ref": "#/definitions/http.EmptyResponse"
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/http.ErrorResponse"
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "domain.News": {
+      "type": "object",
+      "properties": {
+        "content": {
+          "type": "string"
+        },
+        "create_time": {
+          "type": "string"
+        },
+        "owner": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "sex": {
+              "type": "string"
+            },
+            "surname": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "domain.Questionnaire": {
+      "type": "object",
+      "properties": {
+        "birthday": {
+          "type": "string"
+        },
+        "city": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        },
+        "friendship_status": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "interests": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "sex": {
+          "type": "string"
+        },
+        "surname": {
+          "type": "string"
+        }
+      }
+    },
+    "http.AuthenticateRequest": {
+      "type": "object",
+      "properties": {
+        "resource": {
+          "type": "string"
+        }
+      }
+    },
+    "http.AuthenticateResponse": {
+      "type": "object",
+      "properties": {
+        "is_authenticated": {
+          "type": "boolean"
+        }
+      }
+    },
+    "http.EmptyResponse": {
+      "type": "object"
+    },
+    "http.ErrorResponse": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "integer"
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "http.FriendshipRequest": {
+      "type": "object",
+      "required": [
+        "friends_id"
+      ],
+      "properties": {
+        "friends_id": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "http.GetFollowersResponse": {
+      "type": "object",
+      "properties": {
+        "followers": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/domain.Questionnaire"
+          }
+        }
+      }
+    },
+    "http.GetFriendsResponse": {
+      "type": "object",
+      "properties": {
+        "friends": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/domain.Questionnaire"
+          }
+        }
+      }
+    },
+    "http.GetNewsResponse": {
+      "type": "object",
+      "properties": {
+        "count": {
+          "type": "integer"
+        },
+        "news": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/domain.News"
+          }
+        }
+      }
+    },
+    "http.GetUserIDByAccessTokenResponse": {
+      "type": "object",
+      "properties": {
+        "user_id": {
+          "type": "string"
+        }
+      }
+    },
+    "http.GetUserIDByEmailResponse": {
+      "type": "object",
+      "properties": {
+        "user_id": {
+          "type": "string"
+        }
+      }
+    },
+    "http.QuestionnairesResponse": {
+      "type": "object",
+      "properties": {
+        "count": {
+          "type": "integer"
+        },
+        "questionnaires": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/domain.Questionnaire"
+          }
+        }
+      }
+    },
+    "http.RefreshTokenRequest": {
+      "type": "object",
+      "required": [
+        "refresh_token"
+      ],
+      "properties": {
+        "refresh_token": {
+          "type": "string"
+        }
+      }
+    },
+    "http.SearchProfileByAnthroponymRequest": {
+      "type": "object",
+      "required": [
+        "anthroponym"
+      ],
+      "properties": {
+        "anthroponym": {
+          "type": "string"
+        },
+        "limit": {
+          "type": "integer"
+        },
+        "offset": {
+          "type": "integer"
+        }
+      }
+    },
+    "http.SignInRequest": {
+      "type": "object",
+      "required": [
+        "email",
+        "password"
+      ],
+      "properties": {
+        "email": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        }
+      }
+    },
+    "http.SignInResponse": {
+      "type": "object",
+      "properties": {
+        "access_token": {
+          "type": "string"
+        },
+        "refresh_token": {
+          "type": "string"
+        }
+      }
+    },
+    "http.SignUpRequest": {
+      "type": "object",
+      "required": [
+        "birthday",
+        "city",
+        "email",
+        "interests",
+        "name",
+        "password",
+        "sex",
+        "surname"
+      ],
+      "properties": {
+        "birthday": {
+          "type": "string"
+        },
+        "city": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        },
+        "interests": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        },
+        "sex": {
+          "type": "string"
+        },
+        "surname": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "securityDefinitions": {
+    "ApiKeyAuth": {
+      "type": "apiKey",
+      "name": "Authorization",
+      "in": "header"
+    }
+  }
+}

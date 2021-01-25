@@ -9,10 +9,10 @@ import (
 )
 
 type Endpoints struct {
-	cfg  *config.Config
-	Auth *AuthEndpoints
+	cfg    *config.Config
+	Auth   *AuthEndpoints
+	Social *SocialEndpoints
 	//Messenger *MessengerEndpoints
-	//Social    *SocialEndpoints
 }
 
 func MakeEndpoints(cfg *config.Config) *Endpoints {
@@ -24,12 +24,26 @@ func MakeEndpoints(cfg *config.Config) *Endpoints {
 			RefreshToken:     makeHTTPProxyEndpoint(cfg.Auth.Addr),
 			GetUserIDByEmail: makeHTTPProxyEndpoint(cfg.Auth.Addr),
 		},
+		Social: &SocialEndpoints{
+			WS: makeHTTPProxyEndpoint(cfg.Social.Addr),
+			Profile: &SocialProfileEndpoints{
+				SearchByAnthroponym: makeHTTPProxyEndpoint(cfg.Social.Addr),
+			},
+			Friendship: &SocialFriendshipEndpoints{
+				Create:       makeHTTPProxyEndpoint(cfg.Social.Addr),
+				Confirm:      makeHTTPProxyEndpoint(cfg.Social.Addr),
+				Reject:       makeHTTPProxyEndpoint(cfg.Social.Addr),
+				SplitUp:      makeHTTPProxyEndpoint(cfg.Social.Addr),
+				GetFriends:   makeHTTPProxyEndpoint(cfg.Social.Addr),
+				GetFollowers: makeHTTPProxyEndpoint(cfg.Social.Addr),
+			},
+			News: &NewsEndpoints{
+				GetNews: makeHTTPProxyEndpoint(cfg.Social.Addr),
+			},
+		},
 		//Messenger: &MessengerEndpoints{
 		//	Upload: makeUploadEndpoint(cfg.Messenger.Addr),
 		//	Get:    makeGetEndpoint(cfg.Messenger.Addr),
-		//},
-		//Social: &SocialEndpoints{
-		//	Calculate: makeCalculateEndpoint(cfg.Messenger.Addr),
 		//},
 	}
 }
@@ -39,6 +53,30 @@ type AuthEndpoints struct {
 	SignIn           gin.HandlerFunc
 	RefreshToken     gin.HandlerFunc
 	GetUserIDByEmail gin.HandlerFunc
+}
+
+type SocialProfileEndpoints struct {
+	SearchByAnthroponym gin.HandlerFunc
+}
+
+type SocialFriendshipEndpoints struct {
+	Create       gin.HandlerFunc
+	Confirm      gin.HandlerFunc
+	Reject       gin.HandlerFunc
+	SplitUp      gin.HandlerFunc
+	GetFriends   gin.HandlerFunc
+	GetFollowers gin.HandlerFunc
+}
+
+type SocialEndpoints struct {
+	WS         gin.HandlerFunc
+	Profile    *SocialProfileEndpoints
+	Friendship *SocialFriendshipEndpoints
+	News       *NewsEndpoints
+}
+
+type NewsEndpoints struct {
+	GetNews gin.HandlerFunc
 }
 
 func makeHTTPProxyEndpoint(targetHost string) gin.HandlerFunc {

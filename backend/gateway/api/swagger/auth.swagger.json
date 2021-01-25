@@ -18,6 +18,51 @@
     "host": "localhost:10001",
     "basePath": "/",
     "paths": {
+        "/auth/authenticate": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "User's authentication by token in header.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "User's authentication by token in header.",
+                "parameters": [
+                    {
+                        "description": "Authentication payload",
+                        "name": "payload",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/http.AuthenticateRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/http.AuthenticateResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/http.EmptyResponse"
+                        }
+                    }
+                }
+            }
+        },
         "/auth/sign-in": {
             "post": {
                 "description": "Sign in user by credentials.",
@@ -185,9 +230,59 @@
                     }
                 }
             }
+        },
+        "/auth/user/get-id-by-token": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieving User's id by access token in header.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "auth"
+                ],
+                "summary": "Retrieving User's id by access token in header.",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/http.GetUserIDByAccessTokenResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/http.EmptyResponse"
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
+        "http.AuthenticateRequest": {
+            "type": "object",
+            "properties": {
+                "resource": {
+                    "type": "string"
+                }
+            }
+        },
+        "http.AuthenticateResponse": {
+            "type": "object",
+            "properties": {
+                "is_authenticated": {
+                    "type": "boolean"
+                }
+            }
+        },
         "http.EmptyResponse": {
             "type": "object"
         },
@@ -198,6 +293,14 @@
                     "type": "integer"
                 },
                 "message": {
+                    "type": "string"
+                }
+            }
+        },
+        "http.GetUserIDByAccessTokenResponse": {
+            "type": "object",
+            "properties": {
+                "user_id": {
                     "type": "string"
                 }
             }

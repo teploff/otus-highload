@@ -23,6 +23,7 @@ func NewHTTPServer(addr string, endpoints *Endpoints) *http.Server {
 	swag.Register(swag.Name, &swagDoc{})
 
 	router.Use(cors.New(config))
+	router.Use(AuthenticateMiddleware(endpoints.cfg.Addr))
 
 	authGroup := router.Group("/auth")
 	{
@@ -33,6 +34,31 @@ func NewHTTPServer(addr string, endpoints *Endpoints) *http.Server {
 		profileGroup := authGroup.Group("/user")
 		{
 			profileGroup.GET("/get-by-email", endpoints.Auth.GetUserIDByEmail)
+		}
+	}
+
+	socialGroup := router.Group("/social")
+	{
+		socialGroup.GET("/ws", endpoints.Social.WS)
+
+		profileGroup := socialGroup.Group("/profile")
+		{
+			profileGroup.GET("/search-by-anthroponym", endpoints.Social.Profile.SearchByAnthroponym)
+		}
+
+		friendshipGroup := socialGroup.Group("/friendship")
+		{
+			friendshipGroup.POST("/create", endpoints.Social.Friendship.Create)
+			friendshipGroup.POST("/confirm", endpoints.Social.Friendship.Confirm)
+			friendshipGroup.POST("/reject", endpoints.Social.Friendship.Reject)
+			friendshipGroup.POST("/split-up", endpoints.Social.Friendship.SplitUp)
+			friendshipGroup.GET("/get-friends", endpoints.Social.Friendship.GetFriends)
+			friendshipGroup.GET("/get-followers", endpoints.Social.Friendship.GetFollowers)
+		}
+
+		newsGroup := socialGroup.Group("/news")
+		{
+			newsGroup.GET("/get-news", endpoints.Social.News.GetNews)
 		}
 	}
 
