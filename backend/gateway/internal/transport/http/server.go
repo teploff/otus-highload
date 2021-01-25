@@ -23,7 +23,7 @@ func NewHTTPServer(addr string, endpoints *Endpoints) *http.Server {
 	swag.Register(swag.Name, &swagDoc{})
 
 	router.Use(cors.New(config))
-	router.Use(AuthenticateMiddleware(endpoints.cfg.Addr))
+	router.Use(AuthenticateMiddleware(endpoints.cfg.Auth.Addr))
 
 	authGroup := router.Group("/auth")
 	{
