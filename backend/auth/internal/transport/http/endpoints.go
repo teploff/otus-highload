@@ -226,7 +226,7 @@ func makeAuthenticateEndpoint(svc domain.AuthService) gin.HandlerFunc {
 			return
 		}
 
-		if request.Resource == "/auth/sign-up" || request.Resource == "/auth/sing-in" {
+		if request.Resource == "/auth/sign-up" || request.Resource == "/auth/sign-in" {
 			c.JSON(http.StatusOK, AuthenticateResponse{IsAuthenticated: true})
 
 			return
