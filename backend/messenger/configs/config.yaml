@@ -1,4 +1,4 @@
-addr: ":9999"
+addr: ":10003"
 
 storage:
   dsn: "user:password@tcp(127.0.0.1:3306)/social-network?parseTime=true"
