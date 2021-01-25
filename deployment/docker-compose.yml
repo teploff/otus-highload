@@ -76,26 +76,60 @@ services:
     networks:
       - otus-highload-network
 
-  backend:
+  auth:
     build:
-      context: ../backend
+      context: ../backend/auth
       dockerfile: Dockerfile
-    image: backend:stage
-    container_name: backend
-    ports:
-      - '9999:9999'
+    image: auth:otus
+    container_name: auth-otus
     environment:
-      - ADDR=0.0.0.0:9999
+      - ADDR=0.0.0.0:10001
       - STORAGE_DSN=user:password@tcp(mysql-storage:3306)/social-network?parseTime=true
-      - STAN_CLUSTER_ID=stan-cluster
-      - STAN_ADDR=nats://nats-streaming:4222
       - JWT_SECRET=secret
       - JWT_ACCESS_TOKEN_TIME_EXPIRE=1h
       - JWT_REFRESH_TOKEN_TIME_EXPIRE=24h
+      - LOGGER_LEVEL=info
+    depends_on:
+      - storage
+    networks:
+      - otus-highload-network
+
+  social:
+    build:
+      context: ../backend/social
+      dockerfile: Dockerfile
+    image: social:otus
+    container_name: social-otus
+    environment:
+      - ADDR=0.0.0.0:10002
+      - STORAGE_DSN=user:password@tcp(mysql-storage:3306)/social-network?parseTime=true
+      - STAN_CLUSTER_ID=stan-cluster
+      - STAN_ADDR=nats://nats-streaming:4222
+      - LOGGER_LEVEL=info
     depends_on:
       - storage
       - cache
       - nats-streaming
+    networks:
+      - otus-highload-network
+
+  gateway:
+    build:
+      context: ../backend/gateway
+      dockerfile: Dockerfile
+    image: gateway:otus
+    container_name: gateway-otus
+    ports:
+      - '10000:10000'
+    environment:
+      - ADDR=0.0.0.0:10000
+      - AUTH_ADDR=auth-otus:10001
+      - SOCIAL_ADDR=social-otus:10002
+      - MESSENGER_ADDR=messenger-otus:10003
+      - LOGGER_LEVEL=info
+    depends_on:
+      - auth
+      - social
     networks:
       - otus-highload-network
 
@@ -108,7 +142,7 @@ services:
     ports:
       - '8081:80'
     depends_on:
-      - backend
+      - gateway
     networks:
       - otus-highload-network
 

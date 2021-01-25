@@ -4,7 +4,7 @@ db:
 	docker-compose -f deployment/docker-compose.yml up -d storage
 
 up:
-	docker-compose -f deployment/docker-compose.yml up --build -d storage adminer backend frontend ;\
+	docker-compose -f deployment/docker-compose.yml up --build -d adminer gateway frontend ;\
 	docker image prune -f ;\
 
 migrate:
@@ -13,8 +13,8 @@ migrate:
 	docker image prune -f ;\
 
 reload_backend:
-	docker rm -f backend ;\
-	docker-compose -f deployment/docker-compose.yml up -d --build backend ;\
+	docker rm -f gateway-otus ;\
+	docker-compose -f deployment/docker-compose.yml up -d --build gateway ;\
     docker image prune -f ;\
 
 reload_frontend:
