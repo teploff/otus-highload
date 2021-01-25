@@ -68,6 +68,7 @@ func main() {
 	application := app.NewApp(cfg,
 		app.WithLogger(logger),
 	)
+	go application.Run(mysqlConn)
 
 	done := make(chan os.Signal, 1)
 	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)

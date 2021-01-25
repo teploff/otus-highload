@@ -228,6 +228,8 @@ func makeAuthenticateEndpoint(svc domain.AuthService) gin.HandlerFunc {
 
 		if request.Resource == "/auth/sign-up" || request.Resource == "/auth/sing-in" {
 			c.JSON(http.StatusOK, AuthenticateResponse{IsAuthenticated: true})
+
+			return
 		}
 
 		var header AuthorizationHeader
