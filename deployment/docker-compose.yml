@@ -70,7 +70,7 @@ services:
       DSN: "user:password@tcp(mysql-storage:3306)/social-network"
       OPERATION: "up"
     volumes:
-      - ../backend/migrations:/app/migrations
+      - ../backend/migrations/mysql:/app/migrations
     depends_on:
       - storage
     networks:
