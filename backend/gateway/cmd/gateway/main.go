@@ -4,7 +4,9 @@ import (
 	"flag"
 	"gateway/internal/app"
 	"gateway/internal/config"
-	"gateway/internal/infrastructure/logger"
+	zapLogger "gateway/internal/infrastructure/logger"
+	"go.uber.org/zap"
+	"google.golang.org/grpc"
 	"os"
 	"os/signal"
 	"syscall"
@@ -19,12 +21,18 @@ func main() {
 		panic(err)
 	}
 
-	zapLogger := logger.New(&cfg.Logger)
+	logger := zapLogger.New(&cfg.Logger)
+
+	messengerConn, err := grpc.Dial(cfg.Messenger.Addr, grpc.WithInsecure())
+	if err != nil {
+		logger.Fatal("gRPC auth connection", zap.Error(err))
+	}
+	defer messengerConn.Close()
 
 	application := app.New(cfg,
-		app.WithLogger(zapLogger),
+		app.WithLogger(logger),
 	)
-	go application.Run()
+	go application.Run(messengerConn)
 
 	done := make(chan os.Signal, 1)
 	signal.Notify(done, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)

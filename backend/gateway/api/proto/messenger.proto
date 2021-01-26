@@ -1,0 +1,58 @@
+syntax = "proto3";
+
+package messenger;
+
+import "google/protobuf/wrappers.proto";
+
+service Messenger {
+    rpc GetChats (GetChatsRequest) returns (GetChatsResponse) {
+    }
+    rpc GetMessages (GetMessagesRequest) returns (GetMessagesResponse) {
+    }
+}
+
+message GetChatsRequest {
+    google.protobuf.Int32Value offset = 1;
+    google.protobuf.Int32Value limit = 2;
+}
+
+message Participant {
+    string id = 1;
+    string name = 2;
+    string surname = 3;
+}
+
+message Chat {
+    string id = 1;
+    int64 create_time = 2;
+    repeated Participant participants = 3;
+}
+
+message GetChatsResponse {
+    int32 total = 1;
+    int32 offset = 2;
+    int32 limit = 3;
+    repeated Chat chats = 4;
+}
+
+message GetMessagesRequest {
+    string chat_id = 1;
+    google.protobuf.Int32Value offset = 2;
+    google.protobuf.Int32Value limit = 3;
+}
+
+message Message {
+    string id = 1;
+    string text = 2;
+    string status = 3;
+    int64 create_time = 4;
+    string user_id = 5;
+    string chat_id = 6;
+}
+
+message GetMessagesResponse {
+    int32 total = 1;
+    int32 offset = 2;
+    int32 limit = 3;
+    repeated Message messages = 4;
+}

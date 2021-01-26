@@ -2,6 +2,7 @@ package http
 
 import (
 	"gateway/internal/config"
+	"gateway/internal/transport/grpc"
 	"net/http"
 	"net/http/httputil"
 
@@ -9,15 +10,17 @@ import (
 )
 
 type Endpoints struct {
-	cfg    *config.Config
-	Auth   *AuthEndpoints
-	Social *SocialEndpoints
+	cfg           *config.Config
+	grpcendpoints *grpc.MessengerProxyEndpoints
+	Auth          *AuthEndpoints
+	Social        *SocialEndpoints
 	//Messenger *MessengerEndpoints
 }
 
-func MakeEndpoints(cfg *config.Config) *Endpoints {
+func MakeEndpoints(cfg *config.Config, grpcendpoints *grpc.MessengerProxyEndpoints) *Endpoints {
 	return &Endpoints{
-		cfg: cfg,
+		cfg:           cfg,
+		grpcendpoints: grpcendpoints,
 		Auth: &AuthEndpoints{
 			SignUp:           makeHTTPProxyEndpoint(cfg.Auth.Addr),
 			SignIn:           makeHTTPProxyEndpoint(cfg.Auth.Addr),

@@ -3,11 +3,12 @@ package app
 import (
 	"context"
 	"gateway/internal/config"
+	kitgrpc "gateway/internal/transport/grpc"
 	httptransport "gateway/internal/transport/http"
+	"go.uber.org/zap"
+	"google.golang.org/grpc"
 	"net/http"
 	"time"
-
-	"go.uber.org/zap"
 )
 
 const httpTimeoutClose = 5 * time.Second
@@ -39,8 +40,9 @@ func New(cfg *config.Config, opts ...Option) *App {
 	return app
 }
 
-func (a *App) Run() {
-	a.httpSrv = httptransport.NewHTTPServer(a.cfg.Addr, httptransport.MakeEndpoints(a.cfg))
+func (a *App) Run(messengerConn *grpc.ClientConn) {
+	a.httpSrv = httptransport.NewHTTPServer(a.cfg.Addr,
+		httptransport.MakeEndpoints(a.cfg, kitgrpc.MakeMessengerProxyEndpoints(messengerConn)))
 
 	go func() {
 		if err := a.httpSrv.ListenAndServe(); err != nil {
