@@ -9,4 +9,6 @@ RUN apk --no-cache add ca-certificates
 WORKDIR /app
 COPY --from=builder /app/ ./
 
+EXPOSE 10003
+
 CMD ["./messenger", "--config=./configs/config.yaml"]

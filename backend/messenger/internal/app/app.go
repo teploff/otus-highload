@@ -1,18 +1,16 @@
 package app
 
 import (
-	"backend/internal/config"
-	"backend/internal/implementation"
-	"backend/internal/infrastructure/clickhouse"
-	httptransport "backend/internal/transport/http"
-	wstransport "backend/internal/transport/ws"
 	"context"
 	"database/sql"
 	"log"
+	"messenger/internal/config"
+	"messenger/internal/implementation"
+	"messenger/internal/infrastructure/clickhouse"
+	httptransport "messenger/internal/transport/http"
 	"net/http"
 	"time"
 
-	"github.com/go-redis/redis/v8"
 	"go.uber.org/zap"
 )
 
@@ -32,16 +30,14 @@ type App struct {
 	cfg       *config.Config
 	chStorage *clickhouse.Storage
 	httpSrv   *http.Server
-	wsConns   *wstransport.Conns
 	logger    *zap.Logger
 }
 
 // NewApp returns instance of app.
 func NewApp(cfg *config.Config, opts ...Option) *App {
 	app := &App{
-		cfg:     cfg,
-		wsConns: wstransport.NewWSConnects(),
-		logger:  zap.NewNop(),
+		cfg:    cfg,
+		logger: zap.NewNop(),
 	}
 
 	for _, opt := range opts {
@@ -52,19 +48,15 @@ func NewApp(cfg *config.Config, opts ...Option) *App {
 }
 
 // Run lunch application.
-func (a *App) Run(mysqlConn, chConn *sql.DB, redisConn *redis.Client) {
+func (a *App) Run(chConn *sql.DB) {
 	a.chStorage = clickhouse.NewStorage(chConn, a.cfg.Clickhouse.PushTimeout, a.logger)
 	go a.chStorage.StartBatching()
 
-	authSvc := implementation.NewAuthService(implementation.NewUserRepository(mysqlConn), a.cfg.JWT)
-	socialSvc := implementation.NewSocialService(implementation.NewUserRepository(mysqlConn))
+	authSvc := implementation.NewAuthService(a.cfg.Auth.Addr)
+	//messengerSvc := implementation.NewMessengerService(implementation.NewMessengerRepository(a.chStorage))
+	wsSvc := implementation.NewWSService(implementation.NewWSPoolRepository(), a.logger)
 
-	messengerSvc := implementation.NewMessengerService(
-		implementation.NewUserRepository(mysqlConn),
-		implementation.NewMessengerRepository(a.chStorage),
-		implementation.NewCacheRepository(redisConn), a.cfg.Sharding)
-
-	a.httpSrv = httptransport.NewHTTPServer(a.cfg.Addr, httptransport.MakeEndpoints(authSvc, socialSvc, messengerSvc))
+	a.httpSrv = httptransport.NewHTTPServer(a.cfg.Addr, httptransport.MakeEndpoints(authSvc, wsSvc))
 
 	go func() {
 		if err := a.httpSrv.ListenAndServe(); err != nil {
@@ -74,8 +66,6 @@ func (a *App) Run(mysqlConn, chConn *sql.DB, redisConn *redis.Client) {
 }
 
 func (a *App) Stop() {
-	a.wsConns.Close()
-
 	ctx, cancel := context.WithTimeout(context.Background(), httpTimeoutClose)
 	defer cancel()
 

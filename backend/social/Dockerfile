@@ -9,4 +9,6 @@ RUN apk --no-cache add ca-certificates
 WORKDIR /app
 COPY --from=builder /app/ ./
 
+EXPOSE 10002
+
 CMD ["./social", "--config=./configs/config_stage.yaml"]

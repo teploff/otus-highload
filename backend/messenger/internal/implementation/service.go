@@ -1,323 +1,82 @@
 package implementation
 
 import (
-	"backend/internal/config"
-	"backend/internal/domain"
 	"context"
-	"database/sql"
 	"encoding/binary"
-	"errors"
-	"fmt"
-	"time"
-
-	"github.com/dgrijalva/jwt-go"
+	"github.com/gobwas/ws/wsutil"
+	"github.com/imroc/req"
+	"go.uber.org/zap"
+	"messenger/internal/config"
+	"messenger/internal/domain"
+	"net"
 )
 
 type authService struct {
-	repository  domain.UserRepository
-	jwtSettings struct {
-		secret                 []byte
-		accessTokenExpire      time.Duration
-		refreshTokenTimeExpire time.Duration
-	}
+	authAddr string
 }
 
-func NewAuthService(rep domain.UserRepository, cfg config.JWTConfig) *authService {
+func NewAuthService(authAddr string) *authService {
 	return &authService{
-		repository: rep,
-		jwtSettings: struct {
-			secret                 []byte
-			accessTokenExpire      time.Duration
-			refreshTokenTimeExpire time.Duration
-		}{
-			secret:                 []byte(cfg.Secret),
-			accessTokenExpire:      cfg.AccessTokenTimeExpire,
-			refreshTokenTimeExpire: cfg.RefreshTokenTimeExpire},
+		authAddr: authAddr,
 	}
 }
 
-func (a *authService) SignUp(ctx context.Context, profile *domain.User) error {
-	tx, err := a.repository.GetTx(ctx)
-	if err != nil {
-		return err
-	}
-
-	if err = a.repository.Persist(tx, profile); err != nil {
-		if a.repository.CompareError(err, domain.DuplicateKeyErrNumber) {
-			return fmt.Errorf(fmt.Sprintf("user with email: %s already exist", profile.Email))
-		}
-
-		return err
-	}
-
-	return a.repository.CommitTx(tx)
+type getUserIDByAccessTokenResponse struct {
+	UserID string `json:"user_id"`
 }
 
-func (a *authService) SignIn(ctx context.Context, credentials *domain.Credentials) (*domain.TokenPair, error) {
-	tx, err := a.repository.GetTx(ctx)
-	if err != nil {
-		return nil, err
+func (a *authService) Authenticate(_ context.Context, token string) (string, error) {
+	header := req.Header{
+		"Accept":        "application/json",
+		"Authorization": token,
 	}
 
-	user, err := a.repository.GetByEmail(tx, credentials.Email)
-	switch {
-	case errors.Is(err, sql.ErrNoRows):
-		return nil, fmt.Errorf("incorrect username or password")
-	case errors.Is(err, sql.ErrNoRows):
-		return nil, err
-
-	}
-	if err != nil {
-		return nil, err
-	}
-
-	if !user.DoesPasswordMatch(credentials.Password) {
-		return nil, fmt.Errorf("incorrect username or password")
-	}
-
-	tokenPair, err := a.createTokenPair(user)
-	if err != nil {
-		return nil, fmt.Errorf("creating jwt token's pair error, %w", err)
-	}
-
-	user.AccessToken = &tokenPair.AccessToken
-	user.RefreshToken = &tokenPair.RefreshToken
-
-	if err = a.repository.UpdateByID(tx, user); err != nil {
-		return nil, err
-	}
-
-	return &tokenPair, a.repository.CommitTx(tx)
-}
-
-func (a *authService) createTokenPair(user *domain.User) (domain.TokenPair, error) {
-	var tokenPair domain.TokenPair
-
-	accessToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"exp": time.Now().Add(a.jwtSettings.accessTokenExpire).Unix(),
-		"nbf": time.Now().Unix(),
-		"iat": time.Now().Unix(),
-		"iss": "auth_service",
-		"aud": user.ID,
-	})
-	refreshToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"exp": time.Now().Add(a.jwtSettings.refreshTokenTimeExpire).Unix(),
-		"nbf": time.Now().Unix(),
-		"iat": time.Now().Unix(),
-		"iss": "auth_service",
-		"aud": user.ID,
-	})
-
-	var err error
-	tokenPair.AccessToken, err = accessToken.SignedString(a.jwtSettings.secret)
-
-	if err != nil {
-		return tokenPair, fmt.Errorf("creating jwt token's pair error: %w", err)
-	}
-
-	tokenPair.RefreshToken, err = refreshToken.SignedString(a.jwtSettings.secret)
-	if err != nil {
-		return tokenPair, fmt.Errorf("creating jwt token's pair error: %w", err)
-	}
-
-	return tokenPair, nil
-}
-
-func (a *authService) parseToken(tokenString string) (jwt.MapClaims, error) {
-	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
-		}
-
-		return a.jwtSettings.secret, nil
-	})
-	if err != nil {
-		return nil, fmt.Errorf("parsing token err: %w", err)
-	}
-
-	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-		return claims, nil
-	}
-
-	return nil, fmt.Errorf("parsing token err")
-}
-
-func (a *authService) RefreshToken(ctx context.Context, token string) (*domain.TokenPair, error) {
-	tx, err := a.repository.GetTx(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	claims, err := a.parseToken(token)
-	if err != nil {
-		return nil, err
-	}
-
-	userID := claims["aud"].(string)
-	user, err := a.repository.GetByIDAndRefreshToken(tx, userID, token)
-	if err != nil {
-		return nil, err
-	}
-
-	newTokenPair, err := a.createTokenPair(user)
-	if err != nil {
-		return nil, fmt.Errorf("unknown server error: %w", err)
-	}
-
-	user.AccessToken = &newTokenPair.AccessToken
-	user.RefreshToken = &newTokenPair.RefreshToken
-
-	if err = a.repository.UpdateByID(tx, user); err != nil {
-		return nil, err
-	}
-
-	return &newTokenPair, a.repository.CommitTx(tx)
-}
-
-func (a *authService) Authenticate(ctx context.Context, token string) (string, error) {
-	tx, err := a.repository.GetTx(ctx)
+	r, err := req.Get("http://"+a.authAddr+"/auth/user/get-id-by-token", header)
 	if err != nil {
 		return "", err
 	}
 
-	claims, err := a.parseToken(token)
-	if err != nil {
-		return "", fmt.Errorf("invalid token")
-	}
-
-	userID := claims["aud"].(string)
-	_, err = a.repository.GetByIDAndAccessToken(tx, userID, token)
-	if err != nil {
-		return "", fmt.Errorf("invalid token")
-	}
-
-	return userID, a.repository.CommitTx(tx)
-}
-
-func (a *authService) GetUserIDByEmail(ctx context.Context, email string) (string, error) {
-	tx, err := a.repository.GetTx(ctx)
-	if err != nil {
+	var response getUserIDByAccessTokenResponse
+	if err = r.ToJSON(&response); err != nil {
 		return "", err
 	}
 
-	user, err := a.repository.GetByEmail(tx, email)
-	if err != nil {
-		return "", err
-	}
-
-	return user.ID, a.repository.CommitTx(tx)
-}
-
-type socialService struct {
-	repository domain.UserRepository
-}
-
-func NewSocialService(rep domain.UserRepository) *socialService {
-	return &socialService{
-		repository: rep,
-	}
-}
-
-func (s *socialService) GetQuestionnaires(ctx context.Context, userID string, limit, offset int) ([]*domain.Questionnaire, int, error) {
-	tx, err := s.repository.GetTx(ctx)
-	if err != nil {
-		return nil, 0, err
-	}
-
-	count, err := s.repository.GetCount(tx)
-	if err != nil {
-		return nil, 0, err
-	}
-
-	users, err := s.repository.GetByLimitAndOffsetExceptUserID(tx, userID, limit, offset)
-	if err != nil {
-		return nil, 0, err
-	}
-
-	questionnaires := make([]*domain.Questionnaire, 0, len(users))
-	for _, user := range users {
-		questionnaires = append(questionnaires, &domain.Questionnaire{
-			Email:     user.Email,
-			Name:      user.Name,
-			Surname:   user.Surname,
-			Birthday:  user.Birthday,
-			Sex:       user.Sex,
-			City:      user.City,
-			Interests: user.Interests,
-		})
-	}
-
-	// count - 1: without myself
-	return questionnaires, count - 1, s.repository.CommitTx(tx)
-}
-
-func (s *socialService) GetQuestionnairesByNameAndSurname(ctx context.Context, prefix string) ([]*domain.Questionnaire, error) {
-	tx, err := s.repository.GetTx(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	users, err := s.repository.GetByPrefixOfNameAndSurname(tx, prefix)
-	if err != nil {
-		return nil, err
-	}
-
-	questionnaires := make([]*domain.Questionnaire, 0, len(users))
-	for _, user := range users {
-		questionnaires = append(questionnaires, &domain.Questionnaire{
-			Email:     user.Email,
-			Name:      user.Name,
-			Surname:   user.Surname,
-			Birthday:  user.Birthday,
-			Sex:       user.Sex,
-			City:      user.City,
-			Interests: user.Interests,
-		})
-	}
-
-	return questionnaires, s.repository.CommitTx(tx)
+	return response.UserID, nil
 }
 
 type messengerService struct {
-	userRep      domain.UserRepository
-	messRep      domain.MessengerRepository
-	cacheRep     domain.CacheRepository
-	shardingCfg  config.ShardingConfig
-	userActivity *senderActivity
+	messRep     domain.MessengerRepository
+	shardingCfg config.ShardingConfig
 }
 
-func NewMessengerService(userRep domain.UserRepository, messengerRep domain.MessengerRepository,
-	cacheRep domain.CacheRepository, cfg config.ShardingConfig) *messengerService {
+func NewMessengerService(messengerRep domain.MessengerRepository, cfg config.ShardingConfig) *messengerService {
 	return &messengerService{
-		userRep:      userRep,
-		messRep:      messengerRep,
-		cacheRep:     cacheRep,
-		shardingCfg:  cfg,
-		userActivity: newSenderActivity(cfg.MaxMsgFreq),
+		messRep:     messengerRep,
+		shardingCfg: cfg,
 	}
 }
 
 func (m *messengerService) CreateChat(ctx context.Context, masterID, slaveID string) (string, error) {
-	tx, err := m.userRep.GetTx(ctx)
-	if err != nil {
-		return "", err
-	}
-
-	_, err = m.userRep.GetByID(tx, slaveID)
-	switch err {
-	case nil:
-	case sql.ErrNoRows:
-		return "", fmt.Errorf("chat companion with id=[%s] doesn't exist", slaveID)
-	default:
-		return "", err
-	}
+	//tx, err := m.userRep.GetTx(ctx)
+	//if err != nil {
+	//	return "", err
+	//}
+	//
+	//_, err = m.userRep.GetByID(tx, slaveID)
+	//switch err {
+	//case nil:
+	//case sql.ErrNoRows:
+	//	return "", fmt.Errorf("chat companion with id=[%s] doesn't exist", slaveID)
+	//default:
+	//	return "", err
+	//}
 
 	chatID, err := m.messRep.CreateChat(masterID, slaveID)
 	if err != nil {
 		return "", err
 	}
 
-	return chatID, m.userRep.CommitTx(tx)
+	return chatID, nil
 }
 
 func (m *messengerService) GetChat(_ context.Context, masterID, slaveID string) (*domain.Chat, error) {
@@ -343,27 +102,8 @@ func (m *messengerService) GetChats(_ context.Context, userID string, limit, off
 	return chats, total, nil
 }
 
-func (m *messengerService) SendMessages(ctx context.Context, userID, chatID string, messages []*domain.ShortMessage) error {
-	var shardID int
-
-	isLadyGaga, err := m.cacheRep.DoesUserExist(ctx, userID)
-	if err != nil {
-		return err
-	}
-
-	if !isLadyGaga {
-		if isLadyGaga = m.userActivity.DoesUserLadyGaga(userID, len(messages)); isLadyGaga {
-			if err = m.cacheRep.Persist(ctx, userID); err != nil {
-				return err
-			}
-		}
-	}
-
-	if isLadyGaga {
-		shardID = m.shardingCfg.LadyGagaShardID
-	} else {
-		shardID = int(binary.BigEndian.Uint64([]byte(userID)) % uint64(m.shardingCfg.CountNodes))
-	}
+func (m *messengerService) SendMessages(_ context.Context, userID, chatID string, messages []*domain.ShortMessage) error {
+	shardID := int(binary.BigEndian.Uint64([]byte(userID)) % uint64(m.shardingCfg.CountNodes))
 
 	return m.messRep.SendMessages(shardID, userID, chatID, messages)
 }
@@ -387,8 +127,130 @@ func (m *messengerService) GetMessages(_ context.Context, userID, chatID string,
 	return messages, total, nil
 }
 
-func (m *messengerService) UpdateCountShards(_ context.Context, count int) error {
-	m.shardingCfg.CountNodes = count
+// easyjson:json
+type WSRequest struct {
+	Topic   string `json:"topic"`
+	Payload string `json:"payload"`
+}
 
-	return nil
+// easyjson:json
+type WSMessagesRequest struct {
+	Content string `json:"content"`
+}
+
+type wsService struct {
+	wsPoolRep domain.WSPoolRepository
+	logger    *zap.Logger
+}
+
+func NewWSService(wsPoolRep domain.WSPoolRepository, logger *zap.Logger) *wsService {
+	return &wsService{
+		wsPoolRep: wsPoolRep,
+		logger:    logger,
+	}
+}
+
+func (w *wsService) EstablishConn(ctx context.Context, userID string, conn net.Conn) {
+	w.wsPoolRep.AddConnection(userID, conn)
+
+	go func(userID string) {
+		defer conn.Close()
+		defer w.wsPoolRep.RemoveConnection(userID, conn)
+
+		for {
+			msg, _, err := wsutil.ReadClientData(conn)
+			if err != nil {
+				w.logger.Error("fail read from ws", zap.Error(err))
+
+				return
+			}
+
+			w.logger.Info(string(msg))
+
+			//if err = w.parseRequest(ctx, user, msg); err != nil {
+			//	w.logger.Error("", zap.Error(err))
+			//}
+		}
+	}(userID)
+}
+
+//func (w *wsService) parseRequest(ctx context.Context, user *domain.User, msg []byte) error {
+//	var request WSRequest
+//	if err := request.UnmarshalJSON(msg); err != nil {
+//		return err
+//	}
+//
+//	switch request.Topic {
+//	case "news":
+//		var r WSNewsRequest
+//
+//		if err := r.UnmarshalJSON([]byte(request.Payload)); err != nil {
+//			return err
+//		}
+//
+//		n := &domain.News{
+//			ID: uuid.NewV4().String(),
+//			Owner: struct {
+//				Name    string `json:"name"`
+//				Surname string `json:"surname"`
+//				Sex     string `json:"sex"`
+//			}{
+//				user.Name,
+//				user.Surname,
+//				user.Sex,
+//			},
+//			Content:    r.Content,
+//			CreateTime: time.Now().UTC(),
+//		}
+//		news := []*domain.News{n}
+//
+//		tx, err := w.socialRep.GetTx(ctx)
+//		if err != nil {
+//			return err
+//		}
+//
+//		if err = w.socialRep.PublishNews(tx, user.ID, news); err != nil {
+//			return err
+//		}
+//
+//		if err = tx.Commit(); err != nil {
+//			return err
+//		}
+//
+//		if err = w.stanClient.Publish("news", &stantransport.NewsPersistRequest{OwnerID: user.ID, News: []*domain.News{n}}); err != nil {
+//			return err
+//		}
+//	}
+//
+//	return nil
+//}
+
+//func (w *wsService) SendNews(ctx context.Context, ownerID string, news []*domain.News) error {
+//	ids, err := w.socialCacheRep.RetrieveFriendsID(ctx, ownerID)
+//	if err != nil {
+//		return err
+//	}
+//	ids = append(ids, ownerID)
+//
+//	for _, id := range ids {
+//		conns := w.wsPoolRep.RetrieveConnByUserID(id)
+//		for _, conn := range conns {
+//			for _, n := range news {
+//				data, err := n.MarshalJSON()
+//				if err != nil {
+//					return err
+//				}
+//
+//				if err = wsutil.WriteServerMessage(conn, ws.OpText, data); err != nil {
+//					return err
+//				}
+//			}
+//		}
+//	}
+//
+//	return nil
+//}
+
+func (w *wsService) Close() {
+	w.wsPoolRep.FlushConnections()
 }

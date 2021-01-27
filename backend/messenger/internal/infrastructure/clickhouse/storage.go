@@ -184,7 +184,7 @@ func executeTx(tx *sql.Tx, sql string, commands []*database.InsertCommand) error
 			args[i] = field.Value()
 		}
 
-		if _, err := stmt.Exec(args...); err != nil {
+		if _, err = stmt.Exec(args...); err != nil {
 			return err
 		}
 	}
