@@ -14,7 +14,7 @@ type Endpoints struct {
 	grpcendpoints *grpc.MessengerProxyEndpoints
 	Auth          *AuthEndpoints
 	Social        *SocialEndpoints
-	//Messenger *MessengerEndpoints
+	Messenger     *MessengerEndpoints
 }
 
 func MakeEndpoints(cfg *config.Config, grpcendpoints *grpc.MessengerProxyEndpoints) *Endpoints {
@@ -44,10 +44,9 @@ func MakeEndpoints(cfg *config.Config, grpcendpoints *grpc.MessengerProxyEndpoin
 				GetNews: makeHTTPProxyEndpoint(cfg.Social.Addr),
 			},
 		},
-		//Messenger: &MessengerEndpoints{
-		//	Upload: makeUploadEndpoint(cfg.Messenger.Addr),
-		//	Get:    makeGetEndpoint(cfg.Messenger.Addr),
-		//},
+		Messenger: &MessengerEndpoints{
+			WS: makeHTTPProxyEndpoint(cfg.Messenger.Addr),
+		},
 	}
 }
 
@@ -80,6 +79,10 @@ type SocialEndpoints struct {
 
 type NewsEndpoints struct {
 	GetNews gin.HandlerFunc
+}
+
+type MessengerEndpoints struct {
+	WS gin.HandlerFunc
 }
 
 func makeHTTPProxyEndpoint(targetHost string) gin.HandlerFunc {

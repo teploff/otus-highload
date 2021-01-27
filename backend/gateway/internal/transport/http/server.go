@@ -62,6 +62,11 @@ func NewHTTPServer(addr string, endpoints *Endpoints) *http.Server {
 		}
 	}
 
+	messengerGroup := router.Group("/messenger")
+	{
+		messengerGroup.GET("/ws", endpoints.Messenger.WS)
+	}
+
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	return &http.Server{

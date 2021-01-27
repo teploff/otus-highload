@@ -1,18 +1,35 @@
-.PHONY: db up migrate reload_backend reload_frontend down
+.PHONY: infrastructure migrate service reload_auth reload_social reload_messenger reload_gateway reload_frontend down
 
-db:
-	docker-compose -f deployment/docker-compose.yml up -d storage
-
-up:
-	docker-compose -f deployment/docker-compose.yml up --build -d adminer gateway frontend ;\
-	docker image prune -f ;\
+infrastructure:
+	docker-compose -f deployment/docker-compose.yml up -d --build ch-cluster ch-shard-0 ch-shard-1 mysql-storage cache \
+		nats-streaming adminer ;\
 
 migrate:
-	docker-compose -f deployment/docker-compose.yml up --build migrator ;\
-	docker rm -f mysql-migrator ;\
+	docker-compose -f deployment/docker-compose.yml up --build mysql-migrator ch-cluster-migrator ch-shard-migrator-0 \
+    		ch-shard-migrator-1 ;\
+	docker rm -f mysql-migrator ch-cluster-migrator ch-migrator-0 ch-migrator-1 ;\
 	docker image prune -f ;\
 
-reload_backend:
+service:
+	docker-compose -f deployment/docker-compose.yml up --build auth social messenger gateway frontend ;\
+	docker image prune -f ;\
+
+reload_auth:
+	docker rm -f auth-otus ;\
+	docker-compose -f deployment/docker-compose.yml up -d --build auth ;\
+    docker image prune -f ;\
+
+reload_social:
+	docker rm -f social-otus ;\
+	docker-compose -f deployment/docker-compose.yml up -d --build social ;\
+    docker image prune -f ;\
+
+reload_messenger:
+	docker rm -f messenger-otus ;\
+	docker-compose -f deployment/docker-compose.yml up -d --build messenger ;\
+    docker image prune -f ;\
+
+reload_gateway:
 	docker rm -f gateway-otus ;\
 	docker-compose -f deployment/docker-compose.yml up -d --build gateway ;\
     docker image prune -f ;\
