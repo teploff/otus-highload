@@ -1,7 +1,7 @@
 version: '3.7'
 
 services:
-  storage:
+  mysql-storage:
     build:
       context: mysql
       dockerfile: Dockerfile
@@ -55,11 +55,11 @@ services:
     ports:
       - '8080:8080'
     depends_on:
-      - storage
+      - mysql-storage
     networks:
       - otus-highload-network
 
-  migrator:
+  mysql-migrator:
     build:
       context: ../tools/migrator
       dockerfile: Dockerfile
@@ -72,9 +72,111 @@ services:
     volumes:
       - ../backend/migrations/mysql:/app/migrations
     depends_on:
-      - storage
+      - mysql-storage
     networks:
       - otus-highload-network
+
+  ch-cluster:
+    image: yandex/clickhouse-server:20.6.6.7
+    container_name: ch-cluster
+    ports:
+      - "8123:8123"
+      - "9000:9000"
+    volumes:
+      - ch-cluster-data:/opt/clickhouse/data
+      - ./clickhouse/cluster/config.xml:/etc/clickhouse-server/config.xml
+      - ./clickhouse/cluster/users.xml:/etc/clickhouse-server/users.xml
+    ulimits:
+      nproc: 65535
+      nofile:
+        soft: 262144
+        hard: 262144
+    depends_on:
+      - ch-shard-0
+      - ch-shard-1
+    networks:
+      - otus-highload-network
+
+  ch-shard-0:
+    image: yandex/clickhouse-server:20.6.6.7
+    container_name: ch-shard-0
+    volumes:
+      - ch-shard-0-data:/opt/clickhouse/data
+      - ./clickhouse/shard/config.xml:/etc/clickhouse-server/config.xml
+      - ./clickhouse/shard/users.xml:/etc/clickhouse-server/users.xml
+    ulimits:
+      nproc: 65535
+      nofile:
+        soft: 262144
+        hard: 262144
+    networks:
+      - otus-highload-network
+
+  ch-shard-1:
+    image: yandex/clickhouse-server:20.6.6.7
+    container_name: ch-shard-1
+    volumes:
+      - ch-shard-1-data:/opt/clickhouse/data
+      - ./clickhouse/shard/config.xml:/etc/clickhouse-server/config.xml
+      - ./clickhouse/shard/users.xml:/etc/clickhouse-server/users.xml
+    ulimits:
+      nproc: 65535
+      nofile:
+        soft: 262144
+        hard: 262144
+    networks:
+      - otus-highload-network
+
+  ch-cluster-migrator:
+    build:
+      context: ../tools/ch-migrator
+      dockerfile: Dockerfile
+    image: ch-migrator:sharding
+    container_name: ch-cluster-migrator
+    environment:
+      MIGRATIONS_PATH: "./migrations"
+      DSN: "clickhouse://ch-cluster:9000?database=default&username=default&password=password&x-multi-statement=true"
+      OPERATION: "up"
+    volumes:
+      - ../backend/migrations/clickhouse/cluster:/app/migrations
+    networks:
+      - otus-highload-network
+    depends_on:
+      - ch-cluster
+
+  ch-shard-migrator-0:
+    build:
+      context: ../tools/ch-migrator
+      dockerfile: Dockerfile
+    image: ch-migrator:sharding
+    container_name: ch-migrator-0
+    environment:
+      MIGRATIONS_PATH: "./migrations"
+      DSN: "clickhouse://ch-shard-0:9000?database=default&username=default&password=password&x-multi-statement=true"
+      OPERATION: "up"
+    volumes:
+      - ../backend/migrations/clickhouse/shard:/app/migrations
+    networks:
+      - otus-highload-network
+    depends_on:
+      - ch-shard-0
+
+  ch-shard-migrator-1:
+    build:
+      context: ../tools/ch-migrator
+      dockerfile: Dockerfile
+    image: ch-migrator:sharding
+    container_name: ch-migrator-1
+    environment:
+      MIGRATIONS_PATH: "./migrations"
+      DSN: "clickhouse://ch-shard-1:9000?database=default&username=default&password=password&x-multi-statement=true"
+      OPERATION: "up"
+    volumes:
+      - ../backend/migrations/clickhouse/shard:/app/migrations
+    networks:
+      - otus-highload-network
+    depends_on:
+      - ch-shard-1
 
   auth:
     build:
@@ -90,7 +192,7 @@ services:
       - JWT_REFRESH_TOKEN_TIME_EXPIRE=24h
       - LOGGER_LEVEL=info
     depends_on:
-      - storage
+      - mysql-storage
     networks:
       - otus-highload-network
 
@@ -102,16 +204,34 @@ services:
     container_name: social-otus
     environment:
       - ADDR=0.0.0.0:10002
+      - AUTH_ADDR=auth-otus:10001
       - STORAGE_DSN=user:password@tcp(mysql-storage:3306)/social-network?parseTime=true
       - STAN_CLUSTER_ID=stan-cluster
       - STAN_ADDR=nats://nats-streaming:4222
       - LOGGER_LEVEL=info
     depends_on:
-      - storage
+      - mysql-storage
       - cache
       - nats-streaming
     networks:
       - otus-highload-network
+
+  messenger:
+    build:
+      context: ../backend/messenger
+      dockerfile: Dockerfile
+    image: messenger:otus
+    container_name: messenger-otus
+    environment:
+      - ADDR=0.0.0.0:10003
+      - AUTH_ADDR=auth-otus:10001
+      - CH_DSN=tcp://ch-cluster:9000?database=default&username=default&password=password
+      - SHARDING_COUNT_NODES=2
+    restart: unless-stopped
+    networks:
+      - otus-highload-network
+    depends_on:
+      - ch-cluster
 
   gateway:
     build:
@@ -130,6 +250,7 @@ services:
     depends_on:
       - auth
       - social
+      - messenger
     networks:
       - otus-highload-network
 
@@ -148,6 +269,9 @@ services:
 
 volumes:
   mysql-storage-data:
+  ch-cluster-data:
+  ch-shard-0-data:
+  ch-shard-1-data:
   redis-cache-data:
 
 networks:
