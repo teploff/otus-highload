@@ -62,11 +62,13 @@
 </template>
 
 <script>
-import {debounce} from "@/const";
+import {debounce, messengerWSUrl} from "@/const";
+import WSService from "@/service/ws";
 
 export default {
   name: 'Home',
   data: () => ({
+    ws: null,
     menuVisible: false,
     countNewsNotify: 0,
     countMsgNotify: 0,
@@ -75,6 +77,13 @@ export default {
       anthroponym: null,
     },
   }),
+  created() {
+    this.ws = new WSService(this.$store)
+    this.ws.connect(messengerWSUrl + localStorage.getItem('accessToken'))
+  },
+  beforeDestroy() {
+    this.ws.disconnect()
+  },
   methods: {
     followHomePage() {
       this.$router.push({ name: 'Home' });
