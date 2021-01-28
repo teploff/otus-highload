@@ -173,24 +173,24 @@ func (a *authService) RefreshToken(ctx context.Context, token string) (*domain.T
 	return &newTokenPair, a.repository.CommitTx(tx)
 }
 
-func (a *authService) Authenticate(ctx context.Context, token string) (string, error) {
+func (a *authService) Authenticate(ctx context.Context, token string) (*domain.User, error) {
 	tx, err := a.repository.GetTx(ctx)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	claims, err := a.parseToken(token)
 	if err != nil {
-		return "", fmt.Errorf("invalid token")
+		return nil, fmt.Errorf("invalid token")
 	}
 
 	userID := claims["aud"].(string)
-	_, err = a.repository.GetByIDAndAccessToken(tx, userID, token)
+	user, err := a.repository.GetByIDAndAccessToken(tx, userID, token)
 	if err != nil {
-		return "", fmt.Errorf("invalid token")
+		return nil, fmt.Errorf("invalid token")
 	}
 
-	return userID, a.repository.CommitTx(tx)
+	return user, a.repository.CommitTx(tx)
 }
 
 func (a *authService) GetUserIDByEmail(ctx context.Context, email string) (string, error) {
@@ -205,4 +205,46 @@ func (a *authService) GetUserIDByEmail(ctx context.Context, email string) (strin
 	}
 
 	return user.ID, a.repository.CommitTx(tx)
+}
+
+func (a *authService) GetUserByID(ctx context.Context, id string) (*domain.User, error) {
+	tx, err := a.repository.GetTx(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	user, err := a.repository.GetByID(tx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	return user, a.repository.CommitTx(tx)
+}
+
+func (a *authService) SearchByAnthroponym(ctx context.Context, anthroponym, userID string, limit, offset int) ([]*domain.User, int, error) {
+	tx, err := a.repository.GetTx(ctx)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	users, count, err := a.repository.GetByAnthroponym(tx, anthroponym, userID, limit, offset)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return users, count, a.repository.CommitTx(tx)
+}
+
+func (a *authService) GetUsersByIDs(ctx context.Context, ids []string) ([]*domain.User, error) {
+	tx, err := a.repository.GetTx(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	users, err := a.repository.GetByIDs(tx, ids)
+	if err != nil {
+		return nil, err
+	}
+
+	return users, a.repository.CommitTx(tx)
 }

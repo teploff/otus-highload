@@ -28,10 +28,10 @@ type GetUserIDByEmailRequest struct {
 	Email string `json:"email" form:"email" binding:"required"`
 }
 
-type SearchProfileByAnthroponymRequest struct {
+type GetUsersByAnthroponymRequest struct {
 	Anthroponym string `json:"anthroponym" form:"anthroponym" binding:"required"`
-	Limit       *int   `json:"limit" form:"limit"`
-	Offset      *int   `json:"offset" form:"offset"`
+	Limit       int    `json:"limit" form:"limit"`
+	Offset      int    `json:"offset" form:"offset"`
 }
 
 type AuthorizationHeader struct {
@@ -40,4 +40,8 @@ type AuthorizationHeader struct {
 
 type AuthenticateRequest struct {
 	Resource string `json:"resource"`
+}
+
+type GetUserByIDsRequest struct {
+	UserIDs []string `json:"user_ids" binding:"required"`
 }

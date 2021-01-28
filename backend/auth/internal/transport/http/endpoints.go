@@ -15,24 +15,27 @@ type Endpoints struct {
 func MakeEndpoints(auth domain.AuthService) *Endpoints {
 	return &Endpoints{
 		Auth: &AuthEndpoints{
-			SignUp:                 makeSignUpEndpoint(auth),
-			SignIn:                 makeSignInEndpoint(auth),
-			RefreshToken:           makeRefreshTokenEndpoint(auth),
-			GetUserIDByEmail:       makeGetUserIDByEmailEndpoint(auth),
-			Authenticate:           makeAuthenticateEndpoint(auth),
-			GetUserIDByAccessToken: makeGetUserIDByAccessTokenEndpoint(auth),
+			SignUp:                makeSignUpEndpoint(auth),
+			SignIn:                makeSignInEndpoint(auth),
+			RefreshToken:          makeRefreshTokenEndpoint(auth),
+			Authenticate:          makeAuthenticateEndpoint(auth),
+			GetUserIDByEmail:      makeGetUserIDByEmailEndpoint(auth),
+			GetUserByAccessToken:  makeGetUserByAccessTokenEndpoint(auth),
+			GetUsersByAnthroponym: makeGetUsersByAnthroponymEndpoint(auth),
+			GetUserByIDs:          makeGetUserByIDsEndpoint(auth),
 		},
 	}
 }
 
 type AuthEndpoints struct {
-	SignUp                     gin.HandlerFunc
-	SignIn                     gin.HandlerFunc
-	RefreshToken               gin.HandlerFunc
-	GetUserIDByEmail           gin.HandlerFunc
-	SearchProfileByAnthroponym gin.HandlerFunc
-	Authenticate               gin.HandlerFunc
-	GetUserIDByAccessToken     gin.HandlerFunc
+	SignUp                gin.HandlerFunc
+	SignIn                gin.HandlerFunc
+	RefreshToken          gin.HandlerFunc
+	Authenticate          gin.HandlerFunc
+	GetUserIDByEmail      gin.HandlerFunc
+	GetUserByAccessToken  gin.HandlerFunc
+	GetUsersByAnthroponym gin.HandlerFunc
+	GetUserByIDs          gin.HandlerFunc
 }
 
 // SignUp godoc
@@ -254,17 +257,17 @@ func makeAuthenticateEndpoint(svc domain.AuthService) gin.HandlerFunc {
 	}
 }
 
-// GetUserIDByAccessToken godoc
+// GetUserByAccessToken godoc
 // @Summary Retrieving User's id by access token in header.
 // @Description Retrieving User's id by access token in header.
 // @Tags auth
 // @Security ApiKeyAuth
 // @Accept  json
 // @Produce json
-// @Success 200 {object} GetUserIDByAccessTokenResponse
+// @Success 200 {object} GetUserByAccessTokenResponse
 // @Failure 400 {object} EmptyResponse
-// @Router /auth/user/get-id-by-token [get].
-func makeGetUserIDByAccessTokenEndpoint(svc domain.AuthService) gin.HandlerFunc {
+// @Router /auth/user/get-by-token [get].
+func makeGetUserByAccessTokenEndpoint(svc domain.AuthService) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var header AuthorizationHeader
 		if err := c.ShouldBindHeader(&header); err != nil {
@@ -275,7 +278,7 @@ func makeGetUserIDByAccessTokenEndpoint(svc domain.AuthService) gin.HandlerFunc 
 			return
 		}
 
-		userID, err := svc.Authenticate(c, header.AccessToken)
+		user, err := svc.Authenticate(c, header.AccessToken)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized, ErrorResponse{
 				Message: err.Error(),
@@ -284,6 +287,89 @@ func makeGetUserIDByAccessTokenEndpoint(svc domain.AuthService) gin.HandlerFunc 
 			return
 		}
 
-		c.JSON(http.StatusOK, GetUserIDByAccessTokenResponse{UserID: userID})
+		c.JSON(http.StatusOK, GetUserByAccessTokenResponse{User: user})
+	}
+}
+
+// GetUsersByAnthroponym godoc
+// @Summary Retrieving users by some variation of name and surname.
+// @Description Retrieving users by some variation of name and surname.
+// @Tags Auth
+// @Security ApiKeyAuth
+// @Accept  json
+// @Produce json
+// @Param payload body GetUsersByAnthroponymRequest true "Retrieving users payload"
+// @Success 200 {object} GetUsersByAnthroponymResponse
+// @Failure 400 {object} ErrorResponse
+// @Router /auth/user/get-by-anthroponym [post].
+func makeGetUsersByAnthroponymEndpoint(svc domain.AuthService) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var header AuthorizationHeader
+		if err := c.ShouldBindHeader(&header); err != nil {
+			c.JSON(http.StatusUnauthorized, ErrorResponse{
+				Message: err.Error(),
+			})
+
+			return
+		}
+
+		var request GetUsersByAnthroponymRequest
+		if err := c.BindQuery(&request); err != nil {
+			c.JSON(http.StatusBadRequest, ErrorResponse{
+				Message: err.Error(),
+			})
+
+			return
+		}
+
+		user, err := svc.Authenticate(c, header.AccessToken)
+		if err != nil {
+			c.JSON(http.StatusUnauthorized, ErrorResponse{
+				Message: err.Error(),
+			})
+
+			return
+		}
+
+		users, count, err := svc.SearchByAnthroponym(c, request.Anthroponym, user.ID, request.Limit, request.Offset)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, ErrorResponse{
+				Message: err.Error(),
+			})
+
+			return
+		}
+
+		c.JSON(http.StatusOK, GetUsersByAnthroponymResponse{
+			Users: users,
+			Count: count,
+		})
+
+	}
+}
+
+func makeGetUserByIDsEndpoint(svc domain.AuthService) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var request GetUserByIDsRequest
+		if err := c.Bind(&request); err != nil {
+			c.JSON(http.StatusBadRequest, ErrorResponse{
+				Message: err.Error(),
+			})
+
+			return
+		}
+
+		users, err := svc.GetUsersByIDs(c, request.UserIDs)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, ErrorResponse{
+				Message: err.Error(),
+			})
+
+			return
+		}
+
+		c.JSON(http.StatusOK, GetUserByIDsResponse{
+			Users: users,
+		})
 	}
 }

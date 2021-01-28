@@ -15,6 +15,8 @@ type UserRepository interface {
 	GetByEmail(tx *sql.Tx, email string) (*User, error)
 	GetByIDAndRefreshToken(tx *sql.Tx, id, token string) (*User, error)
 	GetByIDAndAccessToken(tx *sql.Tx, id, token string) (*User, error)
+	GetByAnthroponym(tx *sql.Tx, anthroponym, userID string, limit, offset int) ([]*User, int, error)
+	GetByIDs(tx *sql.Tx, ids []string) ([]*User, error)
 	UpdateByID(tx *sql.Tx, user *User) error
 	CompareError(err error, number uint16) bool
 }

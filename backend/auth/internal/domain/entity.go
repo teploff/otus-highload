@@ -7,7 +7,7 @@ import (
 
 type Credentials struct {
 	Email    string `json:"email"`
-	Password string `json:"password"`
+	Password string `json:"-"`
 }
 
 func NewCredentials(email string, password string) (*Credentials, error) {
@@ -15,6 +15,7 @@ func NewCredentials(email string, password string) (*Credentials, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return &Credentials{Email: email, Password: string(hash)}, nil
 }
 
@@ -25,15 +26,14 @@ func (c *Credentials) DoesPasswordMatch(password string) bool {
 type User struct {
 	ID string `json:"id"`
 	Credentials
-	Name             string    `json:"name"`
-	Surname          string    `json:"surname"`
-	Birthday         time.Time `json:"birthday"`
-	Sex              string    `json:"sex"`
-	City             string    `json:"city"`
-	Interests        string    `json:"interests"`
-	AccessToken      *string   `json:"access_token"`
-	RefreshToken     *string   `json:"refresh_token"`
-	FriendshipStatus string    `json:"friendship_status"`
+	Name         string    `json:"name"`
+	Surname      string    `json:"surname"`
+	Birthday     time.Time `json:"birthday"`
+	Sex          string    `json:"sex"`
+	City         string    `json:"city"`
+	Interests    string    `json:"interests"`
+	AccessToken  *string   `json:"-"`
+	RefreshToken *string   `json:"-"`
 }
 
 type TokenPair struct {
