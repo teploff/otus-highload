@@ -1,8 +1,8 @@
 .PHONY: infrastructure migrate service reload_auth reload_social reload_messenger reload_gateway reload_frontend down
 
 infrastructure:
-	docker-compose -f deployment/docker-compose.yml up -d --build ch-cluster ch-shard-0 ch-shard-1 mysql-storage cache \
-		nats-streaming adminer ;\
+	docker-compose -f deployment/docker-compose.yml up -d --build ch-cluster ch-shard-0 ch-shard-1 auth-storage \
+		social-storage cache nats-streaming ;\
 
 migrate:
 	docker-compose -f deployment/docker-compose.yml up --build mysql-migrator ch-cluster-migrator ch-shard-migrator-0 \
