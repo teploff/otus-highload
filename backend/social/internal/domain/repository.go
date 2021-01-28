@@ -6,16 +6,6 @@ import (
 	"net"
 )
 
-const DuplicateKeyErrNumber = 1062
-
-type UserRepository interface {
-	GetTx(ctx context.Context) (*sql.Tx, error)
-	CommitTx(tx *sql.Tx) error
-	GetByID(tx *sql.Tx, id string) (*User, error)
-	GetByAnthroponym(tx *sql.Tx, userID, anthroponym string, limit, offset int) ([]*User, int, error)
-	CompareError(err error, number uint16) bool
-}
-
 type SocialRepository interface {
 	GetTx(ctx context.Context) (*sql.Tx, error)
 	CommitTx(tx *sql.Tx) error
@@ -23,9 +13,10 @@ type SocialRepository interface {
 	ConfirmFriendship(tx *sql.Tx, userID string, friendsID []string) error
 	RejectFriendship(tx *sql.Tx, userID string, friendsID []string) error
 	BreakFriendship(tx *sql.Tx, userID string, friendsID []string) error
-	GetFriends(tx *sql.Tx, userID string) ([]*User, error)
-	GetFollowers(tx *sql.Tx, userID string) ([]*User, error)
-	GetNews(tx *sql.Tx, userID string, limit, offset int) ([]*News, int, error)
+	GetFriends(tx *sql.Tx, userID string) ([]string, error)
+	GetFollowers(tx *sql.Tx, userID string) ([]string, error)
+	GetUserFriendships(tx *sql.Tx, userID string) ([]*FriendShip, error)
+	GetNews(tx *sql.Tx, friends []*User, offset, limit int) ([]*News, int, error)
 	PublishNews(tx *sql.Tx, userID string, news []*News) error
 }
 

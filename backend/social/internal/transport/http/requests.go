@@ -26,3 +26,7 @@ type AuthorizationHeader struct {
 type WSRequest struct {
 	AccessToken string `json:"token"  binding:"required" form:"token"`
 }
+
+type GetUserFriendships struct {
+	UserID string `json:"user_id" binding:"required" form:"user_id"`
+}

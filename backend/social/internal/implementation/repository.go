@@ -9,11 +9,8 @@ import (
 	"net"
 	"social/internal/domain"
 	"social/internal/infrastructure/cache"
-	"strings"
 	"sync"
 	"time"
-
-	"github.com/go-sql-driver/mysql"
 )
 
 const (
@@ -22,165 +19,6 @@ const (
 	friendshipConfirmedStatus = "confirmed"
 	friendshipAcceptedStatus  = "accepted"
 )
-
-type userRepository struct {
-	conn *sql.DB
-}
-
-func NewUserRepository(conn *sql.DB) *userRepository {
-	return &userRepository{conn: conn}
-}
-
-func (p *userRepository) GetTx(ctx context.Context) (*sql.Tx, error) {
-	return p.conn.BeginTx(ctx, nil)
-}
-
-func (p *userRepository) CommitTx(tx *sql.Tx) error {
-	return tx.Commit()
-}
-
-func (p *userRepository) GetByID(tx *sql.Tx, id string) (*domain.User, error) {
-	var user domain.User
-
-	err := tx.QueryRow(`
-		SELECT
-			id, email, password, name, surname, sex, birthday, city, interests, access_token, refresh_token
-		FROM
-			 user 
-		WHERE 
-			  id = ?`, id).Scan(&user.ID, &user.Email, &user.Password, &user.Name, &user.Surname,
-		&user.Sex, &user.Birthday, &user.City, &user.Interests, &user.AccessToken, &user.RefreshToken)
-	if err != nil {
-		tx.Rollback()
-
-		return nil, err
-	}
-
-	return &user, nil
-}
-
-func (p *userRepository) GetByAnthroponym(tx *sql.Tx, anthroponym, userID string, limit, offset int) ([]*domain.User, int, error) {
-	var (
-		rows  *sql.Rows
-		count int
-		err   error
-	)
-
-	friendships := make([]*domain.FriendShip, 0, 100)
-	users := make([]*domain.User, 0, 100)
-
-	rows, err = tx.Query(`
-		SELECT
-			master_user_id, slave_user_id, status
-		FROM
-			user
-		JOIN friendship 
-			ON user.id = friendship.master_user_id
-		WHERE
-			user.id = ?
-		UNION
-		SELECT
-			master_user_id, slave_user_id, status
-		FROM
-			user
-		JOIN friendship 
-			ON user.id = friendship.slave_user_id
-		WHERE
-			user.id = ?`, userID, userID)
-	if err != nil {
-		tx.Rollback()
-
-		return nil, 0, err
-	}
-	defer rows.Close()
-
-	for rows.Next() {
-		friendship := new(domain.FriendShip)
-
-		if err = rows.Scan(&friendship.MasterUserID, &friendship.SlaveUserID, &friendship.Status); err != nil {
-			tx.Rollback()
-
-			return nil, 0, err
-		}
-
-		friendships = append(friendships, friendship)
-	}
-
-	strs := strings.Split(anthroponym, " ")
-
-	if len(strs) > 1 {
-		rows, err = tx.Query(`
-			SELECT
-			    SQL_CALC_FOUND_ROWS id, email, password, name, surname, sex, birthday, city, interests, access_token, refresh_token
-			FROM
-		    	user
-			WHERE 
-				(name LIKE ? AND surname LIKE ?) OR (name LIKE ? AND surname LIKE ?) AND id != ?
-			ORDER BY surname
-			LIMIT ? OFFSET ?`, strs[0]+"%", strs[1]+"%", strs[1]+"%", strs[0]+"%", userID, limit, offset)
-	} else {
-		rows, err = tx.Query(`
-			SELECT
-				SQL_CALC_FOUND_ROWS id, email, password, name, surname, sex, birthday, city, interests, access_token, refresh_token
-			FROM
-		    	user
-			WHERE 
-				name LIKE ? OR surname LIKE ? AND id != ?
-			ORDER BY surname
-			LIMIT ? OFFSET ?`, strs[0]+"%", strs[0]+"%", userID, limit, offset)
-	}
-
-	if err != nil {
-		tx.Rollback()
-
-		return nil, 0, err
-	}
-	defer rows.Close()
-
-	for rows.Next() {
-		user := new(domain.User)
-		user.FriendshipStatus = friendshipNonameStatus
-
-		if err = rows.Scan(&user.ID, &user.Email, &user.Password, &user.Name, &user.Surname, &user.Sex, &user.Birthday,
-			&user.City, &user.Interests, &user.AccessToken, &user.RefreshToken); err != nil {
-			tx.Rollback()
-
-			return nil, 0, err
-		}
-
-		for _, friendship := range friendships {
-			if friendship.MasterUserID == user.ID {
-				switch friendship.Status {
-				case friendshipExpectedStatus:
-					user.FriendshipStatus = friendshipConfirmedStatus
-				default:
-					user.FriendshipStatus = friendshipAcceptedStatus
-				}
-			} else if friendship.SlaveUserID == user.ID {
-				user.FriendshipStatus = friendship.Status
-			}
-		}
-
-		users = append(users, user)
-	}
-
-	if err = tx.QueryRow(`SELECT FOUND_ROWS()`).Scan(&count); err != nil {
-		tx.Rollback()
-
-		return nil, 0, err
-	}
-
-	return users, count, nil
-}
-
-func (p *userRepository) CompareError(err error, number uint16) bool {
-	me, ok := err.(*mysql.MySQLError)
-	if !ok {
-		return false
-	}
-
-	return me.Number == number
-}
 
 type socialRepository struct {
 	conn *sql.DB
@@ -297,27 +135,23 @@ func (s *socialRepository) BreakFriendship(tx *sql.Tx, userID string, friendsID 
 	return nil
 }
 
-func (s *socialRepository) GetFriends(tx *sql.Tx, userID string) ([]*domain.User, error) {
-	users := make([]*domain.User, 0, 100)
+func (s *socialRepository) GetFriends(tx *sql.Tx, userID string) ([]string, error) {
+	usersID := make([]string, 0, 100)
 
 	rows, err := tx.Query(`
 		SELECT
-			user.id, user.email, user.password, user.name, user.surname, user.sex, user.birthday, user.city, user.interests, user.access_token, user.refresh_token
+			slave_user_id as id
 		FROM
-			user
-		JOIN friendship 
-			ON user.id = friendship.master_user_id
+			friendship
 		WHERE
-			friendship.slave_user_id = ? and friendship.status = ?
+			master_user_id = ? and status = ?
 		UNION
 		SELECT
-			user.id, user.email, user.password, user.name, user.surname, user.sex, user.birthday, user.city, user.interests, user.access_token, user.refresh_token
+			slave_user_id as id
 		FROM
-			user
-		JOIN friendship 
-			ON user.id = friendship.slave_user_id
+			friendship
 		WHERE
-			friendship.master_user_id = ? and friendship.status = ?`, userID, friendshipAcceptedStatus, userID, friendshipAcceptedStatus)
+			slave_user_id = ? and status = ?`, userID, friendshipAcceptedStatus, userID, friendshipAcceptedStatus)
 	if err != nil {
 		tx.Rollback()
 
@@ -326,33 +160,30 @@ func (s *socialRepository) GetFriends(tx *sql.Tx, userID string) ([]*domain.User
 	defer rows.Close()
 
 	for rows.Next() {
-		user := new(domain.User)
+		var id string
 
-		if err = rows.Scan(&user.ID, &user.Email, &user.Password, &user.Name, &user.Surname, &user.Sex, &user.Birthday,
-			&user.City, &user.Interests, &user.AccessToken, &user.RefreshToken); err != nil {
+		if err = rows.Scan(&id); err != nil {
 			tx.Rollback()
 
 			return nil, err
 		}
 
-		users = append(users, user)
+		usersID = append(usersID, id)
 	}
 
-	return users, nil
+	return usersID, nil
 }
 
-func (s *socialRepository) GetFollowers(tx *sql.Tx, userID string) ([]*domain.User, error) {
-	users := make([]*domain.User, 0, 100)
+func (s *socialRepository) GetFollowers(tx *sql.Tx, userID string) ([]string, error) {
+	usersID := make([]string, 0, 100)
 
 	rows, err := tx.Query(`
 		SELECT
-			user.id, user.email, user.password, user.name, user.surname, user.sex, user.birthday, user.city, user.interests, user.access_token, user.refresh_token
+			master_user_id as id
 		FROM
-			user
-		JOIN friendship
-			ON user.id = friendship.master_user_id
+			friendship
 		WHERE
-			friendship.slave_user_id = ? and friendship.status = ?`, userID, friendshipExpectedStatus)
+		    slave_user_id = ? and status = ?`, userID, friendshipExpectedStatus)
 	if err != nil {
 		tx.Rollback()
 
@@ -361,40 +192,66 @@ func (s *socialRepository) GetFollowers(tx *sql.Tx, userID string) ([]*domain.Us
 	defer rows.Close()
 
 	for rows.Next() {
-		user := new(domain.User)
+		var userID string
 
-		if err = rows.Scan(&user.ID, &user.Email, &user.Password, &user.Name, &user.Surname, &user.Sex, &user.Birthday,
-			&user.City, &user.Interests, &user.AccessToken, &user.RefreshToken); err != nil {
+		if err = rows.Scan(&userID); err != nil {
 			tx.Rollback()
 
 			return nil, err
 		}
 
-		users = append(users, user)
+		usersID = append(usersID, userID)
 	}
 
-	return users, nil
+	return usersID, nil
 }
 
-func (s *socialRepository) GetNews(tx *sql.Tx, userID string, limit, offset int) ([]*domain.News, int, error) {
-	friends, err := s.GetFriends(tx, userID)
-	if err != nil && err != sql.ErrNoRows {
-		return nil, 0, err
+func (s *socialRepository) GetUserFriendships(tx *sql.Tx, userID string) ([]*domain.FriendShip, error) {
+	friendships := make([]*domain.FriendShip, 0, 100)
+
+	rows, err := tx.Query(`
+		SELECT
+			master_user_id, slave_user_id, status
+		FROM
+			friendship
+		WHERE
+			master_user_id = ? OR slave_user_id = ?`, userID, userID)
+	if err != nil {
+		tx.Rollback()
+
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		friendship := new(domain.FriendShip)
+
+		if err = rows.Scan(&friendship.MasterUserID, &friendship.SlaveUserID, &friendship.Status); err != nil {
+			tx.Rollback()
+
+			return nil, err
+		}
+
+		friendships = append(friendships, friendship)
 	}
 
-	ids := make([]string, 0, len(friends)+1)
-	for _, friend := range friends {
-		ids = append(ids, friend.ID)
+	return friendships, nil
+}
+
+func (s *socialRepository) GetNews(tx *sql.Tx, friends []*domain.User, limit, offset int) ([]*domain.News, int, error) {
+	friendsID := make([]string, 0, len(friends))
+
+	for _, id := range friendsID {
+		friendsID = append(friendsID, id)
 	}
-	ids = append(ids, userID)
 
 	var count int
 	news := make([]*domain.News, 0, 100)
 
-	sqlStr := "SELECT SQL_CALC_FOUND_ROWS news.id, user.name, user.surname, user.sex, content, news.create_time FROM news JOIN user ON news.owner_id = user.id WHERE owner_id IN ("
-	vals := make([]interface{}, 0, len(ids))
+	sqlStr := "SELECT SQL_CALC_FOUND_ROWS id, owner_id, content, create_time FROM news WHERE owner_id IN ("
+	vals := make([]interface{}, 0, len(friendsID))
 
-	for _, id := range ids {
+	for _, id := range friendsID {
 		sqlStr += "?,"
 		vals = append(vals, id)
 	}
@@ -422,12 +279,23 @@ func (s *socialRepository) GetNews(tx *sql.Tx, userID string, limit, offset int)
 	defer rows.Close()
 
 	for rows.Next() {
+		var ownerID string
 		n := new(domain.News)
 
-		if err = rows.Scan(&n.ID, &n.Owner.Name, &n.Owner.Surname, &n.Owner.Sex, &n.Content, &n.CreateTime); err != nil {
+		if err = rows.Scan(&n.ID, &ownerID, &n.Content, &n.CreateTime); err != nil {
 			tx.Rollback()
 
 			return nil, 0, err
+		}
+
+		for _, u := range friends {
+			if u.ID == ownerID {
+				n.Owner.Name = u.Name
+				n.Owner.Surname = u.Surname
+				n.Owner.Sex = u.Sex
+
+				break
+			}
 		}
 
 		news = append(news, n)

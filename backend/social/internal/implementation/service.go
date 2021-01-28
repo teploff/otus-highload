@@ -7,6 +7,7 @@ import (
 	"social/internal/infrastructure/stan"
 	stantransport "social/internal/transport/stan"
 	"sort"
+	"strconv"
 	"time"
 
 	"github.com/gobwas/ws"
@@ -27,76 +28,155 @@ func NewAuthService(authAddr string) *authService {
 }
 
 type getUserIDByAccessTokenResponse struct {
-	UserID string `json:"user_id"`
+	*domain.User
 }
 
-func (a *authService) Authenticate(_ context.Context, token string) (string, error) {
+func (a *authService) Authenticate(_ context.Context, token string) (*domain.User, error) {
 	header := req.Header{
 		"Accept":        "application/json",
 		"Authorization": token,
 	}
 
-	// only url is required, others are optional.
-	r, err := req.Get("http://"+a.authAddr+"/auth/user/get-id-by-token", header)
+	r, err := req.Get("http://"+a.authAddr+"/auth/user/get-by-token", header)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	var response getUserIDByAccessTokenResponse
 	if err = r.ToJSON(&response); err != nil {
-		return "", err
+		return nil, err
 	}
 
-	return response.UserID, nil
+	return response.User, nil
+}
+
+type getUsersByAnthroponymResponse struct {
+	Count int            `json:"count"`
+	Users []*domain.User `json:"users"`
+}
+
+func (a *authService) GetUsersByAnthroponym(ctx context.Context, token, anthroponym string, offset, limit int) ([]*domain.User, int, error) {
+	header := req.Header{
+		"Accept":        "application/json",
+		"Authorization": token,
+	}
+
+	param := req.Param{
+		"anthroponym": anthroponym,
+		"offset":      strconv.Itoa(offset),
+		"limit":       strconv.Itoa(limit),
+	}
+
+	r, err := req.Get("http://"+a.authAddr+"/auth/user/get-by-anthroponym", header, param)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	var response getUsersByAnthroponymResponse
+	if err = r.ToJSON(&response); err != nil {
+		return nil, 0, err
+	}
+
+	return response.Users, response.Count, nil
+}
+
+type getUserByIDsRequest struct {
+	UserIDs []string `json:"user_ids" binding:"required"`
+}
+
+type getUserByIDsResponse struct {
+	Users []*domain.User `json:"users"`
+}
+
+func (a *authService) GetUsersByIDs(ctx context.Context, ids []string) ([]*domain.User, error) {
+	header := req.Header{
+		"Accept": "application/json",
+	}
+
+	body := getUserByIDsRequest{
+		UserIDs: ids,
+	}
+
+	r, err := req.Post("http://"+a.authAddr+"/auth/user/get-by-ids", header, req.BodyJSON(body))
+	if err != nil {
+		return nil, err
+	}
+
+	var response getUserByIDsResponse
+	if err = r.ToJSON(&response); err != nil {
+		return nil, err
+	}
+
+	return response.Users, nil
 }
 
 type profileService struct {
-	repository domain.UserRepository
+	authSvc   domain.AuthService
+	socialRep domain.SocialRepository
 }
 
-func NewProfileService(repository domain.UserRepository) *profileService {
-	return &profileService{repository: repository}
+func NewProfileService(service domain.AuthService, repository domain.SocialRepository) *profileService {
+	return &profileService{
+		authSvc:   service,
+		socialRep: repository,
+	}
 }
 
-func (p *profileService) SearchByAnthroponym(ctx context.Context, anthroponym, userID string, limit, offset int) ([]*domain.Questionnaire, int, error) {
-	tx, err := p.repository.GetTx(ctx)
+func (p *profileService) SearchByAnthroponym(ctx context.Context, token, anthroponym string, offset, limit int) ([]*domain.User, int, error) {
+	user, err := p.authSvc.Authenticate(ctx, token)
 	if err != nil {
 		return nil, 0, err
 	}
 
-	users, count, err := p.repository.GetByAnthroponym(tx, anthroponym, userID, limit, offset)
+	users, count, err := p.authSvc.GetUsersByAnthroponym(ctx, token, anthroponym, offset, limit)
 	if err != nil {
 		return nil, 0, err
 	}
 
-	questionnaires := make([]*domain.Questionnaire, 0, len(users))
-	for _, user := range users {
-		questionnaires = append(questionnaires, &domain.Questionnaire{
-			ID:               user.ID,
-			Email:            user.Email,
-			Name:             user.Name,
-			Surname:          user.Surname,
-			Birthday:         user.Birthday,
-			Sex:              user.Sex,
-			City:             user.City,
-			Interests:        user.Interests,
-			FriendshipStatus: user.FriendshipStatus,
-		})
+	tx, err := p.socialRep.GetTx(ctx)
+	if err != nil {
+		return nil, 0, nil
 	}
 
-	return questionnaires, count, p.repository.CommitTx(tx)
+	friendships, err := p.socialRep.GetUserFriendships(tx, user.ID)
+	if err != nil {
+		return nil, 0, nil
+	}
+
+	if err = p.socialRep.CommitTx(tx); err != nil {
+		return nil, 0, nil
+	}
+
+	for _, u := range users {
+		u.FriendshipStatus = friendshipNonameStatus
+
+		for _, friendship := range friendships {
+			if friendship.MasterUserID == user.ID {
+				switch friendship.Status {
+				case friendshipExpectedStatus:
+					user.FriendshipStatus = friendshipConfirmedStatus
+				default:
+					user.FriendshipStatus = friendshipAcceptedStatus
+				}
+			} else if friendship.SlaveUserID == user.ID {
+				user.FriendshipStatus = friendship.Status
+			}
+		}
+	}
+
+	return users, count, nil
 }
 
 type socialService struct {
-	userRepository        domain.UserRepository
+	authSvc               domain.AuthService
 	socialRepository      domain.SocialRepository
 	socialCacheRepository domain.SocialCacheRepository
 	stanClient            *stan.Client
 }
 
-func NewSocialService(userRep domain.UserRepository, socialRep domain.SocialRepository, socialCacheRep domain.SocialCacheRepository, stanClient *stan.Client) *socialService {
+func NewSocialService(authSvc domain.AuthService, socialRep domain.SocialRepository, socialCacheRep domain.SocialCacheRepository, stanClient *stan.Client) *socialService {
 	return &socialService{
-		userRepository:        userRep,
+		authSvc:               authSvc,
 		socialRepository:      socialRep,
 		socialCacheRepository: socialCacheRep,
 		stanClient:            stanClient,
@@ -199,65 +279,43 @@ func (s *socialService) BreakFriendship(ctx context.Context, userID string, frie
 	return nil
 }
 
-func (s *socialService) GetFriends(ctx context.Context, userID string) ([]*domain.Questionnaire, error) {
+func (s *socialService) GetFriends(ctx context.Context, userID string) ([]*domain.User, error) {
 	tx, err := s.socialRepository.GetTx(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	users, err := s.socialRepository.GetFriends(tx, userID)
+	friendsID, err := s.socialRepository.GetFriends(tx, userID)
 	if err != nil {
 		return nil, err
 	}
 
-	questionnaires := make([]*domain.Questionnaire, 0, len(users))
-	for _, user := range users {
-		questionnaires = append(questionnaires, &domain.Questionnaire{
-			ID:               user.ID,
-			Email:            user.Email,
-			Name:             user.Name,
-			Surname:          user.Surname,
-			Birthday:         user.Birthday,
-			Sex:              user.Sex,
-			City:             user.City,
-			Interests:        user.Interests,
-			FriendshipStatus: user.FriendshipStatus,
-		})
+	if err = s.socialRepository.CommitTx(tx); err != nil {
+		return nil, err
 	}
 
-	return questionnaires, s.socialRepository.CommitTx(tx)
+	return s.authSvc.GetUsersByIDs(ctx, friendsID)
 }
 
-func (s *socialService) GetFollowers(ctx context.Context, userID string) ([]*domain.Questionnaire, error) {
+func (s *socialService) GetFollowers(ctx context.Context, userID string) ([]*domain.User, error) {
 	tx, err := s.socialRepository.GetTx(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	users, err := s.socialRepository.GetFollowers(tx, userID)
+	followersID, err := s.socialRepository.GetFollowers(tx, userID)
 	if err != nil {
 		return nil, err
 	}
 
-	questionnaires := make([]*domain.Questionnaire, 0, len(users))
-	for _, user := range users {
-		questionnaires = append(questionnaires, &domain.Questionnaire{
-			ID:               user.ID,
-			Email:            user.Email,
-			Name:             user.Name,
-			Surname:          user.Surname,
-			Birthday:         user.Birthday,
-			Sex:              user.Sex,
-			City:             user.City,
-			Interests:        user.Interests,
-			FriendshipStatus: user.FriendshipStatus,
-		})
+	if err = s.socialRepository.CommitTx(tx); err != nil {
+		return nil, err
 	}
 
-	return questionnaires, s.socialRepository.CommitTx(tx)
+	return s.authSvc.GetUsersByIDs(ctx, followersID)
 }
 
-func (s *socialService) RetrieveNews(ctx context.Context, userID string, limit, offset int) ([]*domain.News, int, error) {
+func (s *socialService) RetrieveNews(ctx context.Context, userID string, offset, limit int) ([]*domain.News, int, error) {
 	ids, err := s.socialCacheRepository.RetrieveFriendsID(ctx, userID)
 	if err != nil {
 		return nil, 0, err
@@ -298,13 +356,8 @@ func (s *socialService) paginate(n []*domain.News, skip int, size int) []*domain
 	return n[skip:end]
 }
 
-func (s *socialService) PublishNews(ctx context.Context, userID string, newsContent []string) error {
-	tx, err := s.socialRepository.GetTx(ctx)
-	if err != nil {
-		return err
-	}
-
-	user, err := s.userRepository.GetByID(tx, userID)
+func (s *socialService) PublishNews(ctx context.Context, token string, newsContent []string) error {
+	user, err := s.authSvc.Authenticate(ctx, token)
 	if err != nil {
 		return err
 	}
@@ -327,7 +380,12 @@ func (s *socialService) PublishNews(ctx context.Context, userID string, newsCont
 		})
 	}
 
-	if err = s.socialRepository.PublishNews(tx, userID, news); err != nil {
+	tx, err := s.socialRepository.GetTx(ctx)
+	if err != nil {
+		return err
+	}
+
+	if err = s.socialRepository.PublishNews(tx, token, news); err != nil {
 		return err
 	}
 
@@ -335,7 +393,7 @@ func (s *socialService) PublishNews(ctx context.Context, userID string, newsCont
 		return err
 	}
 
-	if err = s.stanClient.Publish("news", &stantransport.NewsPersistRequest{OwnerID: userID, News: news}); err != nil {
+	if err = s.stanClient.Publish("news", &stantransport.NewsPersistRequest{OwnerID: token, News: news}); err != nil {
 		return err
 	}
 
@@ -374,7 +432,7 @@ type WSNewsRequest struct {
 }
 
 type wsService struct {
-	userRep        domain.UserRepository
+	authSvc        domain.AuthService
 	socialRep      domain.SocialRepository
 	socialCacheRep domain.SocialCacheRepository
 	wsPoolRep      domain.WSPoolRepository
@@ -382,11 +440,11 @@ type wsService struct {
 	logger         *zap.Logger
 }
 
-func NewWSService(userRep domain.UserRepository, socialRep domain.SocialRepository,
+func NewWSService(authSvc domain.AuthService, socialRep domain.SocialRepository,
 	socialCacheRep domain.SocialCacheRepository, wsPoolRep domain.WSPoolRepository,
 	stanClient *stan.Client, logger *zap.Logger) *wsService {
 	return &wsService{
-		userRep:        userRep,
+		authSvc:        authSvc,
 		socialRep:      socialRep,
 		socialCacheRep: socialCacheRep,
 		wsPoolRep:      wsPoolRep,
@@ -395,32 +453,12 @@ func NewWSService(userRep domain.UserRepository, socialRep domain.SocialReposito
 	}
 }
 
-func (w *wsService) EstablishConn(ctx context.Context, userID string, conn net.Conn) {
-	w.wsPoolRep.AddConnection(userID, conn)
+func (w *wsService) EstablishConn(ctx context.Context, user *domain.User, conn net.Conn) {
+	w.wsPoolRep.AddConnection(user.ID, conn)
 
-	go func(userID string) {
+	go func(user *domain.User) {
 		defer conn.Close()
-		defer w.wsPoolRep.RemoveConnection(userID, conn)
-
-		tx, err := w.userRep.GetTx(ctx)
-		if err != nil {
-			w.logger.Error("can't get transaction", zap.Error(err))
-
-			return
-		}
-
-		user, err := w.userRep.GetByID(tx, userID)
-		if err != nil {
-			w.logger.Error("fail get user by id", zap.Error(err))
-
-			return
-		}
-
-		if err = tx.Commit(); err != nil {
-			w.logger.Error("fail commit transaction", zap.Error(err))
-
-			return
-		}
+		defer w.wsPoolRep.RemoveConnection(user.ID, conn)
 
 		for {
 			msg, _, err := wsutil.ReadClientData(conn)
@@ -434,7 +472,7 @@ func (w *wsService) EstablishConn(ctx context.Context, userID string, conn net.C
 				w.logger.Error("", zap.Error(err))
 			}
 		}
-	}(userID)
+	}(user)
 }
 
 func (w *wsService) parseRequest(ctx context.Context, user *domain.User, msg []byte) error {

@@ -54,19 +54,20 @@ func NewApp(cfg *config.Config, opts ...Option) *App {
 // Run lunch application.
 func (a *App) Run(mysqlConn *sql.DB, redisPool *cache.Pool, stanClient *stan.Client) {
 	a.stanSrv = stantransport.NewStan(stanClient, a.logger)
+	authSvc := implementation.NewAuthService(a.cfg.Auth.Addr)
 	wsPoolRep := implementation.NewWSPoolRepository()
+
 	a.wsSvc = implementation.NewWSService(
-		implementation.NewUserRepository(mysqlConn),
+		authSvc,
 		implementation.NewSocialRepository(mysqlConn),
 		implementation.NewCacheRepository(redisPool),
 		wsPoolRep,
 		stanClient,
 		a.logger)
 
-	authSvc := implementation.NewAuthService(a.cfg.Auth.Addr)
-	profileSvc := implementation.NewProfileService(implementation.NewUserRepository(mysqlConn))
+	profileSvc := implementation.NewProfileService(authSvc, implementation.NewSocialRepository(mysqlConn))
 	socialSvc := implementation.NewSocialService(
-		implementation.NewUserRepository(mysqlConn),
+		authSvc,
 		implementation.NewSocialRepository(mysqlConn),
 		implementation.NewCacheRepository(redisPool),
 		stanClient,

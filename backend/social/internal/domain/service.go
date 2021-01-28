@@ -6,11 +6,13 @@ import (
 )
 
 type AuthService interface {
-	Authenticate(ctx context.Context, token string) (string, error)
+	Authenticate(ctx context.Context, token string) (*User, error)
+	GetUsersByAnthroponym(ctx context.Context, token, anthroponym string, offset, limit int) ([]*User, int, error)
+	GetUsersByIDs(ctx context.Context, ids []string) ([]*User, error)
 }
 
 type ProfileService interface {
-	SearchByAnthroponym(ctx context.Context, anthroponym, userID string, limit, offset int) ([]*Questionnaire, int, error)
+	SearchByAnthroponym(ctx context.Context, token, anthroponym string, offset, limit int) ([]*User, int, error)
 }
 
 type SocialService interface {
@@ -18,9 +20,9 @@ type SocialService interface {
 	ConfirmFriendship(ctx context.Context, userID string, friendsID []string) error
 	RejectFriendship(ctx context.Context, userID string, friendsID []string) error
 	BreakFriendship(ctx context.Context, userID string, friendsID []string) error
-	GetFriends(ctx context.Context, userID string) ([]*Questionnaire, error)
-	GetFollowers(ctx context.Context, userID string) ([]*Questionnaire, error)
-	RetrieveNews(ctx context.Context, userID string, limit, offset int) ([]*News, int, error)
+	GetFriends(ctx context.Context, userID string) ([]*User, error)
+	GetFollowers(ctx context.Context, userID string) ([]*User, error)
+	RetrieveNews(ctx context.Context, userID string, offset, limit int) ([]*News, int, error)
 	PublishNews(ctx context.Context, userID string, newsContent []string) error
 }
 
@@ -31,7 +33,7 @@ type CacheService interface {
 }
 
 type WSService interface {
-	EstablishConn(ctx context.Context, userID string, coon net.Conn)
+	EstablishConn(ctx context.Context, user *User, coon net.Conn)
 	SendNews(ctx context.Context, ownerID string, news []*News) error
 	Close()
 }

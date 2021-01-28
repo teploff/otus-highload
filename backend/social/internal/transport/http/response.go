@@ -12,17 +12,21 @@ type ErrorResponse struct {
 type EmptyResponse struct {
 }
 
-type QuestionnairesResponse struct {
-	Questionnaires []*domain.Questionnaire `json:"questionnaires"`
-	Count          int                     `json:"count"`
+type SearchProfileByAnthroponymResponse struct {
+	Users []*domain.User `json:"users"`
+	Count int            `json:"count"`
 }
 
 type GetFriendsResponse struct {
-	Friends []*domain.Questionnaire `json:"friends"`
+	Friends []*domain.User `json:"friends"`
 }
 
 type GetFollowersResponse struct {
-	Followers []*domain.Questionnaire `json:"followers"`
+	Followers []*domain.User `json:"followers"`
+}
+
+type GetUserFriendshipsResponse struct {
+	Friendships []*domain.FriendShip
 }
 
 type GetNewsResponse struct {

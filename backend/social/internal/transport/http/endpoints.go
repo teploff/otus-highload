@@ -59,7 +59,7 @@ func makeWSEndpoint(authSvc domain.AuthService, wsSvc domain.WSService) gin.Hand
 			return
 		}
 
-		userID, err := authSvc.Authenticate(c, request.AccessToken)
+		user, err := authSvc.Authenticate(c, request.AccessToken)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized, ErrorResponse{
 				Message: err.Error(),
@@ -77,7 +77,7 @@ func makeWSEndpoint(authSvc domain.AuthService, wsSvc domain.WSService) gin.Hand
 			return
 		}
 
-		wsSvc.EstablishConn(c, userID, conn)
+		wsSvc.EstablishConn(c, user, conn)
 	}
 }
 
@@ -93,7 +93,7 @@ type ProfileEndpoints struct {
 // @Accept  json
 // @Produce json
 // @Param payload body SearchProfileByAnthroponymRequest true "Search payload"
-// @Success 200 {object} QuestionnairesResponse
+// @Success 200 {object} SearchProfileByAnthroponymResponse
 // @Failure 400 {object} ErrorResponse
 // @Router /social/profile/search-by-anthroponym [post].
 func makeSearchProfileByAnthroponym(authSvc domain.AuthService, profileSvc domain.ProfileService) gin.HandlerFunc {
@@ -116,15 +116,6 @@ func makeSearchProfileByAnthroponym(authSvc domain.AuthService, profileSvc domai
 			return
 		}
 
-		userID, err := authSvc.Authenticate(c, header.AccessToken)
-		if err != nil {
-			c.JSON(http.StatusUnauthorized, ErrorResponse{
-				Message: err.Error(),
-			})
-
-			return
-		}
-
 		const (
 			defaultLimit  = 10
 			defaultOffset = 0
@@ -139,7 +130,8 @@ func makeSearchProfileByAnthroponym(authSvc domain.AuthService, profileSvc domai
 			*request.Offset = defaultOffset
 		}
 
-		quest, count, err := profileSvc.SearchByAnthroponym(c, request.Anthroponym, userID, *request.Limit, *request.Offset)
+		users, count, err := profileSvc.SearchByAnthroponym(c, request.Anthroponym, header.AccessToken, *request.Offset,
+			*request.Limit)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, ErrorResponse{
 				Message: err.Error(),
@@ -148,21 +140,21 @@ func makeSearchProfileByAnthroponym(authSvc domain.AuthService, profileSvc domai
 			return
 		}
 
-		c.JSON(http.StatusOK, QuestionnairesResponse{
-			Questionnaires: quest,
-			Count:          count,
+		c.JSON(http.StatusOK, SearchProfileByAnthroponymResponse{
+			Users: users,
+			Count: count,
 		})
-
 	}
 }
 
 type FriendshipEndpoints struct {
-	Create       gin.HandlerFunc
-	Confirm      gin.HandlerFunc
-	Reject       gin.HandlerFunc
-	SplitUp      gin.HandlerFunc
-	GetFriends   gin.HandlerFunc
-	GetFollowers gin.HandlerFunc
+	Create             gin.HandlerFunc
+	Confirm            gin.HandlerFunc
+	Reject             gin.HandlerFunc
+	SplitUp            gin.HandlerFunc
+	GetFriends         gin.HandlerFunc
+	GetFollowers       gin.HandlerFunc
+	GetUserFriendships gin.HandlerFunc
 }
 
 // CreateFriendship godoc
@@ -196,7 +188,7 @@ func makeCreateFriendshipEndpoint(authSvc domain.AuthService, socialSvc domain.S
 			return
 		}
 
-		userID, err := authSvc.Authenticate(c, header.AccessToken)
+		user, err := authSvc.Authenticate(c, header.AccessToken)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized, ErrorResponse{
 				Message: err.Error(),
@@ -205,7 +197,7 @@ func makeCreateFriendshipEndpoint(authSvc domain.AuthService, socialSvc domain.S
 			return
 		}
 
-		if err = socialSvc.CreateFriendship(c, userID, request.FriendsID); err != nil {
+		if err = socialSvc.CreateFriendship(c, user.ID, request.FriendsID); err != nil {
 			c.JSON(http.StatusInternalServerError, ErrorResponse{
 				Message: err.Error(),
 			})
@@ -248,7 +240,7 @@ func makeConfirmFriendshipEndpoint(authSvc domain.AuthService, socialSvc domain.
 			return
 		}
 
-		userID, err := authSvc.Authenticate(c, header.AccessToken)
+		user, err := authSvc.Authenticate(c, header.AccessToken)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized, ErrorResponse{
 				Message: err.Error(),
@@ -257,7 +249,7 @@ func makeConfirmFriendshipEndpoint(authSvc domain.AuthService, socialSvc domain.
 			return
 		}
 
-		if err = socialSvc.ConfirmFriendship(c, userID, request.FriendsID); err != nil {
+		if err = socialSvc.ConfirmFriendship(c, user.ID, request.FriendsID); err != nil {
 			c.JSON(http.StatusInternalServerError, ErrorResponse{
 				Message: err.Error(),
 			})
@@ -300,7 +292,7 @@ func makeRejectFriendshipEndpoint(authSvc domain.AuthService, socialSvc domain.S
 			return
 		}
 
-		userID, err := authSvc.Authenticate(c, header.AccessToken)
+		user, err := authSvc.Authenticate(c, header.AccessToken)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized, ErrorResponse{
 				Message: err.Error(),
@@ -309,7 +301,7 @@ func makeRejectFriendshipEndpoint(authSvc domain.AuthService, socialSvc domain.S
 			return
 		}
 
-		if err = socialSvc.RejectFriendship(c, userID, request.FriendsID); err != nil {
+		if err = socialSvc.RejectFriendship(c, user.ID, request.FriendsID); err != nil {
 			c.JSON(http.StatusInternalServerError, ErrorResponse{
 				Message: err.Error(),
 			})
@@ -352,7 +344,7 @@ func makeSplitUpFriendshipEndpoint(authSvc domain.AuthService, socialSvc domain.
 			return
 		}
 
-		userID, err := authSvc.Authenticate(c, header.AccessToken)
+		user, err := authSvc.Authenticate(c, header.AccessToken)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized, ErrorResponse{
 				Message: err.Error(),
@@ -361,7 +353,7 @@ func makeSplitUpFriendshipEndpoint(authSvc domain.AuthService, socialSvc domain.
 			return
 		}
 
-		if err = socialSvc.BreakFriendship(c, userID, request.FriendsID); err != nil {
+		if err = socialSvc.BreakFriendship(c, user.ID, request.FriendsID); err != nil {
 			c.JSON(http.StatusInternalServerError, ErrorResponse{
 				Message: err.Error(),
 			})
@@ -394,7 +386,7 @@ func makeGetFriendsEndpoint(authSvc domain.AuthService, socialSvc domain.SocialS
 			return
 		}
 
-		userID, err := authSvc.Authenticate(c, header.AccessToken)
+		user, err := authSvc.Authenticate(c, header.AccessToken)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized, ErrorResponse{
 				Message: err.Error(),
@@ -403,7 +395,7 @@ func makeGetFriendsEndpoint(authSvc domain.AuthService, socialSvc domain.SocialS
 			return
 		}
 
-		friends, err := socialSvc.GetFriends(c, userID)
+		friends, err := socialSvc.GetFriends(c, user.ID)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, ErrorResponse{
 				Message: err.Error(),
@@ -437,7 +429,7 @@ func makeGetFollowersEndpoint(authSvc domain.AuthService, socialSvc domain.Socia
 			return
 		}
 
-		userID, err := authSvc.Authenticate(c, header.AccessToken)
+		user, err := authSvc.Authenticate(c, header.AccessToken)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized, ErrorResponse{
 				Message: err.Error(),
@@ -446,7 +438,7 @@ func makeGetFollowersEndpoint(authSvc domain.AuthService, socialSvc domain.Socia
 			return
 		}
 
-		followers, err := socialSvc.GetFollowers(c, userID)
+		followers, err := socialSvc.GetFollowers(c, user.ID)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, ErrorResponse{
 				Message: err.Error(),
@@ -493,7 +485,7 @@ func makeGetNewsEndpoint(authSvc domain.AuthService, socialSvc domain.SocialServ
 			return
 		}
 
-		userID, err := authSvc.Authenticate(c, header.AccessToken)
+		user, err := authSvc.Authenticate(c, header.AccessToken)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized, ErrorResponse{
 				Message: err.Error(),
@@ -516,7 +508,7 @@ func makeGetNewsEndpoint(authSvc domain.AuthService, socialSvc domain.SocialServ
 			*request.Offset = defaultOffset
 		}
 
-		news, count, err := socialSvc.RetrieveNews(c, userID, *request.Limit, *request.Offset)
+		news, count, err := socialSvc.RetrieveNews(c, user.ID, *request.Limit, *request.Offset)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, ErrorResponse{
 				Message: err.Error(),
