@@ -5,9 +5,9 @@ infrastructure:
 		social-storage cache nats-streaming ;\
 
 migrate:
-	docker-compose -f deployment/docker-compose.yml up --build mysql-migrator ch-cluster-migrator ch-shard-migrator-0 \
-    		ch-shard-migrator-1 ;\
-	docker rm -f mysql-migrator ch-cluster-migrator ch-migrator-0 ch-migrator-1 ;\
+	docker-compose -f deployment/docker-compose.yml up --build auth-migrator social-migrator ch-cluster-migrator \
+		ch-shard-migrator-0 ch-shard-migrator-1 ;\
+	docker rm -f auth-migrator social-migrator ch-cluster-migrator ch-migrator-0 ch-migrator-1 ;\
 	docker image prune -f ;\
 
 service:
