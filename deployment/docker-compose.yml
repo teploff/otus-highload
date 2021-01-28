@@ -228,6 +228,8 @@ services:
       - ADDR=0.0.0.0:10002
       - AUTH_ADDR=auth-otus:10001
       - STORAGE_DSN=user:password@tcp(social-storage:3306)/social-network?parseTime=true
+      - HEATER_AUTH_DSN=user:password@tcp(auth-storage:3306)/auth?parseTime=true
+      - HEATER_SOCIAL_DSN=user:password@tcp(social-storage:3306)/social-network?parseTime=true
       - STAN_CLUSTER_ID=stan-cluster
       - STAN_ADDR=nats://nats-streaming:4222
       - LOGGER_LEVEL=info

@@ -13,6 +13,7 @@ type Config struct {
 	Addr    string        `mapstructure:"addr"`
 	Auth    AuthConfig    `mapstructure:"auth"`
 	Storage StorageConfig `mapstructure:"storage"`
+	Heater  HeaterConfig  `mapstructure:"heater"`
 	Cache   []CacheConfig `mapstructure:"cache"`
 	Stan    StanConfig    `mapstructure:"stan"`
 	JWT     JWTConfig     `mapstructure:"jwt"`
@@ -32,6 +33,11 @@ type StorageConfig struct {
 	MaxOpenConns    int           `mapstructure:"max_open_conns"`
 	MaxIdleConns    int           `mapstructure:"max_idle_conns"`
 	AttemptCount    int           `mapstructure:"attempt_count"`
+}
+
+type HeaterConfig struct {
+	AuthDSN   string `mapstructure:"auth_dsn"`
+	SocialDSN string `mapstructure:"social_dsn"`
 }
 
 type CacheConfig struct {

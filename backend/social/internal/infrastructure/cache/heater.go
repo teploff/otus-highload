@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"social/internal/config"
 	"social/internal/domain"
 	staninfrastructure "social/internal/infrastructure/stan"
 	"time"
@@ -20,44 +21,57 @@ const (
 )
 
 type Heater struct {
-	redisPool    *Pool
-	mysqlConn    *sql.DB
-	stanClient   *staninfrastructure.Client
-	subscription stan.Subscription
-	logger       *zap.Logger
-	doneCh       chan struct{}
+	authMySQLConn   *sql.DB
+	socialMySQLConn *sql.DB
+	redisPool       *Pool
+	stanClient      *staninfrastructure.Client
+	subscription    stan.Subscription
+	logger          *zap.Logger
+	doneCh          chan struct{}
 }
 
-func NewHeater(redisPool *Pool, mysqlConn *sql.DB, stanClient *staninfrastructure.Client, logger *zap.Logger) *Heater {
-	return &Heater{
-		redisPool:  redisPool,
-		mysqlConn:  mysqlConn,
-		stanClient: stanClient,
-		logger:     logger,
-		doneCh:     make(chan struct{}),
+func NewHeater(cfg config.HeaterConfig, redisPool *Pool, stanClient *staninfrastructure.Client, logger *zap.Logger) (*Heater, error) {
+	authConn, err := sql.Open("mysql", cfg.AuthDSN)
+	if err != nil {
+		return nil, fmt.Errorf("fail to auth connection db")
 	}
+
+	socialConn, err := sql.Open("mysql", cfg.SocialDSN)
+	if err != nil {
+		return nil, fmt.Errorf("fail to social connection db")
+	}
+
+	// See "Important settings" section.
+	authConn.SetConnMaxLifetime(10)
+	socialConn.SetConnMaxLifetime(10)
+	authConn.SetMaxOpenConns(10)
+	socialConn.SetMaxOpenConns(10)
+	authConn.SetMaxIdleConns(10)
+	socialConn.SetMaxIdleConns(10)
+
+	return &Heater{
+		authMySQLConn:   authConn,
+		socialMySQLConn: socialConn,
+		redisPool:       redisPool,
+		stanClient:      stanClient,
+		logger:          logger,
+		doneCh:          make(chan struct{}),
+	}, err
 }
 
 func (h *Heater) Heat() error {
 	ctx := context.Background()
-	tx, err := h.mysqlConn.BeginTx(ctx, nil)
-	if err != nil {
+
+	if err := h.heatFriends(ctx); err != nil {
 		return err
 	}
 
-	if err = h.heatFriends(ctx, tx); err != nil {
-		tx.Rollback()
-
-		return err
-	}
-
-	if err = h.heatNews(ctx, tx); err != nil {
-		tx.Rollback()
+	if err := h.heatNews(ctx); err != nil {
 
 		return err
 	}
 
-	return tx.Commit()
+	return nil
 }
 
 func (h *Heater) Listening() (err error) {
@@ -81,7 +95,12 @@ func (h *Heater) Listening() (err error) {
 	return nil
 }
 
-func (h *Heater) heatFriends(ctx context.Context, tx *sql.Tx) error {
+func (h *Heater) heatFriends(ctx context.Context) error {
+	tx, err := h.socialMySQLConn.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+
 	friends := make(map[string][]string, 1)
 
 	rows, err := tx.Query(`
@@ -92,6 +111,8 @@ func (h *Heater) heatFriends(ctx context.Context, tx *sql.Tx) error {
 		WHERE
 		    friendship.status = ?`, "accepted")
 	if err != nil {
+		tx.Rollback()
+
 		return err
 	}
 	defer rows.Close()
@@ -100,6 +121,8 @@ func (h *Heater) heatFriends(ctx context.Context, tx *sql.Tx) error {
 		var id1, id2 string
 
 		if err = rows.Scan(&id1, &id2); err != nil {
+			tx.Rollback()
+
 			return err
 		}
 
@@ -124,29 +147,39 @@ func (h *Heater) heatFriends(ctx context.Context, tx *sql.Tx) error {
 	for key, value := range friends {
 		data, err := json.Marshal(value)
 		if err != nil {
+			tx.Rollback()
+
 			return fmt.Errorf("cannot marshal friends id, %w", err)
 		}
 
 		if err = conn.Set(ctx, key, data, 0).Err(); err != nil {
+			tx.Rollback()
+
 			return err
 		}
 	}
 
-	return nil
+	return tx.Commit()
 }
 
-func (h *Heater) heatNews(ctx context.Context, tx *sql.Tx) error {
+func (h *Heater) heatNews(ctx context.Context) error {
 	usersNews := make(map[string][]*domain.News, 1)
 
-	rows, err := tx.Query(`
+	socialTx, err := h.socialMySQLConn.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+
+	rows, err := socialTx.Query(`
 		SELECT
-			news.id, user.id, user.name, user.surname, user.sex, content, news.create_time
+			id, owner_id, content, create_time
 		FROM
 			news
-		JOIN user ON news.owner_id = user.id
-		ORDER BY news.create_time DESC
+		ORDER BY create_time DESC
 		`)
 	if err != nil {
+		socialTx.Rollback()
+
 		return err
 	}
 	defer rows.Close()
@@ -155,7 +188,7 @@ func (h *Heater) heatNews(ctx context.Context, tx *sql.Tx) error {
 		var userID string
 		news := new(domain.News)
 
-		if err = rows.Scan(&news.ID, &userID, &news.Owner.Name, &news.Owner.Surname, &news.Owner.Sex, &news.Content, &news.CreateTime); err != nil {
+		if err = rows.Scan(&news.ID, &userID, &news.Content, &news.CreateTime); err != nil {
 			return err
 		}
 
@@ -163,6 +196,69 @@ func (h *Heater) heatNews(ctx context.Context, tx *sql.Tx) error {
 			usersNews[userID] = make([]*domain.News, 0, 1)
 		}
 		usersNews[userID] = append(usersNews[userID], news)
+	}
+
+	if err = socialTx.Commit(); err != nil {
+		return err
+	}
+
+	userIDs := make([]string, 0, len(usersNews))
+	for id := range usersNews {
+		userIDs = append(userIDs, id)
+	}
+
+	authTx, err := h.authMySQLConn.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+
+	sqlStr := "SELECT id, name, surname, sex FROM user WHERE id IN ("
+	vals := make([]interface{}, 0, len(userIDs))
+
+	for _, id := range userIDs {
+		sqlStr += "?,"
+		vals = append(vals, id)
+	}
+
+	//trim the last ,
+	sqlStr = sqlStr[0 : len(sqlStr)-1]
+	// add ) with limit and offset
+	sqlStr += ")"
+
+	//prepare the statement
+	stmt, err := authTx.Prepare(sqlStr)
+	if err != nil {
+		authTx.Rollback()
+
+		return err
+	}
+
+	rows, err = stmt.Query(vals...)
+	if err != nil {
+		authTx.Rollback()
+
+		return err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var id, name, surname, sex string
+
+		if err = rows.Scan(&id, &name, &surname, &sex); err != nil {
+			authTx.Rollback()
+
+			return err
+		}
+
+		for _, news := range usersNews[id] {
+			news.Owner.Name = name
+			news.Owner.Surname = surname
+			news.Owner.Sex = sex
+		}
+	}
+
+	if err = authTx.Commit(); err != nil {
+		return err
 	}
 
 	conn, err := h.redisPool.GetConnByIndexDB(NewsDBIndex)
@@ -185,6 +281,9 @@ func (h *Heater) heatNews(ctx context.Context, tx *sql.Tx) error {
 }
 
 func (h *Heater) Stop() {
+	h.authMySQLConn.Close()
+	h.socialMySQLConn.Close()
+
 	if err := h.subscription.Close(); err != nil {
 		h.logger.Error("cache heater can't close stan connection: ", zap.Error(err))
 	}
@@ -197,25 +296,13 @@ func (h *Heater) makeCacheReloadSub() func(msg *stan.Msg) {
 		}
 
 		ctx := context.Background()
-		tx, err := h.mysqlConn.BeginTx(ctx, nil)
-		if err != nil {
-			h.logger.Error("cache heater fail to get transaction", zap.Error(err))
-		}
 
-		if err = h.heatFriends(ctx, tx); err != nil {
-			tx.Rollback()
-
+		if err := h.heatFriends(ctx); err != nil {
 			h.logger.Error("cache heater fail to heat friends", zap.Error(err))
 		}
 
-		if err = h.heatNews(ctx, tx); err != nil {
-			tx.Rollback()
-
+		if err := h.heatNews(ctx); err != nil {
 			h.logger.Error("cache heater fail to heat news", zap.Error(err))
-		}
-
-		if err = tx.Commit(); err != nil {
-			h.logger.Error("cache heater fail to commit transaction", zap.Error(err))
 		}
 	}
 }

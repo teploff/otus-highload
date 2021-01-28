@@ -80,8 +80,13 @@ func main() {
 	}
 	defer stanClient.Close()
 
+	logger.Info("cache heater is initializing...")
+	cacheHeater, err := cache.NewHeater(cfg.Heater, redisPool, stanClient, logger)
+	if err != nil {
+		logger.Fatal("fail to initialize cache heater", zap.Error(err))
+	}
+
 	logger.Info("cache heater is starting...")
-	cacheHeater := cache.NewHeater(redisPool, mysqlConn, stanClient, logger)
 	if err = cacheHeater.Heat(); err != nil {
 		logger.Fatal("fail to start cache heater", zap.Error(err))
 	}

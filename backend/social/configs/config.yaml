@@ -10,6 +10,10 @@ storage:
   max_idle_conns: 10
   conn_attempt_count: 10
 
+heater:
+  auth_dsn: "user:password@tcp(127.0.0.1:3306)/auth?parseTime=true"
+  social_dsn: "user:password@tcp(127.0.0.1:3307)/social-network?parseTime=true"
+
 cache:
   - addr: "localhost:6379"
     password: "password"
