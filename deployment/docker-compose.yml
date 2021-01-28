@@ -1,12 +1,31 @@
 version: '3.7'
 
 services:
-  mysql-storage:
+  auth-storage:
     build:
       context: mysql
       dockerfile: Dockerfile
     image: mysql:stage
-    container_name: mysql-storage
+    container_name: auth-storage
+    command: --default-authentication-plugin=mysql_native_password
+    ports:
+      - '3306:3306'
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+      MYSQL_DATABASE: auth
+    volumes:
+      - auth-storage-data:/var/lib/mysql
+    networks:
+      - otus-highload-network
+
+  social-storage:
+    build:
+      context: mysql
+      dockerfile: Dockerfile
+    image: mysql:stage
+    container_name: social-storage
     command: --default-authentication-plugin=mysql_native_password
     ports:
       - '3306:3306'
@@ -16,7 +35,7 @@ services:
       MYSQL_PASSWORD: password
       MYSQL_DATABASE: social-network
     volumes:
-      - mysql-storage-data:/var/lib/mysql
+      - social-storage-data:/var/lib/mysql
     networks:
       - otus-highload-network
 
@@ -49,30 +68,37 @@ services:
     networks:
       - otus-highload-network
 
-  adminer:
-    image: adminer
-    container_name: adminer
-    ports:
-      - '8080:8080'
-    depends_on:
-      - mysql-storage
-    networks:
-      - otus-highload-network
-
-  mysql-migrator:
+  auth-migrator:
     build:
       context: ../tools/migrator
       dockerfile: Dockerfile
     image: migrator:mysql
-    container_name: mysql-migrator
+    container_name: auth-migrator
     environment:
       MIGRATIONS_PATH: "./migrations"
-      DSN: "user:password@tcp(mysql-storage:3306)/social-network"
+      DSN: "user:password@tcp(auth-storage:3306)/auth"
       OPERATION: "up"
     volumes:
-      - ../backend/migrations/mysql:/app/migrations
+      - ../backend/migrations/mysql/auth:/app/migrations
     depends_on:
-      - mysql-storage
+      - auth-storage
+    networks:
+      - otus-highload-network
+
+  social-migrator:
+    build:
+      context: ../tools/migrator
+      dockerfile: Dockerfile
+    image: migrator:mysql
+    container_name: social-migrator
+    environment:
+      MIGRATIONS_PATH: "./migrations"
+      DSN: "user:password@tcp(social-storage:3306)/social-network"
+      OPERATION: "up"
+    volumes:
+      - ../backend/migrations/mysql/social:/app/migrations
+    depends_on:
+      - social-storage
     networks:
       - otus-highload-network
 
@@ -186,13 +212,13 @@ services:
     container_name: auth-otus
     environment:
       - ADDR=0.0.0.0:10001
-      - STORAGE_DSN=user:password@tcp(mysql-storage:3306)/social-network?parseTime=true
+      - STORAGE_DSN=user:password@tcp(social-storage:3306)/social-network?parseTime=true
       - JWT_SECRET=secret
       - JWT_ACCESS_TOKEN_TIME_EXPIRE=1h
       - JWT_REFRESH_TOKEN_TIME_EXPIRE=24h
       - LOGGER_LEVEL=info
     depends_on:
-      - mysql-storage
+      - auth-storage
     networks:
       - otus-highload-network
 
@@ -205,12 +231,12 @@ services:
     environment:
       - ADDR=0.0.0.0:10002
       - AUTH_ADDR=auth-otus:10001
-      - STORAGE_DSN=user:password@tcp(mysql-storage:3306)/social-network?parseTime=true
+      - STORAGE_DSN=user:password@tcp(social-storage:3306)/social-network?parseTime=true
       - STAN_CLUSTER_ID=stan-cluster
       - STAN_ADDR=nats://nats-streaming:4222
       - LOGGER_LEVEL=info
     depends_on:
-      - mysql-storage
+      - social-storage
       - cache
       - nats-streaming
     networks:
@@ -261,14 +287,15 @@ services:
     image: frontend:stage
     container_name: frontend
     ports:
-      - '8081:80'
+      - '8080:80'
     depends_on:
       - gateway
     networks:
       - otus-highload-network
 
 volumes:
-  mysql-storage-data:
+  auth-storage-data:
+  social-storage-data:
   ch-cluster-data:
   ch-shard-0-data:
   ch-shard-1-data:

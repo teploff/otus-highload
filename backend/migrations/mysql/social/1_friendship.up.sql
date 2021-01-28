@@ -6,6 +6,4 @@ CREATE TABLE IF NOT EXISTS friendship (
     create_time    TIMESTAMP NOT NULL,
     update_time    TIMESTAMP,
     CONSTRAINT     uc_master_slave_ids UNIQUE(master_user_id, slave_user_id),
-    FOREIGN        KEY(master_user_id) REFERENCES user(id),
-    FOREIGN        KEY(slave_user_id) REFERENCES user(id)
 ) ENGINE=InnoDB;
