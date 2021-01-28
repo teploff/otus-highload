@@ -11,7 +11,7 @@ migrate:
 	docker image prune -f ;\
 
 service:
-	docker-compose -f deployment/docker-compose.yml up --build auth social messenger gateway frontend ;\
+	docker-compose -f deployment/docker-compose.yml up -d --build auth social messenger gateway frontend ;\
 	docker image prune -f ;\
 
 reload_auth:

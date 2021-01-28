@@ -208,7 +208,7 @@ services:
     container_name: auth-otus
     environment:
       - ADDR=0.0.0.0:10001
-      - STORAGE_DSN=user:password@tcp(social-storage:3306)/social-network?parseTime=true
+      - STORAGE_DSN=user:password@tcp(auth-storage:3306)/auth?parseTime=true
       - JWT_SECRET=secret
       - JWT_ACCESS_TOKEN_TIME_EXPIRE=1h
       - JWT_REFRESH_TOKEN_TIME_EXPIRE=24h
