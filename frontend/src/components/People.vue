@@ -271,7 +271,7 @@ export default {
           return camelcaseKeys(JSON.parse(data), { deep: true })}
         ]})
           .then(() => {
-            for (let i = 0; i < this.cards.friends.length; i++) {
+            for (let i = 0; i < this.cards.users.length; i++) {
               if (this.cards.users[i].id === fiendID) {
                 this.cards.users[i].friendshipStatus = "expected"
               }
