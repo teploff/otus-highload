@@ -130,7 +130,7 @@ func makeSearchProfileByAnthroponym(authSvc domain.AuthService, profileSvc domai
 			*request.Offset = defaultOffset
 		}
 
-		users, count, err := profileSvc.SearchByAnthroponym(c, request.Anthroponym, header.AccessToken, *request.Offset,
+		users, count, err := profileSvc.SearchByAnthroponym(c, header.AccessToken, request.Anthroponym, *request.Offset,
 			*request.Limit)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, ErrorResponse{
