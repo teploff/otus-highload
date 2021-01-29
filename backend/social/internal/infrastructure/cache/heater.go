@@ -202,6 +202,10 @@ func (h *Heater) heatNews(ctx context.Context) error {
 		return err
 	}
 
+	if len(usersNews) == 0 {
+		return nil
+	}
+
 	userIDs := make([]string, 0, len(usersNews))
 	for id := range usersNews {
 		userIDs = append(userIDs, id)
