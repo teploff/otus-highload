@@ -31,7 +31,7 @@ func (a *authService) Authenticate(_ context.Context, token string) (string, err
 		"Authorization": token,
 	}
 
-	r, err := req.Get("http://"+a.authAddr+"/auth/user/get-id-by-token", header)
+	r, err := req.Get("http://"+a.authAddr+"/auth/user/get-by-token", header)
 	if err != nil {
 		return "", err
 	}
