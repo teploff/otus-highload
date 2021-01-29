@@ -68,7 +68,7 @@
         <md-table v-show="cards.count !== 0">
           <md-table-row>
             <div class="card-expansion">
-              <md-card v-for="card in cards.questionnaires" v-bind:key="card.email">
+              <md-card v-for="card in cards.users" v-bind:key="card.email">
                 <md-card-media>
                   <img v-if="card.sex === 'male'" src="../assets/boy.png" alt="People">
                   <img v-else src="../assets/girl.png" alt="People">
@@ -145,7 +145,7 @@ export default {
       offset: 0,
     },
     cards: {
-      questionnaires: null,
+      users: null,
       count: 0,
     },
     countCardsInWindow: 10,
@@ -271,9 +271,9 @@ export default {
           return camelcaseKeys(JSON.parse(data), { deep: true })}
         ]})
           .then(() => {
-            for (let i = 0; i < this.cards.questionnaires.length; i++) {
-              if (this.cards.questionnaires[i].id === fiendID) {
-                this.cards.questionnaires[i].friendshipStatus = "expected"
+            for (let i = 0; i < this.cards.friends.length; i++) {
+              if (this.cards.users[i].id === fiendID) {
+                this.cards.users[i].friendshipStatus = "expected"
               }
             }
           })
