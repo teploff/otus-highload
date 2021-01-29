@@ -147,7 +147,7 @@ func (s *socialRepository) GetFriends(tx *sql.Tx, userID string) ([]string, erro
 			master_user_id = ? and status = ?
 		UNION
 		SELECT
-			slave_user_id as id
+			master_user_id as id
 		FROM
 			friendship
 		WHERE
