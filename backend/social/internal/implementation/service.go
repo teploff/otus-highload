@@ -88,7 +88,7 @@ type getUserByIDsResponse struct {
 	Users []*domain.User `json:"users"`
 }
 
-func (a *authService) GetUsersByIDs(ctx context.Context, ids []string) ([]*domain.User, error) {
+func (a *authService) GetUsersByIDs(_ context.Context, ids []string) ([]*domain.User, error) {
 	header := req.Header{
 		"Accept": "application/json",
 	}
@@ -102,7 +102,7 @@ func (a *authService) GetUsersByIDs(ctx context.Context, ids []string) ([]*domai
 		return nil, err
 	}
 
-	var response getUserByIDsResponse
+	response := &getUserByIDsResponse{Users: make([]*domain.User, 0, 32)}
 	if err = r.ToJSON(&response); err != nil {
 		return nil, err
 	}
