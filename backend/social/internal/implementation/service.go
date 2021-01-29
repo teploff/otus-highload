@@ -55,7 +55,7 @@ type getUsersByAnthroponymResponse struct {
 	Users []*domain.User `json:"users"`
 }
 
-func (a *authService) GetUsersByAnthroponym(ctx context.Context, token, anthroponym string, offset, limit int) ([]*domain.User, int, error) {
+func (a *authService) GetUsersByAnthroponym(_ context.Context, token, anthroponym string, offset, limit int) ([]*domain.User, int, error) {
 	header := req.Header{
 		"Accept":        "application/json",
 		"Authorization": token,
@@ -151,15 +151,15 @@ func (p *profileService) SearchByAnthroponym(ctx context.Context, token, anthrop
 		u.FriendshipStatus = friendshipNonameStatus
 
 		for _, friendship := range friendships {
-			if friendship.MasterUserID == user.ID {
+			if friendship.MasterUserID == u.ID {
 				switch friendship.Status {
 				case friendshipExpectedStatus:
-					user.FriendshipStatus = friendshipConfirmedStatus
+					u.FriendshipStatus = friendshipConfirmedStatus
 				default:
-					user.FriendshipStatus = friendshipAcceptedStatus
+					u.FriendshipStatus = friendshipAcceptedStatus
 				}
-			} else if friendship.SlaveUserID == user.ID {
-				user.FriendshipStatus = friendship.Status
+			} else if friendship.SlaveUserID == u.ID {
+				u.FriendshipStatus = friendship.Status
 			}
 		}
 	}
