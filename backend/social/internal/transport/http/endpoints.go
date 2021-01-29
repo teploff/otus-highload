@@ -508,7 +508,7 @@ func makeGetNewsEndpoint(authSvc domain.AuthService, socialSvc domain.SocialServ
 			*request.Offset = defaultOffset
 		}
 
-		news, count, err := socialSvc.RetrieveNews(c, user.ID, *request.Limit, *request.Offset)
+		news, count, err := socialSvc.RetrieveNews(c, user.ID, *request.Offset, *request.Limit)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, ErrorResponse{
 				Message: err.Error(),
