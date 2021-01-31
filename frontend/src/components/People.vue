@@ -37,9 +37,8 @@
         </mdb-navbar-nav>
       </mdb-navbar>
       <div slot="main">
-        <mdb-container>
-          <mdb-row>
-            <mdb-col sm="4">
+          <mdb-row class="justify-content-center">
+            <mdb-col sm="2">
               <mdb-flipping-card
                   :flipped="flipped"
                   innerClass="text-center h-100 w-100"
@@ -102,7 +101,7 @@
                 </mdb-card>
               </mdb-flipping-card>
             </mdb-col>
-            <mdb-col sm="4">
+            <mdb-col sm="2">
               <mdb-flipping-card
                   :flipped="flipped"
                   innerClass="text-center h-100 w-100"
@@ -165,7 +164,7 @@
                 </mdb-card>
               </mdb-flipping-card>
             </mdb-col>
-            <mdb-col sm="4">
+            <mdb-col sm="2">
               <mdb-flipping-card
                 :flipped="flipped"
                 innerClass="text-center h-100 w-100"
@@ -228,7 +227,7 @@
               </mdb-card>
             </mdb-flipping-card>
             </mdb-col>
-            <mdb-col sm="4">
+            <mdb-col sm="2">
               <mdb-flipping-card
                 :flipped="flipped"
                 innerClass="text-center h-100 w-100"
@@ -291,70 +290,7 @@
               </mdb-card>
             </mdb-flipping-card>
             </mdb-col>
-            <mdb-col sm="4">
-              <mdb-flipping-card
-                :flipped="flipped"
-                innerClass="text-center h-100 w-100"
-                style="max-width: 22rem; height: 416px;"
-            >
-              <mdb-card class="face front" style="height: 416px;">
-                <mdb-card-up>
-                  <img
-                      class="card-image-top"
-                      src="https://mdbootstrap.com/img/Photos/Others/photo7.jpg"
-                      alt="a photo of a house facade"
-                  />
-                </mdb-card-up>
-                <mdb-avatar class="mx-auto white" circle>
-                  <img
-                      src="https://mdbootstrap.com/img/Photos/Avatars/img%20(20).jpg"
-                      class="rounded-circle"
-                  />
-                </mdb-avatar>
-                <mdb-card-body>
-                  <h4 class="font-weight-bold mb-3">Marie Johnson</h4>
-                  <p class="font-weight-bold blue-text">Web developer</p>
-                  <a class="rotate-btn" @click="flipped=true">
-                    <mdb-icon class="pr-2" icon="redo" />Click here to rotate
-                  </a>
-                </mdb-card-body>
-              </mdb-card>
-              <mdb-card class="face back" style="height: 416px;">
-                <mdb-card-body>
-                  <h4 class="font-weight-bold">About me</h4>
-                  <hr />
-                  <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Maxime quae, dolores dicta. Blanditiis rem amet repellat, dolores nihil quae in mollitia asperiores ut rerum repellendus, voluptatum eum, officia laudantium quaerat?</p>
-                  <hr />
-                  <ul class="list-inline py-2">
-                    <li class="list-inline-item">
-                      <a class="p-2 fa-lg fb-ic">
-                        <mdb-icon fab icon="facebook" />
-                      </a>
-                    </li>
-                    <li class="list-inline-item">
-                      <a class="p-2 fa-lg tw-ic">
-                        <mdb-icon fab icon="twitter" />
-                      </a>
-                    </li>
-                    <li class="list-inline-item">
-                      <a class="p-2 fa-lg gplus-ic">
-                        <mdb-icon fab icon="google-plus" />
-                      </a>
-                    </li>
-                    <li class="list-inline-item">
-                      <a class="p-2 fa-lg li-ic">
-                        <mdb-icon fab icon="linkedin" />
-                      </a>
-                    </li>
-                  </ul>
-                  <a class="rotate-btn" @click="flipped=false">
-                    <mdb-icon class="pr-2" icon="undo" />Click here to rotate back
-                  </a>
-                </mdb-card-body>
-              </mdb-card>
-            </mdb-flipping-card>
-            </mdb-col>
-            <mdb-col sm="4">
+            <mdb-col sm="2">
               <mdb-flipping-card
                 :flipped="flipped"
                 innerClass="text-center h-100 w-100"
@@ -418,7 +354,72 @@
             </mdb-flipping-card>
             </mdb-col>
           </mdb-row>
-          <mdb-pagination circle>
+          <mdb-row class="justify-content-center">
+            <mdb-col sm="2">
+              <mdb-flipping-card
+                :flipped="flipped"
+                innerClass="text-center h-100 w-100"
+                style="max-width: 22rem; height: 416px;"
+            >
+              <mdb-card class="face front" style="height: 416px;">
+                <mdb-card-up>
+                  <img
+                      class="card-image-top"
+                      src="https://mdbootstrap.com/img/Photos/Others/photo7.jpg"
+                      alt="a photo of a house facade"
+                  />
+                </mdb-card-up>
+                <mdb-avatar class="mx-auto white" circle>
+                  <img
+                      src="https://mdbootstrap.com/img/Photos/Avatars/img%20(20).jpg"
+                      class="rounded-circle"
+                  />
+                </mdb-avatar>
+                <mdb-card-body>
+                  <h4 class="font-weight-bold mb-3">Marie Johnson</h4>
+                  <p class="font-weight-bold blue-text">Web developer</p>
+                  <a class="rotate-btn" @click="flipped=true">
+                    <mdb-icon class="pr-2" icon="redo" />Click here to rotate
+                  </a>
+                </mdb-card-body>
+              </mdb-card>
+              <mdb-card class="face back" style="height: 416px;">
+                <mdb-card-body>
+                  <h4 class="font-weight-bold">About me</h4>
+                  <hr />
+                  <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Maxime quae, dolores dicta. Blanditiis rem amet repellat, dolores nihil quae in mollitia asperiores ut rerum repellendus, voluptatum eum, officia laudantium quaerat?</p>
+                  <hr />
+                  <ul class="list-inline py-2">
+                    <li class="list-inline-item">
+                      <a class="p-2 fa-lg fb-ic">
+                        <mdb-icon fab icon="facebook" />
+                      </a>
+                    </li>
+                    <li class="list-inline-item">
+                      <a class="p-2 fa-lg tw-ic">
+                        <mdb-icon fab icon="twitter" />
+                      </a>
+                    </li>
+                    <li class="list-inline-item">
+                      <a class="p-2 fa-lg gplus-ic">
+                        <mdb-icon fab icon="google-plus" />
+                      </a>
+                    </li>
+                    <li class="list-inline-item">
+                      <a class="p-2 fa-lg li-ic">
+                        <mdb-icon fab icon="linkedin" />
+                      </a>
+                    </li>
+                  </ul>
+                  <a class="rotate-btn" @click="flipped=false">
+                    <mdb-icon class="pr-2" icon="undo" />Click here to rotate back
+                  </a>
+                </mdb-card-body>
+              </mdb-card>
+            </mdb-flipping-card>
+            </mdb-col>
+          </mdb-row>
+          <mdb-pagination class="justify-content-center" circle>
             <mdb-page-item disabled>First</mdb-page-item>
             <mdb-page-nav prev disabled></mdb-page-nav>
             <mdb-page-item active>1</mdb-page-item>
@@ -429,7 +430,6 @@
             <mdb-page-nav next></mdb-page-nav>
             <mdb-page-item>Last</mdb-page-item>
           </mdb-pagination>
-        </mdb-container>
       </div>
     </mdb-side-nav-2>
   </div>
@@ -446,7 +446,6 @@ import {
   waves,
   mdbInput,
   mdbFormInline,
-  mdbContainer,
   mdbCard,
   mdbCardBody,
   mdbCardUp,
@@ -471,7 +470,6 @@ export default {
     mdbIcon,
     mdbFormInline,
     mdbInput,
-    mdbContainer,
     mdbCard,
     mdbCardBody,
     mdbCardUp,
