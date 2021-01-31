@@ -1,8 +1,7 @@
-import Vue from 'vue';
-import Router from 'vue-router';
+import Vue from 'vue'
+import Router from 'vue-router'
 import SignUp from '@/components/SignUp';
 import SignIn from '@/components/SignIn';
-import SignUpSuccess from '@/components/SignUpSuccess';
 import Home from '@/components/Home';
 import News from '@/components/News';
 import Messenger from '@/components/Messenger';
@@ -22,11 +21,6 @@ const router = new Router({
       path: '/sign-up',
       name: 'SignUp',
       component: SignUp,
-    },
-    {
-      path: '/sign-up-success',
-      name: 'SignUpSuccess',
-      component: SignUpSuccess,
     },
     {
       path: '/',
@@ -58,7 +52,7 @@ const router = new Router({
 });
 
 router.beforeEach((to, from, next) => {
-  if (to.name !== 'SignUp' && to.name !== 'SignUpSuccess' && to.name !== 'SignIn' && !localStorage.getItem('accessToken')) {
+  if (to.name !== 'SignUp' && to.name !== 'SignIn' && !localStorage.getItem('accessToken')) {
     next({name: 'SignIn'});
   } else {
     next();
