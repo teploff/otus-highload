@@ -15,7 +15,7 @@ const getAccessToken = () => localStorage.getItem('accessToken');
 const getRefreshToken = () => localStorage.getItem('refreshToken');
 
 const authInterceptor = (config) => {
-    config.headers['Authorization'] = getAccessToken();
+    config.headers['Authorization'] = getAccessToken() !== null ? getAccessToken() : '';
     return config;
 }
 
