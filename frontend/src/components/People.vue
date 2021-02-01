@@ -37,399 +37,75 @@
         </mdb-navbar-nav>
       </mdb-navbar>
       <div slot="main">
-          <mdb-row class="justify-content-center">
-            <mdb-col sm="2">
-              <mdb-flipping-card
-                  :flipped="flipped"
-                  innerClass="text-center h-100 w-100"
-                  style="max-width: 22rem; height: 416px;"
-              >
-                <mdb-card class="face front" style="height: 416px;">
-                  <mdb-card-up>
-                    <img
-                        class="card-image-top"
-                        src="https://mdbootstrap.com/img/Photos/Others/photo7.jpg"
-                        alt="a photo of a house facade"
-                    />
-                  </mdb-card-up>
-                  <mdb-avatar class="mx-auto white" circle>
-                    <img
-                        src="https://mdbootstrap.com/img/Photos/Avatars/img%20(20).jpg"
-                        class="rounded-circle"
-                    />
-                  </mdb-avatar>
-                  <mdb-card-body>
-                    <h4 class="font-weight-bold mb-3">Marie Johnson</h4>
-                    <p class="font-weight-bold blue-text">Web developer</p>
-                    <a class="rotate-btn" @click="flipped=true">
-                      <mdb-icon class="pr-2" icon="redo" />Click here to rotate
-                    </a>
-                  </mdb-card-body>
-                </mdb-card>
-                <mdb-card class="face back" style="height: 416px;">
-                  <mdb-card-body>
-                    <h4 class="font-weight-bold">About me</h4>
-                    <hr />
-                    <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Maxime quae, dolores dicta. Blanditiis rem amet repellat, dolores nihil quae in mollitia asperiores ut rerum repellendus, voluptatum eum, officia laudantium quaerat?</p>
-                    <hr />
-                    <ul class="list-inline py-2">
-                      <li class="list-inline-item">
-                        <a class="p-2 fa-lg fb-ic">
-                          <mdb-icon fab icon="facebook" />
-                        </a>
-                      </li>
-                      <li class="list-inline-item">
-                        <a class="p-2 fa-lg tw-ic">
-                          <mdb-icon fab icon="twitter" />
-                        </a>
-                      </li>
-                      <li class="list-inline-item">
-                        <a class="p-2 fa-lg gplus-ic">
-                          <mdb-icon fab icon="google-plus" />
-                        </a>
-                      </li>
-                      <li class="list-inline-item">
-                        <a class="p-2 fa-lg li-ic">
-                          <mdb-icon fab icon="linkedin" />
-                        </a>
-                      </li>
-                    </ul>
-                    <a class="rotate-btn" @click="flipped=false">
-                      <mdb-icon class="pr-2" icon="undo" />Click here to rotate back
-                    </a>
-                  </mdb-card-body>
-                </mdb-card>
-              </mdb-flipping-card>
-            </mdb-col>
-            <mdb-col sm="2">
-              <mdb-flipping-card
-                  :flipped="flipped"
-                  innerClass="text-center h-100 w-100"
-                  style="max-width: 22rem; height: 416px;"
-              >
-                <mdb-card class="face front" style="height: 416px;">
-                  <mdb-card-up>
-                    <img
-                        class="card-image-top"
-                        src="https://mdbootstrap.com/img/Photos/Others/photo7.jpg"
-                        alt="a photo of a house facade"
-                    />
-                  </mdb-card-up>
-                  <mdb-avatar class="mx-auto white" circle>
-                    <img
-                        src="https://mdbootstrap.com/img/Photos/Avatars/img%20(20).jpg"
-                        class="rounded-circle"
-                    />
-                  </mdb-avatar>
-                  <mdb-card-body>
-                    <h4 class="font-weight-bold mb-3">Marie Johnson</h4>
-                    <p class="font-weight-bold blue-text">Web developer</p>
-                    <a class="rotate-btn" @click="flipped=true">
-                      <mdb-icon class="pr-2" icon="redo" />Click here to rotate
-                    </a>
-                  </mdb-card-body>
-                </mdb-card>
-                <mdb-card class="face back" style="height: 416px;">
-                  <mdb-card-body>
-                    <h4 class="font-weight-bold">About me</h4>
-                    <hr />
-                    <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Maxime quae, dolores dicta. Blanditiis rem amet repellat, dolores nihil quae in mollitia asperiores ut rerum repellendus, voluptatum eum, officia laudantium quaerat?</p>
-                    <hr />
-                    <ul class="list-inline py-2">
-                      <li class="list-inline-item">
-                        <a class="p-2 fa-lg fb-ic">
-                          <mdb-icon fab icon="facebook" />
-                        </a>
-                      </li>
-                      <li class="list-inline-item">
-                        <a class="p-2 fa-lg tw-ic">
-                          <mdb-icon fab icon="twitter" />
-                        </a>
-                      </li>
-                      <li class="list-inline-item">
-                        <a class="p-2 fa-lg gplus-ic">
-                          <mdb-icon fab icon="google-plus" />
-                        </a>
-                      </li>
-                      <li class="list-inline-item">
-                        <a class="p-2 fa-lg li-ic">
-                          <mdb-icon fab icon="linkedin" />
-                        </a>
-                      </li>
-                    </ul>
-                    <a class="rotate-btn" @click="flipped=false">
-                      <mdb-icon class="pr-2" icon="undo" />Click here to rotate back
-                    </a>
-                  </mdb-card-body>
-                </mdb-card>
-              </mdb-flipping-card>
-            </mdb-col>
-            <mdb-col sm="2">
-              <mdb-flipping-card
-                :flipped="flipped"
-                innerClass="text-center h-100 w-100"
-                style="max-width: 22rem; height: 416px;"
-            >
-              <mdb-card class="face front" style="height: 416px;">
-                <mdb-card-up>
-                  <img
-                      class="card-image-top"
-                      src="https://mdbootstrap.com/img/Photos/Others/photo7.jpg"
-                      alt="a photo of a house facade"
-                  />
-                </mdb-card-up>
-                <mdb-avatar class="mx-auto white" circle>
-                  <img
-                      src="https://mdbootstrap.com/img/Photos/Avatars/img%20(20).jpg"
-                      class="rounded-circle"
-                  />
-                </mdb-avatar>
-                <mdb-card-body>
-                  <h4 class="font-weight-bold mb-3">Marie Johnson</h4>
-                  <p class="font-weight-bold blue-text">Web developer</p>
-                  <a class="rotate-btn" @click="flipped=true">
-                    <mdb-icon class="pr-2" icon="redo" />Click here to rotate
-                  </a>
-                </mdb-card-body>
-              </mdb-card>
-              <mdb-card class="face back" style="height: 416px;">
-                <mdb-card-body>
-                  <h4 class="font-weight-bold">About me</h4>
-                  <hr />
-                  <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Maxime quae, dolores dicta. Blanditiis rem amet repellat, dolores nihil quae in mollitia asperiores ut rerum repellendus, voluptatum eum, officia laudantium quaerat?</p>
-                  <hr />
-                  <ul class="list-inline py-2">
-                    <li class="list-inline-item">
-                      <a class="p-2 fa-lg fb-ic">
-                        <mdb-icon fab icon="facebook" />
-                      </a>
-                    </li>
-                    <li class="list-inline-item">
-                      <a class="p-2 fa-lg tw-ic">
-                        <mdb-icon fab icon="twitter" />
-                      </a>
-                    </li>
-                    <li class="list-inline-item">
-                      <a class="p-2 fa-lg gplus-ic">
-                        <mdb-icon fab icon="google-plus" />
-                      </a>
-                    </li>
-                    <li class="list-inline-item">
-                      <a class="p-2 fa-lg li-ic">
-                        <mdb-icon fab icon="linkedin" />
-                      </a>
-                    </li>
-                  </ul>
-                  <a class="rotate-btn" @click="flipped=false">
-                    <mdb-icon class="pr-2" icon="undo" />Click here to rotate back
-                  </a>
-                </mdb-card-body>
-              </mdb-card>
-            </mdb-flipping-card>
-            </mdb-col>
-            <mdb-col sm="2">
-              <mdb-flipping-card
-                :flipped="flipped"
-                innerClass="text-center h-100 w-100"
-                style="max-width: 22rem; height: 416px;"
-            >
-              <mdb-card class="face front" style="height: 416px;">
-                <mdb-card-up>
-                  <img
-                      class="card-image-top"
-                      src="https://mdbootstrap.com/img/Photos/Others/photo7.jpg"
-                      alt="a photo of a house facade"
-                  />
-                </mdb-card-up>
-                <mdb-avatar class="mx-auto white" circle>
-                  <img
-                      src="https://mdbootstrap.com/img/Photos/Avatars/img%20(20).jpg"
-                      class="rounded-circle"
-                  />
-                </mdb-avatar>
-                <mdb-card-body>
-                  <h4 class="font-weight-bold mb-3">Marie Johnson</h4>
-                  <p class="font-weight-bold blue-text">Web developer</p>
-                  <a class="rotate-btn" @click="flipped=true">
-                    <mdb-icon class="pr-2" icon="redo" />Click here to rotate
-                  </a>
-                </mdb-card-body>
-              </mdb-card>
-              <mdb-card class="face back" style="height: 416px;">
-                <mdb-card-body>
-                  <h4 class="font-weight-bold">About me</h4>
-                  <hr />
-                  <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Maxime quae, dolores dicta. Blanditiis rem amet repellat, dolores nihil quae in mollitia asperiores ut rerum repellendus, voluptatum eum, officia laudantium quaerat?</p>
-                  <hr />
-                  <ul class="list-inline py-2">
-                    <li class="list-inline-item">
-                      <a class="p-2 fa-lg fb-ic">
-                        <mdb-icon fab icon="facebook" />
-                      </a>
-                    </li>
-                    <li class="list-inline-item">
-                      <a class="p-2 fa-lg tw-ic">
-                        <mdb-icon fab icon="twitter" />
-                      </a>
-                    </li>
-                    <li class="list-inline-item">
-                      <a class="p-2 fa-lg gplus-ic">
-                        <mdb-icon fab icon="google-plus" />
-                      </a>
-                    </li>
-                    <li class="list-inline-item">
-                      <a class="p-2 fa-lg li-ic">
-                        <mdb-icon fab icon="linkedin" />
-                      </a>
-                    </li>
-                  </ul>
-                  <a class="rotate-btn" @click="flipped=false">
-                    <mdb-icon class="pr-2" icon="undo" />Click here to rotate back
-                  </a>
-                </mdb-card-body>
-              </mdb-card>
-            </mdb-flipping-card>
-            </mdb-col>
-            <mdb-col sm="2">
-              <mdb-flipping-card
-                :flipped="flipped"
-                innerClass="text-center h-100 w-100"
-                style="max-width: 22rem; height: 416px;"
-            >
-              <mdb-card class="face front" style="height: 416px;">
-                <mdb-card-up>
-                  <img
-                      class="card-image-top"
-                      src="https://mdbootstrap.com/img/Photos/Others/photo7.jpg"
-                      alt="a photo of a house facade"
-                  />
-                </mdb-card-up>
-                <mdb-avatar class="mx-auto white" circle>
-                  <img
-                      src="https://mdbootstrap.com/img/Photos/Avatars/img%20(20).jpg"
-                      class="rounded-circle"
-                  />
-                </mdb-avatar>
-                <mdb-card-body>
-                  <h4 class="font-weight-bold mb-3">Marie Johnson</h4>
-                  <p class="font-weight-bold blue-text">Web developer</p>
-                  <a class="rotate-btn" @click="flipped=true">
-                    <mdb-icon class="pr-2" icon="redo" />Click here to rotate
-                  </a>
-                </mdb-card-body>
-              </mdb-card>
-              <mdb-card class="face back" style="height: 416px;">
-                <mdb-card-body>
-                  <h4 class="font-weight-bold">About me</h4>
-                  <hr />
-                  <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Maxime quae, dolores dicta. Blanditiis rem amet repellat, dolores nihil quae in mollitia asperiores ut rerum repellendus, voluptatum eum, officia laudantium quaerat?</p>
-                  <hr />
-                  <ul class="list-inline py-2">
-                    <li class="list-inline-item">
-                      <a class="p-2 fa-lg fb-ic">
-                        <mdb-icon fab icon="facebook" />
-                      </a>
-                    </li>
-                    <li class="list-inline-item">
-                      <a class="p-2 fa-lg tw-ic">
-                        <mdb-icon fab icon="twitter" />
-                      </a>
-                    </li>
-                    <li class="list-inline-item">
-                      <a class="p-2 fa-lg gplus-ic">
-                        <mdb-icon fab icon="google-plus" />
-                      </a>
-                    </li>
-                    <li class="list-inline-item">
-                      <a class="p-2 fa-lg li-ic">
-                        <mdb-icon fab icon="linkedin" />
-                      </a>
-                    </li>
-                  </ul>
-                  <a class="rotate-btn" @click="flipped=false">
-                    <mdb-icon class="pr-2" icon="undo" />Click here to rotate back
-                  </a>
-                </mdb-card-body>
-              </mdb-card>
-            </mdb-flipping-card>
-            </mdb-col>
-          </mdb-row>
-          <mdb-row class="justify-content-center">
-            <mdb-col sm="2">
-              <mdb-flipping-card
-                :flipped="flipped"
-                innerClass="text-center h-100 w-100"
-                style="max-width: 22rem; height: 416px;"
-            >
-              <mdb-card class="face front" style="height: 416px;">
-                <mdb-card-up>
-                  <img
-                      class="card-image-top"
-                      src="https://mdbootstrap.com/img/Photos/Others/photo7.jpg"
-                      alt="a photo of a house facade"
-                  />
-                </mdb-card-up>
-                <mdb-avatar class="mx-auto white" circle>
-                  <img
-                      src="https://mdbootstrap.com/img/Photos/Avatars/img%20(20).jpg"
-                      class="rounded-circle"
-                  />
-                </mdb-avatar>
-                <mdb-card-body>
-                  <h4 class="font-weight-bold mb-3">Marie Johnson</h4>
-                  <p class="font-weight-bold blue-text">Web developer</p>
-                  <a class="rotate-btn" @click="flipped=true">
-                    <mdb-icon class="pr-2" icon="redo" />Click here to rotate
-                  </a>
-                </mdb-card-body>
-              </mdb-card>
-              <mdb-card class="face back" style="height: 416px;">
-                <mdb-card-body>
-                  <h4 class="font-weight-bold">About me</h4>
-                  <hr />
-                  <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Maxime quae, dolores dicta. Blanditiis rem amet repellat, dolores nihil quae in mollitia asperiores ut rerum repellendus, voluptatum eum, officia laudantium quaerat?</p>
-                  <hr />
-                  <ul class="list-inline py-2">
-                    <li class="list-inline-item">
-                      <a class="p-2 fa-lg fb-ic">
-                        <mdb-icon fab icon="facebook" />
-                      </a>
-                    </li>
-                    <li class="list-inline-item">
-                      <a class="p-2 fa-lg tw-ic">
-                        <mdb-icon fab icon="twitter" />
-                      </a>
-                    </li>
-                    <li class="list-inline-item">
-                      <a class="p-2 fa-lg gplus-ic">
-                        <mdb-icon fab icon="google-plus" />
-                      </a>
-                    </li>
-                    <li class="list-inline-item">
-                      <a class="p-2 fa-lg li-ic">
-                        <mdb-icon fab icon="linkedin" />
-                      </a>
-                    </li>
-                  </ul>
-                  <a class="rotate-btn" @click="flipped=false">
-                    <mdb-icon class="pr-2" icon="undo" />Click here to rotate back
-                  </a>
-                </mdb-card-body>
-              </mdb-card>
-            </mdb-flipping-card>
-            </mdb-col>
-          </mdb-row>
-          <mdb-pagination class="justify-content-center" circle>
-            <mdb-page-item disabled>First</mdb-page-item>
-            <mdb-page-nav prev disabled></mdb-page-nav>
-            <mdb-page-item active>1</mdb-page-item>
-            <mdb-page-item>2</mdb-page-item>
-            <mdb-page-item>3</mdb-page-item>
-            <mdb-page-item>4</mdb-page-item>
-            <mdb-page-item>5</mdb-page-item>
-            <mdb-page-nav next></mdb-page-nav>
-            <mdb-page-item>Last</mdb-page-item>
-          </mdb-pagination>
+        <mdb-flipping-card v-for="card in cards.people" v-bind:key="card.id"
+            :flipped="flipped"
+            innerClass="text-center h-100 w-100"
+            style="max-width: 22rem; height: 416px;"
+        >
+          <mdb-card class="face front" style="height: 416px;">
+            <mdb-card-up>
+              <img
+                  class="card-image-top"
+                  src="https://mdbootstrap.com/img/Photos/Others/photo7.jpg"
+                  alt="a photo of a house facade"
+              />
+            </mdb-card-up>
+            <mdb-avatar class="mx-auto white" circle>
+              <img v-if="card.sex === 'male'" src="../assets/boy.png" class="rounded-circle"/>
+              <img v-else src="../assets/girl.png" class="rounded-circle"/>
+            </mdb-avatar>
+            <mdb-card-body>
+              <h4 class="font-weight-bold mb-3">{{card.name}} {{card.surname}}</h4>
+              <p class="font-weight-bold blue-text">{{card.email}}</p>
+              <p><b>Birthday:</b> {{ moment(card.birthday).format('Do MMMM YYYY') }}</p>
+              <a class="rotate-btn" @click="flipped=true">
+                <mdb-icon class="pr-2" icon="redo" />Learn more
+              </a>
+            </mdb-card-body>
+          </mdb-card>
+          <mdb-card class="face back" style="height: 416px;">
+            <mdb-card-body>
+              <h4 class="font-weight-bold">About me</h4>
+              <hr />
+              <p>Hi there! I'm {{card.name}} {{card.surname}}.</p>
+              <p>I'm from {{card.city}}.</p>
+              <p>My interests: {{card.interests}}</p>
+              <hr />
+              <ul class="list-inline py-2">
+                <li class="list-inline-item">
+                  <mdb-tooltip material trigger="hover" :options="{placement: 'left'}">
+                    <span slot="tip">Make friendship</span>
+                      <mdb-btn slot="reference" v-if="card.friendshipStatus === 'noname'" tag="a" gradient="blue" floating><mdb-icon icon="plus"/></mdb-btn>
+                  </mdb-tooltip>
+                  <mdb-tooltip v-if="card.friendshipStatus !== 'noname'" material trigger="hover" :options="{placement: 'left'}">
+                    <span slot="tip">Your fiend</span>
+                    <mdb-btn slot="reference" tag="a" gradient="green" disabled floating><mdb-icon icon="check"/></mdb-btn>
+                  </mdb-tooltip>
+                </li>
+                <li class="list-inline-item">
+                  <mdb-tooltip v-if="card.friendshipStatus !== 'noname'" material trigger="hover" :options="{placement: 'right'}">
+                    <span slot="tip">Start chatting</span>
+                    <mdb-btn slot="reference" tag="a" gradient="peach" floating><mdb-icon icon="comment"/></mdb-btn>
+                  </mdb-tooltip>
+                </li>
+              </ul>
+              <a class="rotate-btn" @click="flipped=false">
+                <mdb-icon class="pr-2" icon="undo" />Back to preview
+              </a>
+            </mdb-card-body>
+          </mdb-card>
+        </mdb-flipping-card>
+        <mdb-pagination class="justify-content-center" circle>
+          <mdb-page-item disabled>First</mdb-page-item>
+          <mdb-page-nav prev disabled></mdb-page-nav>
+          <mdb-page-item active>1</mdb-page-item>
+          <mdb-page-item>2</mdb-page-item>
+          <mdb-page-item>3</mdb-page-item>
+          <mdb-page-item>4</mdb-page-item>
+          <mdb-page-item>5</mdb-page-item>
+          <mdb-page-nav next></mdb-page-nav>
+          <mdb-page-item>Last</mdb-page-item>
+        </mdb-pagination>
       </div>
     </mdb-side-nav-2>
   </div>
@@ -453,12 +129,12 @@ import {
   mdbPagination,
   mdbPageItem,
   mdbPageNav,
-  mdbRow,
-  mdbCol,
+  mdbTooltip,
 } from "mdbvue";
 
 import router from "@/router";
 import store from "@/store"
+import {searchByAnthroponym} from "@/api/social.api";
 
 export default {
   components: {
@@ -477,11 +153,11 @@ export default {
     mdbPagination,
     mdbPageItem,
     mdbPageNav,
-    mdbRow,
-    mdbCol,
+    mdbTooltip,
   },
 name: "People",
   data: () => ({
+    moment: require('moment'),
     show: true,
     collapsed: false,
     navigation: [
@@ -508,12 +184,30 @@ name: "People",
     ],
     searchPayload: {
       anthroponym: store.getters.searchAnthroponym,
+      limit: 10,
+      offset: 0,
     },
-    flipped: false
+    flipped: false,
+    cards: {
+      people: [],
+      count: 0,
+    }
   }),
   methods: {
     searchPeople() {
       this.$store.commit("changeAnthroponym", this.searchPayload.anthroponym);
+
+      this.getPeopleByAnthroponym();
+    },
+    async getPeopleByAnthroponym() {
+      try {
+        const response = await searchByAnthroponym(this.searchPayload)
+
+        this.cards.people = response.data.users
+        this.cards.count = response.data.count
+      } catch (error) {
+        this.$notify.error({message: error.response.data.message, position: 'top right', timeOut: 5000});
+      }
     },
     logOut() {
       localStorage.removeItem("accessToken");
@@ -521,6 +215,14 @@ name: "People",
 
       this.$router.push({name: 'SignIn'});
     },
+  },
+  created() {
+    if (this.$store.getters.searchAnthroponym !== null && this.$store.getters.searchAnthroponym !== '') {
+      this.getPeopleByAnthroponym();
+    }
+  },
+  beforeDestroy() {
+    this.$store.commit("changeAnthroponym", null);
   },
   mixins: [waves]
 }
