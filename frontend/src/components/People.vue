@@ -21,11 +21,7 @@
       <div slot="content" class="mt-5 d-flex justify-content-center">
         <mdb-btn tag="a" gradient="blue" size="sm" class="mx-0" floating :icon="collapsed ? 'chevron-right' : 'chevron-left'" @click="collapsed = !collapsed"></mdb-btn>
       </div>
-      <mdb-navbar
-          slot="nav"
-          tag="div"
-          :toggler="false"
-          position="top">
+      <mdb-navbar slot="nav" tag="div" :toggler="false" position="top">
         <mdb-navbar-nav right>
           <mdb-form-inline class="ml-auto">
             <mdb-input v-model="searchPayload.anthroponym" class="mr-sm-1" type="text" placeholder="Search people..."/>
@@ -40,8 +36,7 @@
         <mdb-flipping-card v-for="card in cards.people" v-bind:key="card.id"
             :flipped="flipped"
             innerClass="text-center h-100 w-100"
-            style="max-width: 22rem; height: 416px;"
-        >
+            style="max-width: 22rem; height: 416px;">
           <mdb-card class="face front" style="height: 416px;">
             <mdb-card-up>
               <img
@@ -73,17 +68,21 @@
               <hr />
               <ul class="list-inline py-2">
                 <li class="list-inline-item">
-                  <mdb-tooltip material trigger="hover" :options="{placement: 'left'}">
+                  <mdb-tooltip v-if="card.friendshipStatus === 'noname'" material trigger="hover" :options="{placement: 'left'}">
                     <span slot="tip">Make friendship</span>
-                      <mdb-btn slot="reference" v-if="card.friendshipStatus === 'noname'" tag="a" gradient="blue" floating><mdb-icon icon="plus"/></mdb-btn>
+                      <mdb-btn @click="addFriend(card.id)" slot="reference" tag="a" gradient="blue" floating><mdb-icon icon="plus"/></mdb-btn>
                   </mdb-tooltip>
-                  <mdb-tooltip v-if="card.friendshipStatus !== 'noname'" material trigger="hover" :options="{placement: 'left'}">
+                  <mdb-tooltip v-if="card.friendshipStatus === 'expected'" material trigger="hover" :options="{placement: 'left'}">
+                    <span slot="tip">Pending request</span>
+                    <mdb-btn slot="reference" tag="a" gradient="heavy-rain" floating><mdb-icon icon="clock"/></mdb-btn>
+                  </mdb-tooltip>
+                  <mdb-tooltip v-if="card.friendshipStatus === 'accepted'" material trigger="hover" :options="{placement: 'left'}">
                     <span slot="tip">Your fiend</span>
                     <mdb-btn slot="reference" tag="a" gradient="green" disabled floating><mdb-icon icon="check"/></mdb-btn>
                   </mdb-tooltip>
                 </li>
                 <li class="list-inline-item">
-                  <mdb-tooltip v-if="card.friendshipStatus !== 'noname'" material trigger="hover" :options="{placement: 'right'}">
+                  <mdb-tooltip v-if="card.friendshipStatus === 'accepted'" material trigger="hover" :options="{placement: 'right'}">
                     <span slot="tip">Start chatting</span>
                     <mdb-btn slot="reference" tag="a" gradient="peach" floating><mdb-icon icon="comment"/></mdb-btn>
                   </mdb-tooltip>
@@ -135,6 +134,7 @@ import {
 import router from "@/router";
 import store from "@/store"
 import {searchByAnthroponym} from "@/api/social.api";
+import WSService from "@/service/ws";
 
 export default {
   components: {
@@ -209,6 +209,28 @@ name: "People",
         this.$notify.error({message: error.response.data.message, position: 'top right', timeOut: 5000});
       }
     },
+    addFriend(fiendID) {
+      try {
+        this.ws.send(
+            JSON.stringify({
+              topic: 'friendship',
+              action: 'create',
+              payload:
+                  JSON.stringify({
+                    users_id: fiendID,
+                  }),
+            })
+        )
+
+        for (let i = 0; i < this.cards.people.length; i++) {
+          if (this.cards.people[i].id === fiendID) {
+            this.cards.people[i].friendshipStatus = "expected"
+          }
+        }
+      } catch (error) {
+        this.$notify.error({message: error.response.data.message, position: 'top right', timeOut: 5000});
+      }
+    },
     logOut() {
       localStorage.removeItem("accessToken");
       localStorage.removeItem("refreshToken");
@@ -220,9 +242,13 @@ name: "People",
     if (this.$store.getters.searchAnthroponym !== null && this.$store.getters.searchAnthroponym !== '') {
       this.getPeopleByAnthroponym();
     }
+
+    this.ws = new WSService(this.$store)
+    this.ws.connect(process.env.VUE_APP_SOCIAL_WS_URL)
   },
   beforeDestroy() {
     this.$store.commit("changeAnthroponym", null);
+    this.ws.disconnect()
   },
   mixins: [waves]
 }
