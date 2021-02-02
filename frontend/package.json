@@ -39,7 +39,7 @@
     "del-cli": "^3.0.0",
     "eslint": "^5.16.0",
     "eslint-plugin-vue": "^5.0.0",
-    "node-sass": "^4.13.1",
+    "node-sass": "^4.14.1",
     "register-service-worker": "^1.6.2",
     "sass-loader": "^8.0.0",
     "vue-cli-plugin-mdb": "~2.1.0",

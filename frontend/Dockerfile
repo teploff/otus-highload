@@ -6,6 +6,7 @@ WORKDIR /app
 ENV PATH /app/node_modules/.bin:$PATH
 
 COPY package*.json ./
+COPY mdb ./mdb
 RUN npm install --silent
 COPY . .
 RUN npm run build
