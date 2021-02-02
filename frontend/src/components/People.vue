@@ -133,8 +133,7 @@ import {
 
 import router from "@/router";
 import store from "@/store"
-import {searchByAnthroponym} from "@/api/social.api";
-import WSService from "@/service/ws";
+import {createFriendship, searchByAnthroponym} from "@/api/social.api";
 
 export default {
   components: {
@@ -209,21 +208,12 @@ name: "People",
         this.$notify.error({message: error.response.data.message, position: 'top right', timeOut: 5000});
       }
     },
-    addFriend(fiendID) {
+    async addFriend(friendID) {
       try {
-        this.ws.send(
-            JSON.stringify({
-              topic: 'friendship',
-              action: 'create',
-              payload:
-                  JSON.stringify({
-                    users_id: fiendID,
-                  }),
-            })
-        )
+        await createFriendship([friendID])
 
         for (let i = 0; i < this.cards.people.length; i++) {
-          if (this.cards.people[i].id === fiendID) {
+          if (this.cards.people[i].id === friendID) {
             this.cards.people[i].friendshipStatus = "expected"
           }
         }
@@ -242,13 +232,9 @@ name: "People",
     if (this.$store.getters.searchAnthroponym !== null && this.$store.getters.searchAnthroponym !== '') {
       this.getPeopleByAnthroponym();
     }
-
-    this.ws = new WSService(this.$store)
-    this.ws.connect(process.env.VUE_APP_SOCIAL_WS_URL)
   },
   beforeDestroy() {
     this.$store.commit("changeAnthroponym", null);
-    this.ws.disconnect()
   },
   mixins: [waves]
 }
