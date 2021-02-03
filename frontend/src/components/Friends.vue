@@ -37,7 +37,140 @@
         </mdb-navbar-nav>
       </mdb-navbar>
       <div slot="main">
-        <!--        payload here!-->
+        <mdb-tabs
+            :active="0"
+            tabs
+            card
+            class="mb-5"
+            justify
+            color="info"
+            :links="[
+                { text: 'Friends', icon: 'user-friends', slot: 'friends-slot' },
+                { text: 'Followers', icon: 'bullhorn', slot: 'friends-slot' }]"
+        >
+          <template slot="friends-slot">
+            <mdb-container>
+              <mdb-row>
+                <mdb-col sm="4">
+                  <mdb-card testimonial>
+                    <mdb-card-up gradient="blue" class="lighten-1"></mdb-card-up>
+                    <mdb-card-avatar color="white" class="mx-auto"><img src="../assets/girl.png" class="rounded-circle"></mdb-card-avatar>
+                    <mdb-card-body>
+                      <mdb-card-title>Anna Doe</mdb-card-title>
+                      <hr />
+                      <p>
+                        <mdb-icon icon="quote-left" /> Lorem ipsum dolor sit amet, consectetur adipisicing elit. Eos,
+                        adipisci</p>
+                      <hr />
+                      <mdb-row>
+                        <mdb-col class="col-6">
+                          <mdb-btn rounded color="primary">Add</mdb-btn>
+                        </mdb-col>
+                        <mdb-col class="col-4">
+                          <mdb-btn rounded color="red">Remove</mdb-btn>
+                        </mdb-col>
+                      </mdb-row>
+                    </mdb-card-body>
+                  </mdb-card>
+                </mdb-col>
+                <mdb-col sm="4">
+                  <mdb-card testimonial>
+                    <mdb-card-up gradient="blue" class="lighten-1"></mdb-card-up>
+                    <mdb-card-avatar color="white" class="mx-auto"><img src="../assets/boy.png" class="rounded-circle"></mdb-card-avatar>
+                    <mdb-card-body>
+                      <mdb-card-title>Martha Smith</mdb-card-title>
+                      <hr />
+                      <p>
+                        <mdb-icon icon="quote-left" /> Lorem ipsum dolor sit amet, consectetur adipisicing elit. Eos,
+                        adipisci</p>
+                      <hr />
+                      <mdb-row>
+                        <mdb-col class="col-6">
+                          <mdb-btn rounded color="primary">Add</mdb-btn>
+                        </mdb-col>
+                        <mdb-col class="col-4">
+                          <mdb-btn rounded color="red">Remove</mdb-btn>
+                        </mdb-col>
+                      </mdb-row>
+                    </mdb-card-body>
+                  </mdb-card>
+                </mdb-col>
+              </mdb-row>
+            </mdb-container>
+            <mdb-pagination class="justify-content-center" circle>
+              <mdb-page-item disabled>First</mdb-page-item>
+              <mdb-page-nav prev disabled></mdb-page-nav>
+              <mdb-page-item active>1</mdb-page-item>
+              <mdb-page-item>2</mdb-page-item>
+              <mdb-page-item>3</mdb-page-item>
+              <mdb-page-item>4</mdb-page-item>
+              <mdb-page-item>5</mdb-page-item>
+              <mdb-page-nav next></mdb-page-nav>
+              <mdb-page-item>Last</mdb-page-item>
+            </mdb-pagination>
+          </template>
+          <template slot="followers-slot">
+            <mdb-container>
+              <mdb-row>
+                <mdb-col sm="4">
+                  <mdb-card testimonial>
+                    <mdb-card-up gradient="blue" class="lighten-1"></mdb-card-up>
+                    <mdb-card-avatar color="white" class="mx-auto"><img src="../assets/girl.png" class="rounded-circle"></mdb-card-avatar>
+                    <mdb-card-body>
+                      <mdb-card-title>Anna Doe</mdb-card-title>
+                      <hr />
+                      <p>
+                        <mdb-icon icon="quote-left" /> Lorem ipsum dolor sit amet, consectetur adipisicing elit. Eos,
+                        adipisci</p>
+                      <hr />
+                      <mdb-row>
+                        <mdb-col class="col-6">
+                          <mdb-btn rounded color="primary">Add</mdb-btn>
+                        </mdb-col>
+                        <mdb-col class="col-4">
+                          <mdb-btn rounded color="red">Remove</mdb-btn>
+                        </mdb-col>
+                      </mdb-row>
+                    </mdb-card-body>
+                  </mdb-card>
+                </mdb-col>
+                <mdb-col sm="4">
+                  <mdb-card testimonial>
+                    <mdb-card-up gradient="blue" class="lighten-1"></mdb-card-up>
+                    <mdb-card-avatar color="white" class="mx-auto"><img src="../assets/boy.png" class="rounded-circle"></mdb-card-avatar>
+                    <mdb-card-body>
+                      <mdb-card-title>Martha Smith</mdb-card-title>
+                      <hr />
+                      <p>
+                        <mdb-icon icon="quote-left" /> Lorem ipsum dolor sit amet, consectetur adipisicing elit. Eos,
+                        adipisci</p>
+                      <hr />
+                      <mdb-row>
+                        <mdb-col class="col-6">
+                          <mdb-btn rounded color="primary">Add</mdb-btn>
+                        </mdb-col>
+                        <mdb-col class="col-4">
+                          <mdb-btn rounded color="red">Remove</mdb-btn>
+                        </mdb-col>
+                      </mdb-row>
+                    </mdb-card-body>
+                  </mdb-card>
+                </mdb-col>
+              </mdb-row>
+              <mdb-pagination class="justify-content-center" circle>
+                <mdb-page-item disabled>First</mdb-page-item>
+                <mdb-page-nav prev disabled></mdb-page-nav>
+                <mdb-page-item active>1</mdb-page-item>
+                <mdb-page-item>2</mdb-page-item>
+                <mdb-page-item>3</mdb-page-item>
+                <mdb-page-item>4</mdb-page-item>
+                <mdb-page-item>5</mdb-page-item>
+                <mdb-page-nav next></mdb-page-nav>
+                <mdb-page-item>Last</mdb-page-item>
+              </mdb-pagination>
+            </mdb-container>
+          </template>
+        </mdb-tabs>
       </div>
     </mdb-side-nav-2>
   </div>
@@ -53,7 +186,19 @@ import {
   mdbIcon,
   waves,
   mdbFormInline,
-  mdbInput
+  mdbInput,
+  mdbTabs,
+  mdbRow,
+  mdbCol,
+  mdbCard,
+  mdbCardBody,
+  mdbCardTitle,
+  mdbCardUp,
+  mdbCardAvatar,
+  mdbContainer,
+  mdbPagination,
+  mdbPageItem,
+  mdbPageNav,
 } from "mdbvue";
 
 import router from "@/router";
@@ -67,7 +212,19 @@ export default {
     mdbBtn,
     mdbIcon,
     mdbFormInline,
-    mdbInput
+    mdbInput,
+    mdbTabs,
+    mdbRow,
+    mdbCol,
+    mdbCard,
+    mdbCardBody,
+    mdbCardTitle,
+    mdbCardUp,
+    mdbCardAvatar,
+    mdbContainer,
+    mdbPagination,
+    mdbPageItem,
+    mdbPageNav,
   },
   name: "Friends",
   data: () => ({
