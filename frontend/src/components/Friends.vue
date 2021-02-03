@@ -49,7 +49,7 @@
                 { text: 'Friends', icon: 'user-friends', slot: 'friends-slot' },
                 { text: 'Followers', icon: 'bullhorn', slot: 'followers-slot'}]"
         >
-          <template slot="'friends-slot'">
+          <template slot="friends-slot">
             <mdb-container>
               <mdb-row v-for="(row, i) in friends" v-bind:key="i">
                 <mdb-col sm="4" v-for="friend in row" v-bind:key="friend.id">
@@ -88,7 +88,7 @@
               <mdb-page-item>Last</mdb-page-item>
             </mdb-pagination>
           </template>
-          <template slot="'followers-slot'">
+          <template slot="followers-slot">
             <mdb-container>
               <mdb-row v-for="(row, i) in followers" v-bind:key="i">
                 <mdb-col sm="4" v-for="follower in row" v-bind:key="follower.id">
@@ -111,28 +111,6 @@
                         </mdb-col>
                         <mdb-col class="col-4">
                           <mdb-btn @click="refuseFollower(follower)" rounded color="red">Remove</mdb-btn>
-                        </mdb-col>
-                      </mdb-row>
-                    </mdb-card-body>
-                  </mdb-card>
-                </mdb-col>
-                <mdb-col sm="4">
-                  <mdb-card testimonial>
-                    <mdb-card-up gradient="blue" class="lighten-1"></mdb-card-up>
-                    <mdb-card-avatar color="white" class="mx-auto"><img src="../assets/boy.png" class="rounded-circle"></mdb-card-avatar>
-                    <mdb-card-body>
-                      <mdb-card-title>Martha Smith</mdb-card-title>
-                      <hr />
-                      <p>
-                        <mdb-icon icon="quote-left" /> Lorem ipsum dolor sit amet, consectetur adipisicing elit. Eos,
-                        adipisci</p>
-                      <hr />
-                      <mdb-row>
-                        <mdb-col class="col-6">
-                          <mdb-btn rounded color="primary">Add</mdb-btn>
-                        </mdb-col>
-                        <mdb-col class="col-4">
-                          <mdb-btn rounded color="red">Remove</mdb-btn>
                         </mdb-col>
                       </mdb-row>
                     </mdb-card-body>
