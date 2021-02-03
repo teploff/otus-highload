@@ -39,6 +39,7 @@
       <div slot="main">
         <mdb-tabs
             :active="0"
+            @activeTab="getActiveTabIndex"
             tabs
             card
             class="mb-5"
@@ -46,50 +47,28 @@
             color="info"
             :links="[
                 { text: 'Friends', icon: 'user-friends', slot: 'friends-slot' },
-                { text: 'Followers', icon: 'bullhorn', slot: 'friends-slot' }]"
+                { text: 'Followers', icon: 'bullhorn', slot: 'followers-slot'}]"
         >
-          <template slot="friends-slot">
+          <template slot="'friends-slot'">
             <mdb-container>
-              <mdb-row>
-                <mdb-col sm="4">
+              <mdb-row v-for="(_, rowIndex) in friends.length%4" v-bind:key="rowIndex">
+                <mdb-col sm="4" v-for="(_, colIndex) in 4" v-bind:key="colIndex">
                   <mdb-card testimonial>
                     <mdb-card-up gradient="blue" class="lighten-1"></mdb-card-up>
-                    <mdb-card-avatar color="white" class="mx-auto"><img src="../assets/girl.png" class="rounded-circle"></mdb-card-avatar>
+                    <mdb-card-avatar color="white" class="mx-auto">
+                      <img v-if="friends[rowIndex * 4 + colIndex].sex==='female'" src="../assets/girl.png" class="rounded-circle">
+                      <img v-else src="../assets/boy.png" class="rounded-circle">
+                    </mdb-card-avatar>
                     <mdb-card-body>
-                      <mdb-card-title>Anna Doe</mdb-card-title>
+                      <mdb-card-title>{{ friends[rowIndex * 4 + colIndex].name }} {{ friends[rowIndex * 4 + colIndex].surname }}</mdb-card-title>
                       <hr />
                       <p>
                         <mdb-icon icon="quote-left" /> Lorem ipsum dolor sit amet, consectetur adipisicing elit. Eos,
                         adipisci</p>
                       <hr />
                       <mdb-row>
-                        <mdb-col class="col-6">
-                          <mdb-btn rounded color="primary">Add</mdb-btn>
-                        </mdb-col>
-                        <mdb-col class="col-4">
-                          <mdb-btn rounded color="red">Remove</mdb-btn>
-                        </mdb-col>
-                      </mdb-row>
-                    </mdb-card-body>
-                  </mdb-card>
-                </mdb-col>
-                <mdb-col sm="4">
-                  <mdb-card testimonial>
-                    <mdb-card-up gradient="blue" class="lighten-1"></mdb-card-up>
-                    <mdb-card-avatar color="white" class="mx-auto"><img src="../assets/boy.png" class="rounded-circle"></mdb-card-avatar>
-                    <mdb-card-body>
-                      <mdb-card-title>Martha Smith</mdb-card-title>
-                      <hr />
-                      <p>
-                        <mdb-icon icon="quote-left" /> Lorem ipsum dolor sit amet, consectetur adipisicing elit. Eos,
-                        adipisci</p>
-                      <hr />
-                      <mdb-row>
-                        <mdb-col class="col-6">
-                          <mdb-btn rounded color="primary">Add</mdb-btn>
-                        </mdb-col>
-                        <mdb-col class="col-4">
-                          <mdb-btn rounded color="red">Remove</mdb-btn>
+                        <mdb-col>
+                          <mdb-btn @click="splitUpFriendship(friends[rowIndex * 4 + colIndex])" rounded color="red">Remove</mdb-btn>
                         </mdb-col>
                       </mdb-row>
                     </mdb-card-body>
@@ -109,15 +88,20 @@
               <mdb-page-item>Last</mdb-page-item>
             </mdb-pagination>
           </template>
-          <template slot="followers-slot">
+          <template slot="'followers-slot'">
             <mdb-container>
-              <mdb-row>
-                <mdb-col sm="4">
+              <mdb-row v-for="(_, rowIndex) in followers.length%4" v-bind:key="rowIndex">
+                <mdb-col sm="4" v-for="(_, colIndex) in 4" v-bind:key="colIndex">
                   <mdb-card testimonial>
                     <mdb-card-up gradient="blue" class="lighten-1"></mdb-card-up>
-                    <mdb-card-avatar color="white" class="mx-auto"><img src="../assets/girl.png" class="rounded-circle"></mdb-card-avatar>
+                    <mdb-card-avatar color="white" class="mx-auto">
+                      {{log(followers[rowIndex * 4 + colIndex])}}
+                      {{log(followers[rowIndex * 4 + colIndex].sex)}}
+                      <img v-if="followers[rowIndex * 4 + colIndex].sex==='female'" src="../assets/girl.png" class="rounded-circle">
+                      <img v-else src="../assets/boy.png" class="rounded-circle">
+                    </mdb-card-avatar>
                     <mdb-card-body>
-                      <mdb-card-title>Anna Doe</mdb-card-title>
+                      <mdb-card-title>{{ followers[rowIndex * 4 + colIndex].name }} {{ followers[rowIndex * 4 + colIndex].surname }}</mdb-card-title>
                       <hr />
                       <p>
                         <mdb-icon icon="quote-left" /> Lorem ipsum dolor sit amet, consectetur adipisicing elit. Eos,
@@ -125,10 +109,10 @@
                       <hr />
                       <mdb-row>
                         <mdb-col class="col-6">
-                          <mdb-btn rounded color="primary">Add</mdb-btn>
+                          <mdb-btn @click="acceptFollower(followers[rowIndex * 4 + colIndex])" rounded color="primary">Add</mdb-btn>
                         </mdb-col>
                         <mdb-col class="col-4">
-                          <mdb-btn rounded color="red">Remove</mdb-btn>
+                          <mdb-btn @click="refuseFollower(followers[rowIndex * 4 + colIndex])" rounded color="red">Remove</mdb-btn>
                         </mdb-col>
                       </mdb-row>
                     </mdb-card-body>
@@ -202,6 +186,7 @@ import {
 } from "mdbvue";
 
 import router from "@/router";
+import {confirmFriendship, getFollowers, getFriends, rejectFriendship, splitUpFriendship} from "@/api/social.api";
 
 export default {
   components: {
@@ -227,6 +212,15 @@ export default {
     mdbPageNav,
   },
   name: "Friends",
+  async beforeMount() {
+    try {
+      const response = await getFriends()
+
+      this.friends = response.data.friends
+    } catch (error) {
+      this.$notify.error({message: error.response.data.message, position: 'top right', timeOut: 5000});
+    }
+  },
   data: () => ({
     show: true,
     collapsed: false,
@@ -254,12 +248,57 @@ export default {
     ],
     searchPayload: {
       anthroponym: '',
-    }
+    },
+    friends: [],
+    followers: [],
   }),
   methods: {
+    log(text) {
+      console.log(text)
+    },
     searchPeople() {
       this.$store.commit("changeAnthroponym", this.searchPayload.anthroponym);
       this.$router.push({ name: 'People' })
+    },
+    async getActiveTabIndex(index) {
+      if (index === 0) {
+        try {
+          const response = await getFriends()
+
+          this.friends = response.data.friends
+        } catch (error) {
+          this.$notify.error({message: error.response.data.message, position: 'top right', timeOut: 5000});
+        }
+      } else {
+        try {
+          const response = await getFollowers()
+
+          this.followers = response.data.followers
+        } catch (error) {
+          this.$notify.error({message: error.response.data.message, position: 'top right', timeOut: 5000});
+        }
+      }
+    },
+    async acceptFollower(user) {
+      try {
+        await confirmFriendship([user.id])
+      } catch (error) {
+        this.$notify.error({message: error.response.data.message, position: 'top right', timeOut: 5000});
+      }
+    },
+    async refuseFollower(user) {
+      try {
+        await rejectFriendship([user.id])
+      } catch (error) {
+        this.$notify.error({message: error.response.data.message, position: 'top right', timeOut: 5000});
+      }
+    },
+    async splitUpFriendship(user) {
+      try {
+        await splitUpFriendship([user.id])
+      } catch (error) {
+        this.$notify.error({message: error.response.data.message, position: 'top right', timeOut: 5000});
+      }
     },
     logOut() {
       localStorage.removeItem("accessToken");
