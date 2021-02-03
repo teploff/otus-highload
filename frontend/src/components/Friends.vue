@@ -191,8 +191,18 @@ export default {
   async beforeMount() {
     try {
       const response = await getFriends()
+      const friends = response.data.friends
 
-      this.friends = response.data.friends
+      this.friends = [[]]
+
+      let j = 0;
+      for (let i = 0; i < friends.length; i++) {
+        if ((i !== 0) && (i % 4 === 0)) {
+          j++;
+        }
+
+        this.friends[j].push(friends[i])
+      }
     } catch (error) {
       this.$notify.error({message: error.response.data.message, position: 'top right', timeOut: 5000});
     }
@@ -244,7 +254,8 @@ export default {
 
           this.friends = [[]]
 
-          for (let i,j = 0; i < friends.length - 1; i++) {
+          let j = 0;
+          for (let i = 0; i < friends.length; i++) {
             if ((i !== 0) && (i%4 === 0)) {
               j++;
             }
