@@ -51,16 +51,16 @@
         >
           <template slot="'friends-slot'">
             <mdb-container>
-              <mdb-row v-for="(_, rowIndex) in friends.length%4" v-bind:key="rowIndex">
-                <mdb-col sm="4" v-for="(_, colIndex) in 4" v-bind:key="colIndex">
+              <mdb-row v-for="(row, i) in friends" v-bind:key="i">
+                <mdb-col sm="4" v-for="friend in row" v-bind:key="friend.id">
                   <mdb-card testimonial>
                     <mdb-card-up gradient="blue" class="lighten-1"></mdb-card-up>
                     <mdb-card-avatar color="white" class="mx-auto">
-                      <img v-if="friends[rowIndex * 4 + colIndex].sex==='female'" src="../assets/girl.png" class="rounded-circle">
+                      <img v-if="friend.sex==='female'" src="../assets/girl.png" class="rounded-circle">
                       <img v-else src="../assets/boy.png" class="rounded-circle">
                     </mdb-card-avatar>
                     <mdb-card-body>
-                      <mdb-card-title>{{ friends[rowIndex * 4 + colIndex].name }} {{ friends[rowIndex * 4 + colIndex].surname }}</mdb-card-title>
+                      <mdb-card-title>{{ friend.name }} {{ friend.surname }}</mdb-card-title>
                       <hr />
                       <p>
                         <mdb-icon icon="quote-left" /> Lorem ipsum dolor sit amet, consectetur adipisicing elit. Eos,
@@ -68,7 +68,7 @@
                       <hr />
                       <mdb-row>
                         <mdb-col>
-                          <mdb-btn @click="splitUpFriendship(friends[rowIndex * 4 + colIndex])" rounded color="red">Remove</mdb-btn>
+                          <mdb-btn @click="splitUpFriendship(friend)" rounded color="red">Remove</mdb-btn>
                         </mdb-col>
                       </mdb-row>
                     </mdb-card-body>
@@ -90,18 +90,16 @@
           </template>
           <template slot="'followers-slot'">
             <mdb-container>
-              <mdb-row v-for="(_, rowIndex) in followers.length%4" v-bind:key="rowIndex">
-                <mdb-col sm="4" v-for="(_, colIndex) in 4" v-bind:key="colIndex">
+              <mdb-row v-for="(row, i) in followers" v-bind:key="i">
+                <mdb-col sm="4" v-for="follower in row" v-bind:key="follower.id">
                   <mdb-card testimonial>
                     <mdb-card-up gradient="blue" class="lighten-1"></mdb-card-up>
                     <mdb-card-avatar color="white" class="mx-auto">
-                      {{log(followers[rowIndex * 4 + colIndex])}}
-                      {{log(followers[rowIndex * 4 + colIndex].sex)}}
-                      <img v-if="followers[rowIndex * 4 + colIndex].sex==='female'" src="../assets/girl.png" class="rounded-circle">
+                      <img v-if="follower.sex==='female'" src="../assets/girl.png" class="rounded-circle">
                       <img v-else src="../assets/boy.png" class="rounded-circle">
                     </mdb-card-avatar>
                     <mdb-card-body>
-                      <mdb-card-title>{{ followers[rowIndex * 4 + colIndex].name }} {{ followers[rowIndex * 4 + colIndex].surname }}</mdb-card-title>
+                      <mdb-card-title>{{ follower.name }} {{ follower.surname }}</mdb-card-title>
                       <hr />
                       <p>
                         <mdb-icon icon="quote-left" /> Lorem ipsum dolor sit amet, consectetur adipisicing elit. Eos,
@@ -109,10 +107,10 @@
                       <hr />
                       <mdb-row>
                         <mdb-col class="col-6">
-                          <mdb-btn @click="acceptFollower(followers[rowIndex * 4 + colIndex])" rounded color="primary">Add</mdb-btn>
+                          <mdb-btn @click="acceptFollower(follower)" rounded color="primary">Add</mdb-btn>
                         </mdb-col>
                         <mdb-col class="col-4">
-                          <mdb-btn @click="refuseFollower(followers[rowIndex * 4 + colIndex])" rounded color="red">Remove</mdb-btn>
+                          <mdb-btn @click="refuseFollower(follower)" rounded color="red">Remove</mdb-btn>
                         </mdb-col>
                       </mdb-row>
                     </mdb-card-body>
@@ -249,8 +247,8 @@ export default {
     searchPayload: {
       anthroponym: '',
     },
-    friends: [],
-    followers: [],
+    friends: [[]],
+    followers: [[]],
   }),
   methods: {
     log(text) {
@@ -264,16 +262,35 @@ export default {
       if (index === 0) {
         try {
           const response = await getFriends()
+          const friends = response.data.friends
 
-          this.friends = response.data.friends
+          this.friends = [[]]
+
+          for (let i,j = 0; i < friends.length - 1; i++) {
+            if ((i !== 0) && (i%4 === 0)) {
+              j++;
+            }
+
+            this.friends[j].push(friends[i])
+          }
         } catch (error) {
           this.$notify.error({message: error.response.data.message, position: 'top right', timeOut: 5000});
         }
       } else {
         try {
           const response = await getFollowers()
+          const followers = response.data.followers
 
-          this.followers = response.data.followers
+          this.followers = [[]]
+
+          let j = 0;
+          for (let i = 0; i < followers.length; i++) {
+            if ((i !== 0) && (i%4 === 0)) {
+              j++;
+            }
+
+            this.followers[j].push(followers[i])
+          }
         } catch (error) {
           this.$notify.error({message: error.response.data.message, position: 'top right', timeOut: 5000});
         }
