@@ -17,11 +17,25 @@ type grpcMessengerProxyService struct {
 func NewGRPCMessengerProxyService(messengerEndpoints *grpc.MessengerProxyEndpoints) *grpcMessengerProxyService {
 	return &grpcMessengerProxyService{messengerEndpoints: messengerEndpoints}
 }
+func (g *grpcMessengerProxyService) CreateChat(ctx context.Context, userToken, companionID string) (string, error) {
+	response, err := g.messengerEndpoints.CreateChat(ctx, &pbmessenger.CreateChatRequest{
+		MasterToken: userToken,
+		SlaveId:     companionID,
+	})
+	if err != nil {
+		return "", err
+	}
 
-func (g *grpcMessengerProxyService) GetChats(offset, limit *int32, ctx context.Context) (*domain.GetChatsResponse, error) {
+	resp := response.(*pbmessenger.CreateChatResponse)
+
+	return resp.ChatId, nil
+}
+
+func (g *grpcMessengerProxyService) GetChats(ctx context.Context, userToken string, offset, limit *int32) (*domain.GetChatsResponse, error) {
 	response, err := g.messengerEndpoints.GetChats(ctx, &pbmessenger.GetChatsRequest{
-		Offset: &wrappers.Int32Value{Value: *offset},
-		Limit:  &wrappers.Int32Value{Value: *limit},
+		UserToken: userToken,
+		Offset:    &wrappers.Int32Value{Value: *offset},
+		Limit:     &wrappers.Int32Value{Value: *limit},
 	})
 	if err != nil {
 		return nil, err
@@ -56,11 +70,12 @@ func (g *grpcMessengerProxyService) GetChats(offset, limit *int32, ctx context.C
 	}, nil
 }
 
-func (g *grpcMessengerProxyService) GetMessages(chatID string, offset, limit *int32, ctx context.Context) (*domain.GetMessagesResponse, error) {
+func (g *grpcMessengerProxyService) GetMessages(ctx context.Context, userToken, chatID string, offset, limit *int32) (*domain.GetMessagesResponse, error) {
 	response, err := g.messengerEndpoints.GetMessages(ctx, &pbmessenger.GetMessagesRequest{
-		ChatId: chatID,
-		Offset: &wrappers.Int32Value{Value: *offset},
-		Limit:  &wrappers.Int32Value{Value: *limit},
+		UserToken: userToken,
+		ChatId:    chatID,
+		Offset:    &wrappers.Int32Value{Value: *offset},
+		Limit:     &wrappers.Int32Value{Value: *limit},
 	})
 	if err != nil {
 		return nil, err

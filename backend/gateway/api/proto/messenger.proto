@@ -5,15 +5,27 @@ package messenger;
 import "google/protobuf/wrappers.proto";
 
 service Messenger {
+    rpc CreateChat (CreateChatRequest) returns (CreateChatResponse) {
+    }
     rpc GetChats (GetChatsRequest) returns (GetChatsResponse) {
     }
     rpc GetMessages (GetMessagesRequest) returns (GetMessagesResponse) {
     }
 }
 
+message CreateChatRequest {
+    string master_token = 1;
+    string slave_id = 2;
+}
+
+message CreateChatResponse {
+    string chat_id = 1;
+}
+
 message GetChatsRequest {
-    google.protobuf.Int32Value offset = 1;
-    google.protobuf.Int32Value limit = 2;
+    string user_token = 1;
+    google.protobuf.Int32Value offset = 2;
+    google.protobuf.Int32Value limit = 3;
 }
 
 message Participant {
@@ -36,9 +48,10 @@ message GetChatsResponse {
 }
 
 message GetMessagesRequest {
-    string chat_id = 1;
-    google.protobuf.Int32Value offset = 2;
-    google.protobuf.Int32Value limit = 3;
+    string user_token = 1;
+    string chat_id = 2;
+    google.protobuf.Int32Value offset = 3;
+    google.protobuf.Int32Value limit = 4;
 }
 
 message Message {

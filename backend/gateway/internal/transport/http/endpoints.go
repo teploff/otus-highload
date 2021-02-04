@@ -2,7 +2,7 @@ package http
 
 import (
 	"gateway/internal/config"
-	"gateway/internal/transport/grpc"
+	"gateway/internal/domain"
 	"net/http"
 	"net/http/httputil"
 
@@ -10,17 +10,15 @@ import (
 )
 
 type Endpoints struct {
-	cfg           *config.Config
-	grpcendpoints *grpc.MessengerProxyEndpoints
-	Auth          *AuthEndpoints
-	Social        *SocialEndpoints
-	Messenger     *MessengerEndpoints
+	cfg       *config.Config
+	Auth      *AuthEndpoints
+	Social    *SocialEndpoints
+	Messenger *MessengerEndpoints
 }
 
-func MakeEndpoints(cfg *config.Config, grpcendpoints *grpc.MessengerProxyEndpoints) *Endpoints {
+func MakeEndpoints(cfg *config.Config, service domain.GRPCMessengerProxyService) *Endpoints {
 	return &Endpoints{
-		cfg:           cfg,
-		grpcendpoints: grpcendpoints,
+		cfg: cfg,
 		Auth: &AuthEndpoints{
 			SignUp:           makeHTTPProxyEndpoint(cfg.Auth.Addr),
 			SignIn:           makeHTTPProxyEndpoint(cfg.Auth.Addr),
@@ -45,7 +43,10 @@ func MakeEndpoints(cfg *config.Config, grpcendpoints *grpc.MessengerProxyEndpoin
 			},
 		},
 		Messenger: &MessengerEndpoints{
-			WS: makeHTTPProxyEndpoint(cfg.Messenger.Addr),
+			WS:          makeHTTPProxyEndpoint(cfg.Messenger.Addr),
+			CreateChat:  makeCreateChatEndpoint(service),
+			GetChats:    makeGetChatsEndpoint(service),
+			GetMessages: makeGetMessagesEndpoint(service),
 		},
 	}
 }
@@ -77,14 +78,6 @@ type SocialEndpoints struct {
 	News       *NewsEndpoints
 }
 
-type NewsEndpoints struct {
-	GetNews gin.HandlerFunc
-}
-
-type MessengerEndpoints struct {
-	WS gin.HandlerFunc
-}
-
 func makeHTTPProxyEndpoint(targetHost string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		proxy := httputil.ReverseProxy{
@@ -96,5 +89,125 @@ func makeHTTPProxyEndpoint(targetHost string) gin.HandlerFunc {
 			},
 		}
 		proxy.ServeHTTP(c.Writer, c.Request)
+	}
+}
+
+type NewsEndpoints struct {
+	GetNews gin.HandlerFunc
+}
+
+type MessengerEndpoints struct {
+	WS          gin.HandlerFunc
+	CreateChat  gin.HandlerFunc
+	GetChats    gin.HandlerFunc
+	GetMessages gin.HandlerFunc
+}
+
+func makeCreateChatEndpoint(svc domain.GRPCMessengerProxyService) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var header AuthorizationHeader
+		if err := c.ShouldBindHeader(&header); err != nil {
+			c.JSON(http.StatusUnauthorized, ErrorResponse{
+				Message: err.Error(),
+			})
+
+			return
+		}
+
+		var request CreateChatRequest
+		if err := c.Bind(&request); err != nil {
+			c.JSON(http.StatusBadRequest, ErrorResponse{
+				Message: err.Error(),
+			})
+
+			return
+		}
+
+		chatID, err := svc.CreateChat(c, header.AccessToken, request.CompanionID)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, ErrorResponse{
+				Message: err.Error(),
+			})
+
+			return
+		}
+
+		c.JSON(http.StatusOK, CreateChatResponse{ChatID: chatID})
+	}
+}
+
+func makeGetChatsEndpoint(svc domain.GRPCMessengerProxyService) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var header AuthorizationHeader
+		if err := c.ShouldBindHeader(&header); err != nil {
+			c.JSON(http.StatusUnauthorized, ErrorResponse{
+				Message: err.Error(),
+			})
+
+			return
+		}
+
+		var request GetChatsRequest
+		if err := c.BindQuery(&request); err != nil {
+			c.JSON(http.StatusBadRequest, ErrorResponse{
+				Message: err.Error(),
+			})
+
+			return
+		}
+
+		response, err := svc.GetChats(c, header.AccessToken, request.Offset, request.Limit)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, ErrorResponse{
+				Message: err.Error(),
+			})
+
+			return
+		}
+
+		c.JSON(http.StatusOK, GetChatsResponse{
+			Total:  response.Total,
+			Limit:  response.Limit,
+			Offset: response.Offset,
+			Chats:  response.Chats,
+		})
+	}
+}
+
+func makeGetMessagesEndpoint(svc domain.GRPCMessengerProxyService) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		var header AuthorizationHeader
+		if err := c.ShouldBindHeader(&header); err != nil {
+			c.JSON(http.StatusUnauthorized, ErrorResponse{
+				Message: err.Error(),
+			})
+
+			return
+		}
+
+		var request GetMessagesRequest
+		if err := c.BindQuery(&request); err != nil {
+			c.JSON(http.StatusBadRequest, ErrorResponse{
+				Message: err.Error(),
+			})
+
+			return
+		}
+
+		response, err := svc.GetMessages(c, header.AccessToken, request.ChatID, request.Offset, request.Limit)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, ErrorResponse{
+				Message: err.Error(),
+			})
+
+			return
+		}
+
+		c.JSON(http.StatusOK, GetMessagesResponse{
+			Total:    response.Total,
+			Limit:    response.Limit,
+			Offset:   response.Offset,
+			Messages: response.Messages,
+		})
 	}
 }
