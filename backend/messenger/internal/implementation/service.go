@@ -86,7 +86,7 @@ func (m *messengerService) GetChat(ctx context.Context, masterToken, slaveID str
 	return chat, nil
 }
 
-func (m *messengerService) GetChats(ctx context.Context, userToken string, limit, offset int) ([]*domain.Chat, int, error) {
+func (m *messengerService) GetChats(ctx context.Context, userToken string, offset, limit int) ([]*domain.Chat, int, error) {
 	user, err := m.authSvc.Authenticate(ctx, userToken)
 	if err != nil {
 		return nil, 0, err
@@ -116,7 +116,7 @@ func (m *messengerService) SendMessages(ctx context.Context, userToken, chatID s
 	return m.messRep.SendMessages(shardID, user.ID, chatID, messages)
 }
 
-func (m *messengerService) GetMessages(ctx context.Context, userToken, chatID string, limit, offset int) ([]*domain.Message, int, error) {
+func (m *messengerService) GetMessages(ctx context.Context, userToken, chatID string, offset, limit int) ([]*domain.Message, int, error) {
 	user, err := m.authSvc.Authenticate(ctx, userToken)
 	if err != nil {
 		return nil, 0, err

@@ -12,10 +12,15 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-const maxReceivedMsgSize = 1024 * 1024 * 20
+const (
+	maxReceivedMsgSize = 1024 * 1024 * 20
+	defaultLimit       = 10
+	defaultOffset      = 0
+)
 
 type server struct {
-	createChat kitgrpc.Handler
+	createChat  kitgrpc.Handler
+	getMessages kitgrpc.Handler
 }
 
 func (s *server) CreateChat(ctx context.Context, request *pb.CreateChatRequest) (*pb.CreateChatResponse, error) {
@@ -32,7 +37,12 @@ func (s *server) GetChats(ctx context.Context, request *pb.GetChatsRequest) (*pb
 }
 
 func (s *server) GetMessages(ctx context.Context, request *pb.GetMessagesRequest) (*pb.GetMessagesResponse, error) {
-	panic("implement me")
+	_, response, err := s.getMessages.ServeGRPC(ctx, request)
+	if err != nil {
+		return nil, status.Error(codes.Internal, err.Error())
+	}
+
+	return response.(*pb.GetMessagesResponse), nil
 }
 
 // NewGRPCServer instance of gRPC server.
@@ -46,6 +56,12 @@ func NewGRPCServer(endpoints *Endpoints, errLogger log.Logger) *grpc.Server {
 			endpoints.CreateChat,
 			decodeCreateChatRequest,
 			encodeSignInResponse,
+			options...,
+		), errLogger),
+		getMessages: newRecoveryGRPCHandler(kitgrpc.NewServer(
+			endpoints.GetMessages,
+			decodeGetMessagesRequest,
+			encodeGetMessagesResponse,
 			options...,
 		), errLogger),
 	}
@@ -65,11 +81,56 @@ func decodeCreateChatRequest(_ context.Context, grpcReq interface{}) (interface{
 	}, nil
 }
 
+func decodeGetMessagesRequest(_ context.Context, grpcReq interface{}) (interface{}, error) {
+	request := grpcReq.(*pb.GetMessagesRequest)
+
+	offset := defaultOffset
+	limit := defaultLimit
+
+	if request.Offset != nil {
+		offset = int(request.Limit.Value)
+	}
+
+	if request.Limit != nil {
+		limit = int(request.Limit.Value)
+	}
+
+	return &GetMessagesRequest{
+		UserToken: request.UserToken,
+		ChatID:    request.ChatId,
+		Limit:     limit,
+		Offset:    offset,
+	}, nil
+}
+
 func encodeSignInResponse(_ context.Context, grpcResp interface{}) (interface{}, error) {
 	response := grpcResp.(*CreateChatResponse)
 
 	return &pb.CreateChatResponse{
 		ChatId: response.ChatID,
+	}, nil
+}
+
+func encodeGetMessagesResponse(_ context.Context, grpcResp interface{}) (interface{}, error) {
+	response := grpcResp.(*GetMessagesResponse)
+
+	messages := make([]*pb.Message, 0, len(response.Messages))
+	for _, msg := range response.Messages {
+		messages = append(messages, &pb.Message{
+			Id:         msg.ID,
+			Text:       msg.Text,
+			Status:     msg.Status,
+			CreateTime: msg.CreateTime.UnixNano(),
+			UserId:     msg.UserID,
+			ChatId:     msg.ChatID,
+		})
+	}
+
+	return &pb.GetMessagesResponse{
+		Total:    int32(response.Total),
+		Offset:   int32(response.Offset),
+		Limit:    int32(response.Limit),
+		Messages: messages,
 	}, nil
 }
 

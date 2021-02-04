@@ -71,12 +71,20 @@ func (g *grpcMessengerProxyService) GetChats(ctx context.Context, userToken stri
 }
 
 func (g *grpcMessengerProxyService) GetMessages(ctx context.Context, userToken, chatID string, offset, limit *int32) (*domain.GetMessagesResponse, error) {
-	response, err := g.messengerEndpoints.GetMessages(ctx, &pbmessenger.GetMessagesRequest{
+	request := &pbmessenger.GetMessagesRequest{
 		UserToken: userToken,
 		ChatId:    chatID,
-		Offset:    &wrappers.Int32Value{Value: *offset},
-		Limit:     &wrappers.Int32Value{Value: *limit},
-	})
+	}
+
+	if offset != nil {
+		request.Offset = &wrappers.Int32Value{Value: *offset}
+	}
+
+	if limit != nil {
+		request.Limit = &wrappers.Int32Value{Value: *limit}
+	}
+
+	response, err := g.messengerEndpoints.GetMessages(ctx, request)
 	if err != nil {
 		return nil, err
 	}

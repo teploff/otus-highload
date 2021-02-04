@@ -12,13 +12,13 @@ type GetChatRequest struct {
 
 type GetChatsRequest struct {
 	UserToken string `json:"user_token"`
-	Limit     *int   `json:"limit"`
-	Offset    *int   `json:"offset"`
+	Limit     int    `json:"limit"`
+	Offset    int    `json:"offset"`
 }
 
 type GetMessagesRequest struct {
 	UserToken string `json:"user_token"`
 	ChatID    string `json:"chat_id"`
-	Limit     *int   `json:"limit"`
-	Offset    *int   `json:"offset"`
+	Limit     int    `json:"limit"`
+	Offset    int    `json:"offset"`
 }
