@@ -104,6 +104,7 @@ import {
   mdbInput
 } from "mdbvue";
 import router from "@/router";
+import WSService from "@/service/ws";
 
 export default {
   components: {
@@ -561,6 +562,13 @@ export default {
 
       this.$router.push({name: 'SignIn'});
     },
+  },
+  created() {
+    this.ws = new WSService(this.$store)
+    this.ws.connect(process.env.VUE_APP_MESSENGER_WS_URL)
+  },
+  beforeDestroy() {
+    this.ws.disconnect();
   },
   mixins: [waves]
 }
