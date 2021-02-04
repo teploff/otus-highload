@@ -66,7 +66,7 @@ func decodeCreateChatRequest(_ context.Context, grpcReq interface{}) (interface{
 }
 
 func encodeSignInResponse(_ context.Context, grpcResp interface{}) (interface{}, error) {
-	response := grpcResp.(CreateChatResponse)
+	response := grpcResp.(*CreateChatResponse)
 
 	return &pb.CreateChatResponse{
 		ChatId: response.ChatID,

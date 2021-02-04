@@ -14,14 +14,14 @@ type Endpoints struct {
 
 func makeCreateChatEndpoint(svc domain.MessengerService) endpoint.Endpoint {
 	return func(ctx context.Context, request interface{}) (response interface{}, err error) {
-		req := request.(CreateChatRequest)
+		req := request.(*CreateChatRequest)
 		chatID, err := svc.CreateChat(ctx, req.MasterToken, req.SlaveID)
 
 		if err != nil {
-			return CreateChatResponse{}, err
+			return nil, err
 		}
 
-		return CreateChatResponse{ChatID: chatID}, nil
+		return &CreateChatResponse{ChatID: chatID}, nil
 	}
 }
 
