@@ -247,7 +247,8 @@ services:
     image: messenger:otus
     container_name: messenger-otus
     environment:
-      - ADDR=0.0.0.0:10003
+      - HTTP_ADDR=0.0.0.0:10003
+      - GRPC_ADDR=0.0.0.0:10004
       - AUTH_ADDR=auth-otus:10001
       - CH_DSN=tcp://ch-cluster:9000?database=default&username=default&password=password
       - SHARDING_COUNT_NODES=2

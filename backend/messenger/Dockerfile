@@ -10,5 +10,6 @@ WORKDIR /app
 COPY --from=builder /app/ ./
 
 EXPOSE 10003
+EXPOSE 10004
 
 CMD ["./messenger", "--config=./configs/config.yaml"]
