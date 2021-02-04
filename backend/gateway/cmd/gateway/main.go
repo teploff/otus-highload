@@ -23,7 +23,7 @@ func main() {
 
 	logger := zapLogger.New(&cfg.Logger)
 
-	messengerConn, err := grpc.Dial(cfg.Messenger.Addr, grpc.WithInsecure())
+	messengerConn, err := grpc.Dial(cfg.Messenger.GRPCAddr, grpc.WithInsecure())
 	if err != nil {
 		logger.Fatal("gRPC auth connection", zap.Error(err))
 	}

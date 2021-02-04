@@ -7,7 +7,8 @@ social:
   addr: "localhost:10002"
 
 messenger:
-  addr: "localhost:10003"
+  http_addr: "localhost:10003"
+  grpc_addr: "localhost:10004"
 
 logger:
   level: "info"

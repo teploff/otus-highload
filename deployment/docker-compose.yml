@@ -269,7 +269,8 @@ services:
       - ADDR=0.0.0.0:10000
       - AUTH_ADDR=auth-otus:10001
       - SOCIAL_ADDR=social-otus:10002
-      - MESSENGER_ADDR=messenger-otus:10003
+      - MESSENGER_HTTP_ADDR=messenger-otus:10003
+      - MESSENGER_GRPC_ADDR=messenger-otus:10004
       - LOGGER_LEVEL=info
     depends_on:
       - auth

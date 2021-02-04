@@ -27,7 +27,8 @@ type AuthConfig struct {
 //
 // Addr - socket address (host + port).
 type MessengerConfig struct {
-	Addr string `mapstructure:"addr"`
+	HTTPAddr string `mapstructure:"http_addr"`
+	GRPCAddr string `mapstructure:"grpc_addr"`
 }
 
 // SocialConfig social-network service address.

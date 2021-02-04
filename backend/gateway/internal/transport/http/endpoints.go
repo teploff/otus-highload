@@ -43,7 +43,7 @@ func MakeEndpoints(cfg *config.Config, service domain.GRPCMessengerProxyService)
 			},
 		},
 		Messenger: &MessengerEndpoints{
-			WS:          makeHTTPProxyEndpoint(cfg.Messenger.Addr),
+			WS:          makeHTTPProxyEndpoint(cfg.Messenger.HTTPAddr),
 			CreateChat:  makeCreateChatEndpoint(service),
 			GetChats:    makeGetChatsEndpoint(service),
 			GetMessages: makeGetMessagesEndpoint(service),
