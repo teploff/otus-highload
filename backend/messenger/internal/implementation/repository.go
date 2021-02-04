@@ -23,10 +23,6 @@ func NewMessengerRepository(conn *clickhouse.Storage) *messengerRepository {
 func (m *messengerRepository) CreateChat(masterID, slaveID string) (string, error) {
 	var chatID string
 
-	//SELECT id
-	//FROM chat
-	//WHERE hasAll(participants, [toUUID('786b020e-a126-4950-abfa-68cd7b6c5d6e'), toUUID('fd883849-4692-44d5-97f6-4d7ca403a207')])
-
 	err := m.conn.DB().QueryRow(`
 		SELECT
 			id

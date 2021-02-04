@@ -1,4 +1,5 @@
-addr: ":10003"
+http_addr: ":10003"
+grpc_addr: ":10004"
 
 auth:
   addr: "localhost:10001"

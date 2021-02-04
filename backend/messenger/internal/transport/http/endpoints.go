@@ -45,7 +45,7 @@ func makeWSEndpoint(authSvc domain.AuthService, wsSvc domain.WSService) gin.Hand
 			return
 		}
 
-		userID, err := authSvc.Authenticate(c, request.AccessToken)
+		user, err := authSvc.Authenticate(c, request.AccessToken)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized, ErrorResponse{
 				Message: err.Error(),
@@ -63,6 +63,6 @@ func makeWSEndpoint(authSvc domain.AuthService, wsSvc domain.WSService) gin.Hand
 			return
 		}
 
-		wsSvc.EstablishConn(c, userID, conn)
+		wsSvc.EstablishConn(c, user.ID, conn)
 	}
 }

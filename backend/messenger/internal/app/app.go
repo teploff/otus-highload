@@ -3,15 +3,21 @@ package app
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"log"
 	"messenger/internal/config"
 	"messenger/internal/implementation"
 	"messenger/internal/infrastructure/clickhouse"
+	zaplogger "messenger/internal/infrastructure/logger"
+	grpctransport "messenger/internal/transport/grpc"
 	httptransport "messenger/internal/transport/http"
+	"net"
 	"net/http"
 	"time"
 
 	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
+	"google.golang.org/grpc"
 )
 
 const httpTimeoutClose = 5 * time.Second
@@ -30,6 +36,7 @@ type App struct {
 	cfg       *config.Config
 	chStorage *clickhouse.Storage
 	httpSrv   *http.Server
+	gRPCSrv   *grpc.Server
 	logger    *zap.Logger
 }
 
@@ -53,16 +60,31 @@ func (a *App) Run(chConn *sql.DB) {
 	go a.chStorage.StartBatching()
 
 	authSvc := implementation.NewAuthService(a.cfg.Auth.Addr)
-	//messengerSvc := implementation.NewMessengerService(implementation.NewMessengerRepository(a.chStorage))
+
+	messengerSvc := implementation.NewMessengerService(authSvc, implementation.NewMessengerRepository(a.chStorage),
+		a.cfg.Sharding)
 	wsSvc := implementation.NewWSService(implementation.NewWSPoolRepository(), a.logger)
 
-	a.httpSrv = httptransport.NewHTTPServer(a.cfg.Addr, httptransport.MakeEndpoints(authSvc, wsSvc))
+	a.httpSrv = httptransport.NewHTTPServer(a.cfg.HttpAddr, httptransport.MakeEndpoints(authSvc, wsSvc))
+	gRPCListener, err := net.Listen("tcp", a.cfg.GRPCAddr)
+	if err != nil {
+		a.logger.Fatal("gRPC listener", zap.Error(err))
+	}
+	a.gRPCSrv = grpctransport.NewGRPCServer(grpctransport.MakeMessengerEndpoints(messengerSvc),
+		zaplogger.NewZapSugarLogger(a.logger, zapcore.ErrorLevel))
 
 	go func() {
-		if err := a.httpSrv.ListenAndServe(); err != nil {
+		if err = a.httpSrv.ListenAndServe(); err != nil {
 			a.logger.Fatal("http serve error, ", zap.Error(err))
 		}
 	}()
+
+	go func() {
+		if err = a.gRPCSrv.Serve(gRPCListener); !errors.Is(err, grpc.ErrServerStopped) && err != nil {
+			a.logger.Fatal("gRPC serve error", zap.Error(err))
+		}
+	}()
+
 }
 
 func (a *App) Stop() {
@@ -73,5 +95,6 @@ func (a *App) Stop() {
 		log.Fatal("http closing error, ", zap.Error(err))
 	}
 
+	a.gRPCSrv.GracefulStop()
 	a.chStorage.Stop()
 }

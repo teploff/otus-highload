@@ -22,10 +22,10 @@ func NewAuthService(authAddr string) *authService {
 }
 
 type getUserIDByAccessTokenResponse struct {
-	UserID string `json:"user_id"`
+	*domain.User
 }
 
-func (a *authService) Authenticate(_ context.Context, token string) (string, error) {
+func (a *authService) Authenticate(_ context.Context, token string) (*domain.User, error) {
 	header := req.Header{
 		"Accept":        "application/json",
 		"Authorization": token,
@@ -33,45 +33,38 @@ func (a *authService) Authenticate(_ context.Context, token string) (string, err
 
 	r, err := req.Get("http://"+a.authAddr+"/auth/user/get-by-token", header)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	var response getUserIDByAccessTokenResponse
 	if err = r.ToJSON(&response); err != nil {
-		return "", err
+		return nil, err
 	}
 
-	return response.UserID, nil
+	return response.User, nil
 }
 
 type messengerService struct {
+	authSvc     domain.AuthService
 	messRep     domain.MessengerRepository
 	shardingCfg config.ShardingConfig
 }
 
-func NewMessengerService(messengerRep domain.MessengerRepository, cfg config.ShardingConfig) *messengerService {
+func NewMessengerService(authSvc domain.AuthService, messengerRep domain.MessengerRepository, cfg config.ShardingConfig) *messengerService {
 	return &messengerService{
+		authSvc:     authSvc,
 		messRep:     messengerRep,
 		shardingCfg: cfg,
 	}
 }
 
-func (m *messengerService) CreateChat(ctx context.Context, masterID, slaveID string) (string, error) {
-	//tx, err := m.userRep.GetTx(ctx)
-	//if err != nil {
-	//	return "", err
-	//}
-	//
-	//_, err = m.userRep.GetByID(tx, slaveID)
-	//switch err {
-	//case nil:
-	//case sql.ErrNoRows:
-	//	return "", fmt.Errorf("chat companion with id=[%s] doesn't exist", slaveID)
-	//default:
-	//	return "", err
-	//}
+func (m *messengerService) CreateChat(ctx context.Context, masterToken, slaveID string) (string, error) {
+	user, err := m.authSvc.Authenticate(ctx, masterToken)
+	if err != nil {
+		return "", err
+	}
 
-	chatID, err := m.messRep.CreateChat(masterID, slaveID)
+	chatID, err := m.messRep.CreateChat(user.ID, slaveID)
 	if err != nil {
 		return "", err
 	}
@@ -79,8 +72,13 @@ func (m *messengerService) CreateChat(ctx context.Context, masterID, slaveID str
 	return chatID, nil
 }
 
-func (m *messengerService) GetChat(_ context.Context, masterID, slaveID string) (*domain.Chat, error) {
-	chat, err := m.messRep.GetChatWithCompanion(masterID, slaveID)
+func (m *messengerService) GetChat(ctx context.Context, masterToken, slaveID string) (*domain.Chat, error) {
+	user, err := m.authSvc.Authenticate(ctx, masterToken)
+	if err != nil {
+		return nil, err
+	}
+
+	chat, err := m.messRep.GetChatWithCompanion(user.ID, slaveID)
 	if err != nil {
 		return nil, err
 	}
@@ -88,13 +86,18 @@ func (m *messengerService) GetChat(_ context.Context, masterID, slaveID string) 
 	return chat, nil
 }
 
-func (m *messengerService) GetChats(_ context.Context, userID string, limit, offset int) ([]*domain.Chat, int, error) {
-	total, err := m.messRep.GetCountChats(userID)
+func (m *messengerService) GetChats(ctx context.Context, userToken string, limit, offset int) ([]*domain.Chat, int, error) {
+	user, err := m.authSvc.Authenticate(ctx, userToken)
 	if err != nil {
 		return nil, 0, err
 	}
 
-	chats, err := m.messRep.GetChats(userID, limit, offset)
+	total, err := m.messRep.GetCountChats(user.ID)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	chats, err := m.messRep.GetChats(user.ID, limit, offset)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -102,14 +105,24 @@ func (m *messengerService) GetChats(_ context.Context, userID string, limit, off
 	return chats, total, nil
 }
 
-func (m *messengerService) SendMessages(_ context.Context, userID, chatID string, messages []*domain.ShortMessage) error {
-	shardID := int(binary.BigEndian.Uint64([]byte(userID)) % uint64(m.shardingCfg.CountNodes))
+func (m *messengerService) SendMessages(ctx context.Context, userToken, chatID string, messages []*domain.ShortMessage) error {
+	user, err := m.authSvc.Authenticate(ctx, userToken)
+	if err != nil {
+		return err
+	}
 
-	return m.messRep.SendMessages(shardID, userID, chatID, messages)
+	shardID := int(binary.BigEndian.Uint64([]byte(user.ID)) % uint64(m.shardingCfg.CountNodes))
+
+	return m.messRep.SendMessages(shardID, user.ID, chatID, messages)
 }
 
-func (m *messengerService) GetMessages(_ context.Context, userID, chatID string, limit, offset int) ([]*domain.Message, int, error) {
-	_, err := m.messRep.GetChatAsParticipant(userID)
+func (m *messengerService) GetMessages(ctx context.Context, userToken, chatID string, limit, offset int) ([]*domain.Message, int, error) {
+	user, err := m.authSvc.Authenticate(ctx, userToken)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	_, err = m.messRep.GetChatAsParticipant(user.ID)
 	if err != nil {
 		return nil, 0, err
 	}

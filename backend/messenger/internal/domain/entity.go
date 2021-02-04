@@ -4,6 +4,18 @@ import (
 	"time"
 )
 
+type User struct {
+	ID               string    `json:"id"`
+	Email            string    `json:"email"`
+	Name             string    `json:"name"`
+	Surname          string    `json:"surname"`
+	Birthday         time.Time `json:"birthday"`
+	Sex              string    `json:"sex"`
+	City             string    `json:"city"`
+	Interests        string    `json:"interests"`
+	FriendshipStatus string    `json:"friendship_status"`
+}
+
 type ShortMessage struct {
 	Text   string `json:"text" binding:"required"`
 	Status string `json:"status" binding:"oneof=created received read deleted"`

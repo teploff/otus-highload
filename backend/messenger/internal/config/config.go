@@ -10,7 +10,8 @@ import (
 )
 
 type Config struct {
-	Addr       string           `mapstructure:"addr"`
+	HttpAddr   string           `mapstructure:"http_addr"`
+	GRPCAddr   string           `mapstructure:"grpc_addr"`
 	Auth       AuthConfig       `mapstructure:"auth"`
 	Clickhouse ClickhouseConfig `mapstructure:"ch"`
 	Logger     LoggerConfig     `mapstructure:"logger"`
