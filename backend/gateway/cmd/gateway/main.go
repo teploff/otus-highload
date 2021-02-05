@@ -5,6 +5,7 @@ import (
 	"gateway/internal/app"
 	"gateway/internal/config"
 	zapLogger "gateway/internal/infrastructure/logger"
+	"gateway/internal/infrastructure/tracer"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"os"
@@ -22,6 +23,12 @@ func main() {
 	}
 
 	logger := zapLogger.New(&cfg.Logger)
+
+	closer, err := tracer.InitGlobalTracer(cfg.Jaeger.ServiceName, cfg.Jaeger.AgentAddr)
+	if err != nil {
+		logger.Fatal("fail to connect jaeger", zap.Error(err))
+	}
+	defer closer.Close()
 
 	messengerConn, err := grpc.Dial(cfg.Messenger.GRPCAddr, grpc.WithInsecure())
 	if err != nil {

@@ -1,15 +1,17 @@
 package http
 
 import (
-	"github.com/swaggo/swag"
 	"io/ioutil"
 	"log"
 	"net/http"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/ext"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
+	"github.com/swaggo/swag"
 )
 
 func NewHTTPServer(addr string, endpoints *Endpoints) *http.Server {
@@ -24,6 +26,7 @@ func NewHTTPServer(addr string, endpoints *Endpoints) *http.Server {
 
 	router.Use(cors.New(config))
 	router.Use(AuthenticateMiddleware(endpoints.cfg.Auth.Addr))
+	router.Use(TracerMiddleware("gateway", opentracing.Tag{Key: string(ext.Component), Value: "gateway"}))
 
 	authGroup := router.Group("/auth")
 	{

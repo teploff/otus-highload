@@ -11,6 +11,8 @@ import (
 func NewHTTPServer(addr string, endpoints *Endpoints) *http.Server {
 	router := gin.Default()
 
+	router.Use(TracerMiddleware("auth"))
+
 	authGroup := router.Group("/auth")
 	{
 		authGroup.POST("/sign-up", endpoints.Auth.SignUp)

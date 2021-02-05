@@ -14,6 +14,7 @@ type Config struct {
 	GRPCAddr   string           `mapstructure:"grpc_addr"`
 	Auth       AuthConfig       `mapstructure:"auth"`
 	Clickhouse ClickhouseConfig `mapstructure:"ch"`
+	Jaeger     JaegerConfig     `mapstructure:"jaeger"`
 	Logger     LoggerConfig     `mapstructure:"logger"`
 	Sharding   ShardingConfig   `mapstructure:"sharding"`
 }
@@ -33,6 +34,11 @@ type ClickhouseConfig struct {
 // LoggerConfig logger configuration.
 type LoggerConfig struct {
 	Level string `mapstructure:"level"`
+}
+
+type JaegerConfig struct {
+	AgentAddr   string `mapstructure:"agent_addr"`
+	ServiceName string `mapstructure:"service_name"`
 }
 
 type ShardingConfig struct {

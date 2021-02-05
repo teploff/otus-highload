@@ -2,7 +2,7 @@
 
 infrastructure:
 	docker-compose -f deployment/docker-compose.yml up -d --build ch-cluster ch-shard-0 ch-shard-1 auth-storage \
-		social-storage cache nats-streaming ;\
+		social-storage cache nats-streaming jaeger ;\
 
 migrate:
 	docker-compose -f deployment/docker-compose.yml up --build auth-migrator social-migrator ch-cluster-migrator \

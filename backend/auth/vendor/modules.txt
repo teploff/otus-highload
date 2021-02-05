@@ -1,3 +1,5 @@
+# github.com/HdrHistogram/hdrhistogram-go v1.0.1
+## explicit
 # github.com/KyleBanks/depth v1.2.1
 github.com/KyleBanks/depth
 # github.com/PuerkitoBio/purell v1.1.1
@@ -75,8 +77,15 @@ github.com/mitchellh/mapstructure
 github.com/modern-go/concurrent
 # github.com/modern-go/reflect2 v1.0.1
 github.com/modern-go/reflect2
+# github.com/opentracing/opentracing-go v1.2.0
+## explicit
+github.com/opentracing/opentracing-go
+github.com/opentracing/opentracing-go/ext
+github.com/opentracing/opentracing-go/log
 # github.com/pelletier/go-toml v1.2.0
 github.com/pelletier/go-toml
+# github.com/pkg/errors v0.8.1
+github.com/pkg/errors
 # github.com/spf13/afero v1.1.2
 github.com/spf13/afero
 github.com/spf13/afero/mem
@@ -100,6 +109,29 @@ github.com/swaggo/gin-swagger
 # github.com/swaggo/swag v1.7.0
 ## explicit
 github.com/swaggo/swag
+# github.com/uber/jaeger-client-go v2.25.0+incompatible
+## explicit
+github.com/uber/jaeger-client-go
+github.com/uber/jaeger-client-go/config
+github.com/uber/jaeger-client-go/internal/baggage
+github.com/uber/jaeger-client-go/internal/baggage/remote
+github.com/uber/jaeger-client-go/internal/reporterstats
+github.com/uber/jaeger-client-go/internal/spanlog
+github.com/uber/jaeger-client-go/internal/throttler
+github.com/uber/jaeger-client-go/internal/throttler/remote
+github.com/uber/jaeger-client-go/log
+github.com/uber/jaeger-client-go/rpcmetrics
+github.com/uber/jaeger-client-go/thrift
+github.com/uber/jaeger-client-go/thrift-gen/agent
+github.com/uber/jaeger-client-go/thrift-gen/baggage
+github.com/uber/jaeger-client-go/thrift-gen/jaeger
+github.com/uber/jaeger-client-go/thrift-gen/sampling
+github.com/uber/jaeger-client-go/thrift-gen/zipkincore
+github.com/uber/jaeger-client-go/transport
+github.com/uber/jaeger-client-go/utils
+# github.com/uber/jaeger-lib v2.4.0+incompatible
+## explicit
+github.com/uber/jaeger-lib/metrics
 # github.com/ugorji/go/codec v1.1.13
 github.com/ugorji/go/codec
 # go.uber.org/atomic v1.6.0

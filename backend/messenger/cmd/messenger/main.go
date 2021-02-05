@@ -8,6 +8,7 @@ import (
 	"messenger/internal/app"
 	"messenger/internal/config"
 	zaplogger "messenger/internal/infrastructure/logger"
+	"messenger/internal/infrastructure/tracer"
 	"os"
 	"os/signal"
 	"syscall"
@@ -47,6 +48,12 @@ func main() {
 	}
 
 	logger := zaplogger.NewLogger(&cfg.Logger)
+
+	closer, err := tracer.InitGlobalTracer(cfg.Jaeger.ServiceName, cfg.Jaeger.AgentAddr)
+	if err != nil {
+		logger.Fatal("fail to connect jaeger", zap.Error(err))
+	}
+	defer closer.Close()
 
 	chConn, err := sql.Open("clickhouse", cfg.Clickhouse.DSN)
 	if err != nil {

@@ -13,6 +13,7 @@ type Config struct {
 	Auth      AuthConfig      `mapstructure:"auth"`
 	Messenger MessengerConfig `mapstructure:"messenger"`
 	Social    SocialConfig    `mapstructure:"social"`
+	Jaeger    JaegerConfig    `mapstructure:"jaeger"`
 	Logger    LoggerConfig    `mapstructure:"logger"`
 }
 
@@ -36,6 +37,11 @@ type MessengerConfig struct {
 // Addr - socket address (host + port).
 type SocialConfig struct {
 	Addr string `mapstructure:"addr"`
+}
+
+type JaegerConfig struct {
+	AgentAddr   string `mapstructure:"agent_addr"`
+	ServiceName string `mapstructure:"service_name"`
 }
 
 // LoggerConfig logger configuration.

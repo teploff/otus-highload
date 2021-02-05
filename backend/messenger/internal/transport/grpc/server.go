@@ -2,6 +2,8 @@ package grpc
 
 import (
 	"context"
+	kitopentracing "github.com/go-kit/kit/tracing/opentracing"
+	"github.com/opentracing/opentracing-go"
 	pb "messenger/internal/transport/grpc/messenger"
 
 	"github.com/go-kit/kit/log"
@@ -49,17 +51,19 @@ func (s *server) GetMessages(ctx context.Context, request *pb.GetMessagesRequest
 func NewGRPCServer(endpoints *Endpoints, errLogger log.Logger) *grpc.Server {
 	options := []kitgrpc.ServerOption{
 		kitgrpc.ServerErrorHandler(transport.NewLogErrorHandler(errLogger)),
+		kitgrpc.ServerBefore(
+			kitopentracing.GRPCToContext(opentracing.GlobalTracer(), "messenger", log.NewNopLogger())),
 	}
 
 	srv := &server{
 		createChat: newRecoveryGRPCHandler(kitgrpc.NewServer(
-			endpoints.CreateChat,
+			kitopentracing.TraceServer(opentracing.GlobalTracer(), "create-chat")(endpoints.CreateChat),
 			decodeCreateChatRequest,
 			encodeSignInResponse,
 			options...,
 		), errLogger),
 		getMessages: newRecoveryGRPCHandler(kitgrpc.NewServer(
-			endpoints.GetMessages,
+			kitopentracing.TraceServer(opentracing.GlobalTracer(), "get-messages")(endpoints.GetMessages),
 			decodeGetMessagesRequest,
 			encodeGetMessagesResponse,
 			options...,

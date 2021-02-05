@@ -9,6 +9,8 @@ import (
 func NewHTTPServer(addr string, endpoints *Endpoints) *http.Server {
 	router := gin.Default()
 
+	router.Use(TracerMiddleware("social"))
+
 	socialGroup := router.Group("/social")
 	{
 		socialGroup.GET("/ws", endpoints.WS)

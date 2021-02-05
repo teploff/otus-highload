@@ -200,6 +200,14 @@ services:
     depends_on:
       - ch-shard-1
 
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: jaeger-otus
+    ports:
+      - '16686:16686'
+    networks:
+      - otus-highload-network
+
   auth:
     build:
       context: ../backend/auth
@@ -212,9 +220,12 @@ services:
       - JWT_SECRET=secret
       - JWT_ACCESS_TOKEN_TIME_EXPIRE=1h
       - JWT_REFRESH_TOKEN_TIME_EXPIRE=24h
+      - JAEGER_AGENT_ADDR=jaeger-otus:6831
+      - JAEGER_SERVICE_NAME=auth
       - LOGGER_LEVEL=info
     depends_on:
       - auth-storage
+      - jaeger
     networks:
       - otus-highload-network
 
@@ -232,11 +243,14 @@ services:
       - HEATER_SOCIAL_DSN=user:password@tcp(social-storage:3306)/social-network?parseTime=true
       - STAN_CLUSTER_ID=stan-cluster
       - STAN_ADDR=nats://nats-streaming:4222
+      - JAEGER_AGENT_ADDR=jaeger-otus:6831
+      - JAEGER_SERVICE_NAME=social
       - LOGGER_LEVEL=info
     depends_on:
       - social-storage
       - cache
       - nats-streaming
+      - jaeger
     networks:
       - otus-highload-network
 
@@ -252,11 +266,14 @@ services:
       - AUTH_ADDR=auth-otus:10001
       - CH_DSN=tcp://ch-cluster:9000?database=default&username=default&password=password
       - SHARDING_COUNT_NODES=2
+      - JAEGER_AGENT_ADDR=jaeger-otus:6831
+      - JAEGER_SERVICE_NAME=messenger
     restart: unless-stopped
     networks:
       - otus-highload-network
     depends_on:
       - ch-cluster
+      - jaeger
 
   gateway:
     build:
@@ -272,11 +289,14 @@ services:
       - SOCIAL_ADDR=social-otus:10002
       - MESSENGER_HTTP_ADDR=messenger-otus:10003
       - MESSENGER_GRPC_ADDR=messenger-otus:10004
+      - JAEGER_AGENT_ADDR=jaeger-otus:6831
+      - JAEGER_SERVICE_NAME=gateway
       - LOGGER_LEVEL=info
     depends_on:
       - auth
       - social
       - messenger
+      - jaeger
     networks:
       - otus-highload-network
 

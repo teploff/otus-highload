@@ -11,6 +11,7 @@ import (
 	"social/internal/infrastructure/cache"
 	zaplogger "social/internal/infrastructure/logger"
 	"social/internal/infrastructure/stan"
+	"social/internal/infrastructure/tracer"
 	"syscall"
 	"time"
 
@@ -48,6 +49,12 @@ func main() {
 	}
 
 	logger := zaplogger.NewLogger(&cfg.Logger)
+
+	closer, err := tracer.InitGlobalTracer(cfg.Jaeger.ServiceName, cfg.Jaeger.AgentAddr)
+	if err != nil {
+		logger.Fatal("fail to connect jaeger", zap.Error(err))
+	}
+	defer closer.Close()
 
 	mysqlConn, err := sql.Open("mysql", cfg.Storage.DSN)
 	if err != nil {

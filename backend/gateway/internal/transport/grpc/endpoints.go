@@ -2,9 +2,12 @@ package grpc
 
 import (
 	pbmessenger "gateway/internal/transport/grpc/messenger"
+	"github.com/go-kit/kit/log"
 
 	"github.com/go-kit/kit/endpoint"
+	kitopentracing "github.com/go-kit/kit/tracing/opentracing"
 	grpctransport "github.com/go-kit/kit/transport/grpc"
+	"github.com/opentracing/opentracing-go"
 	"google.golang.org/grpc"
 )
 
@@ -16,9 +19,9 @@ type MessengerProxyEndpoints struct {
 
 func MakeMessengerProxyEndpoints(conn *grpc.ClientConn) *MessengerProxyEndpoints {
 	return &MessengerProxyEndpoints{
-		CreateChat:  makeCreateChatProxyEndpoint(conn),
-		GetChats:    makeGetChatsProxyEndpoint(conn),
-		GetMessages: makeGetMessagesProxyEndpoint(conn),
+		CreateChat:  kitopentracing.TraceClient(opentracing.GlobalTracer(), "gateway")(makeCreateChatProxyEndpoint(conn)),
+		GetChats:    kitopentracing.TraceClient(opentracing.GlobalTracer(), "gateway")(makeGetChatsProxyEndpoint(conn)),
+		GetMessages: kitopentracing.TraceClient(opentracing.GlobalTracer(), "gateway")(makeGetMessagesProxyEndpoint(conn)),
 	}
 }
 
@@ -30,6 +33,7 @@ func makeCreateChatProxyEndpoint(conn *grpc.ClientConn) endpoint.Endpoint {
 		encodeCreateChatProxyRequest,
 		decodeCreateChatProxyResponse,
 		pbmessenger.CreateChatResponse{},
+		grpctransport.ClientBefore(kitopentracing.ContextToGRPC(opentracing.GlobalTracer(), log.NewNopLogger())),
 	).Endpoint()
 }
 
@@ -41,6 +45,7 @@ func makeGetChatsProxyEndpoint(conn *grpc.ClientConn) endpoint.Endpoint {
 		encodeGetChatsProxyRequest,
 		decodeGetChatsProxyResponse,
 		pbmessenger.GetChatsResponse{},
+		grpctransport.ClientBefore(kitopentracing.ContextToGRPC(opentracing.GlobalTracer(), log.NewNopLogger())),
 	).Endpoint()
 }
 
@@ -52,5 +57,6 @@ func makeGetMessagesProxyEndpoint(conn *grpc.ClientConn) endpoint.Endpoint {
 		encodeGetMessagesProxyRequest,
 		decodeGetMessagesResponse,
 		pbmessenger.GetMessagesResponse{},
+		grpctransport.ClientBefore(kitopentracing.ContextToGRPC(opentracing.GlobalTracer(), log.NewNopLogger())),
 	).Endpoint()
 }

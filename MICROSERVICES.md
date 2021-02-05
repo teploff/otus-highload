@@ -1,3 +1,11 @@
+```shell
+docker rm -f $(docker ps -aq) && docker volume prune
+```
+
+```shell
+make infrastructure && make migrate && make service
+```
+
 ```shell script
 curl -X POST -H "Content-Type: application/json" \
     -d '{"email": "bob@email.com", "password": "1234567890", "name": "Bob", "surname": "Tallor", "birthday": "1994-04-10T20:21:25+00:00", "sex": "male", "city": "New Yourk", "interests": "programming"}' \
@@ -31,16 +39,6 @@ export ALICE_ACCESS_TOKEN=$(curl -X POST -H "Content-Type: application/json" \
 export HENRY_ACCESS_TOKEN=$(curl -X POST -H "Content-Type: application/json" \
     -d '{"email": "henry@email.com", "password": "1234567890"}' \
     http://localhost:10000/auth/sign-in | jq -r '.access_token')
-```
-
-```shell script
-export ALICE_ID=$(curl -X GET -H "Content-Type: application/json" -H "Authorization: ${BOB_ACCESS_TOKEN}" \
-    http://localhost:9999/auth/user?email=alice@email.com | jq -r '.user_id')
-```
-    
-```shell script
-export ALICE_ID=$(curl -X GET -H "Content-Type: application/json" -H "Authorization: ${BOB_ACCESS_TOKEN}" \
-    http://localhost:9999/auth/user?email=alice@email.com | jq -r '.user_id')
 ```
 
 ```shell script

@@ -17,6 +17,7 @@ type Config struct {
 	Cache   []CacheConfig `mapstructure:"cache"`
 	Stan    StanConfig    `mapstructure:"stan"`
 	JWT     JWTConfig     `mapstructure:"jwt"`
+	Jaeger  JaegerConfig  `mapstructure:"jaeger"`
 	Logger  LoggerConfig  `mapstructure:"logger"`
 }
 
@@ -60,6 +61,11 @@ type JWTConfig struct {
 	Secret                 string
 	AccessTokenTimeExpire  time.Duration `mapstructure:"access_token_time_expire"`
 	RefreshTokenTimeExpire time.Duration `mapstructure:"refresh_token_time_expire"`
+}
+
+type JaegerConfig struct {
+	AgentAddr   string `mapstructure:"agent_addr"`
+	ServiceName string `mapstructure:"service_name"`
 }
 
 // LoggerConfig logger configuration.

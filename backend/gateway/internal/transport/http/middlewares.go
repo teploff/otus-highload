@@ -1,6 +1,8 @@
 package http
 
 import (
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/ext"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -57,4 +59,23 @@ func findToken(c *gin.Context) string {
 	}
 
 	return ""
+}
+
+func TracerMiddleware(spanName string, tag opentracing.Tag) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		span := opentracing.GlobalTracer().StartSpan(
+			spanName,
+			tag,
+		)
+		defer span.Finish()
+
+		ext.SpanKindRPCClient.Set(span)
+		ext.HTTPUrl.Set(span, c.Request.URL.String())
+		ext.HTTPMethod.Set(span, c.Request.Method)
+
+		opentracing.GlobalTracer().Inject(span.Context(), opentracing.HTTPHeaders,
+			opentracing.HTTPHeadersCarrier(c.Request.Header))
+
+		c.Next()
+	}
 }
