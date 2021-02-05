@@ -14,6 +14,9 @@ func TracerMiddleware(spanName string) gin.HandlerFunc {
 		span := tracer.StartSpan(spanName, ext.RPCServerOption(spanCtx))
 		defer span.Finish()
 
+		ext.HTTPMethod.Set(span, c.Request.Method)
+		ext.HTTPUrl.Set(span, c.Request.URL.String())
+
 		c.Next()
 	}
 }

@@ -6,6 +6,9 @@ import (
 	"encoding/json"
 	"gateway/internal/config"
 	"gateway/internal/domain"
+	"github.com/go-kit/kit/log"
+	kitopentracing "github.com/go-kit/kit/tracing/opentracing"
+	"github.com/opentracing/opentracing-go"
 	"io/ioutil"
 	"net/http"
 	"net/http/httputil"
@@ -34,7 +37,7 @@ func MakeEndpoints(cfg *config.Config, service domain.GRPCMessengerProxyService)
 			GetUserIDByEmail: makeHTTPProxyEndpoint(cfg.Auth.Addr),
 		},
 		AuthProxy: &AuthProxyEndpoints{
-			Authenticate: makeAuthenticateProxyEndpoint("http://" + cfg.Auth.Addr),
+			Authenticate: kitopentracing.TraceClient(opentracing.GlobalTracer(), "authenticate")(makeAuthenticateProxyEndpoint("http://" + cfg.Auth.Addr)),
 		},
 		Social: &SocialEndpoints{
 			WS: makeHTTPProxyEndpoint(cfg.Social.Addr),
@@ -235,6 +238,7 @@ func makeAuthenticateProxyEndpoint(proxyURL string) endpoint.Endpoint {
 		tgt,
 		encodePostAddressRequest,
 		decodeDeleteAddressResponse,
+		httptransport.ClientBefore(kitopentracing.ContextToHTTP(opentracing.GlobalTracer(), log.NewNopLogger())),
 	).Endpoint()
 }
 
