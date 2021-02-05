@@ -1,17 +1,25 @@
 package http
 
 import (
+	"bytes"
+	"context"
+	"encoding/json"
 	"gateway/internal/config"
 	"gateway/internal/domain"
+	"io/ioutil"
 	"net/http"
 	"net/http/httputil"
+	"net/url"
 
 	"github.com/gin-gonic/gin"
+	"github.com/go-kit/kit/endpoint"
+	httptransport "github.com/go-kit/kit/transport/http"
 )
 
 type Endpoints struct {
 	cfg       *config.Config
 	Auth      *AuthEndpoints
+	AuthProxy *AuthProxyEndpoints
 	Social    *SocialEndpoints
 	Messenger *MessengerEndpoints
 }
@@ -24,6 +32,9 @@ func MakeEndpoints(cfg *config.Config, service domain.GRPCMessengerProxyService)
 			SignIn:           makeHTTPProxyEndpoint(cfg.Auth.Addr),
 			RefreshToken:     makeHTTPProxyEndpoint(cfg.Auth.Addr),
 			GetUserIDByEmail: makeHTTPProxyEndpoint(cfg.Auth.Addr),
+		},
+		AuthProxy: &AuthProxyEndpoints{
+			Authenticate: makeAuthenticateProxyEndpoint("http://" + cfg.Auth.Addr),
 		},
 		Social: &SocialEndpoints{
 			WS: makeHTTPProxyEndpoint(cfg.Social.Addr),
@@ -210,4 +221,46 @@ func makeGetMessagesEndpoint(svc domain.GRPCMessengerProxyService) gin.HandlerFu
 			Messages: response.Messages,
 		})
 	}
+}
+
+type AuthProxyEndpoints struct {
+	Authenticate endpoint.Endpoint
+}
+
+func makeAuthenticateProxyEndpoint(proxyURL string) endpoint.Endpoint {
+	tgt, _ := url.Parse(proxyURL)
+
+	return httptransport.NewClient(
+		"POST",
+		tgt,
+		encodePostAddressRequest,
+		decodeDeleteAddressResponse,
+	).Endpoint()
+}
+
+func encodePostAddressRequest(ctx context.Context, req *http.Request, request interface{}) error {
+	r := request.(AuthenticateRequest)
+
+	req.URL.Path = "/auth/authenticate"
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", r.Header)
+
+	return encodeRequest(ctx, req, request)
+}
+
+func encodeRequest(_ context.Context, r *http.Request, request interface{}) error {
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(request); err != nil {
+		return err
+	}
+	r.Body = ioutil.NopCloser(&buf)
+
+	return nil
+}
+
+func decodeDeleteAddressResponse(_ context.Context, resp *http.Response) (interface{}, error) {
+	var response AuthenticateResponse
+	err := json.NewDecoder(resp.Body).Decode(&response)
+
+	return response, err
 }

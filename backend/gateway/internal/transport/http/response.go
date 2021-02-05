@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-type authenticateResponse struct {
+type AuthenticateResponse struct {
 	IsAuthenticated bool `json:"is_authenticated"`
 }
 

@@ -6,40 +6,30 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/imroc/req"
 )
 
-func AuthenticateMiddleware(authAddr string) gin.HandlerFunc {
+func AuthenticateMiddleware(endpoints *AuthProxyEndpoints) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		header := req.Header{
-			"Accept":        "application/json",
-			"Authorization": findToken(c),
-		}
-
-		type Request struct {
-			Resource string `json:"resource"`
-		}
-
-		body := Request{
+		request := AuthenticateRequest{
+			Header:   findToken(c),
 			Resource: c.Request.URL.Path,
 		}
 
-		r, err := req.Post("http://"+authAddr+"/auth/authenticate", header, req.BodyJSON(body))
+		resp, err := endpoints.Authenticate(c, request)
 		if err != nil {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, err.Error())
+			c.AbortWithStatusJSON(http.StatusUnauthorized, ErrorResponse{
+				Message: err.Error(),
+			})
 
 			return
 		}
 
-		var response authenticateResponse
-		if err = r.ToJSON(&response); err != nil {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, err)
-
-			return
-		}
+		response := resp.(AuthenticateResponse)
 
 		if !response.IsAuthenticated {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, "Permission Denied")
+			c.AbortWithStatusJSON(http.StatusUnauthorized, ErrorResponse{
+				Message: "User isn't authenticated",
+			})
 
 			return
 		}

@@ -25,7 +25,7 @@ func NewHTTPServer(addr string, endpoints *Endpoints) *http.Server {
 	swag.Register(swag.Name, &swagDoc{})
 
 	router.Use(cors.New(config))
-	router.Use(AuthenticateMiddleware(endpoints.cfg.Auth.Addr))
+	router.Use(AuthenticateMiddleware(endpoints.AuthProxy))
 	router.Use(TracerMiddleware("gateway", opentracing.Tag{Key: string(ext.Component), Value: "gateway"}))
 
 	authGroup := router.Group("/auth")

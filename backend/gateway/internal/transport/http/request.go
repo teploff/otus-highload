@@ -26,3 +26,8 @@ type GetMessagesRequest struct {
 	Limit  *int32 `json:"limit" form:"limit"`
 	Offset *int32 `json:"offset" form:"offset"`
 }
+
+type AuthenticateRequest struct {
+	Header   string `json:"-"`
+	Resource string `json:"resource"`
+}
