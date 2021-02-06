@@ -6,17 +6,17 @@ import (
 	"encoding/json"
 	"gateway/internal/config"
 	"gateway/internal/domain"
+	"github.com/gin-gonic/gin"
+	"github.com/go-kit/kit/endpoint"
 	"github.com/go-kit/kit/log"
 	kitopentracing "github.com/go-kit/kit/tracing/opentracing"
+	httptransport "github.com/go-kit/kit/transport/http"
 	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/ext"
 	"io/ioutil"
 	"net/http"
 	"net/http/httputil"
 	"net/url"
-
-	"github.com/gin-gonic/gin"
-	"github.com/go-kit/kit/endpoint"
-	httptransport "github.com/go-kit/kit/transport/http"
 )
 
 type Endpoints struct {
@@ -102,6 +102,31 @@ func makeHTTPProxyEndpoint(targetHost string) gin.HandlerFunc {
 				request.URL.Host = targetHost
 			},
 		}
+
+		var clientSpan opentracing.Span
+		tracer := opentracing.GlobalTracer()
+
+		if parentSpan := opentracing.SpanFromContext(c.Request.Context()); parentSpan != nil {
+			clientSpan = tracer.StartSpan(
+				c.Request.Method,
+				opentracing.ChildOf(parentSpan.Context()),
+			)
+		} else {
+			clientSpan = tracer.StartSpan(c.Request.Method)
+		}
+		defer clientSpan.Finish()
+
+		ext.SpanKindRPCClient.Set(clientSpan)
+		c.Request = c.Request.WithContext(opentracing.ContextWithSpan(c.Request.Context(), clientSpan))
+
+		if span := opentracing.SpanFromContext(c.Request.Context()); span != nil {
+			opentracing.GlobalTracer().Inject(
+				span.Context(),
+				opentracing.HTTPHeaders,
+				opentracing.HTTPHeadersCarrier(c.Request.Header),
+			)
+		}
+
 		proxy.ServeHTTP(c.Writer, c.Request)
 	}
 }

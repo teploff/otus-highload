@@ -7,8 +7,8 @@ import (
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/opentracing-contrib/go-gin/ginhttp"
 	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/ext"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 	"github.com/swaggo/swag"
@@ -25,7 +25,7 @@ func NewHTTPServer(addr string, endpoints *Endpoints) *http.Server {
 	swag.Register(swag.Name, &swagDoc{})
 
 	router.Use(cors.New(config))
-	router.Use(TracerMiddleware("gateway", opentracing.Tag{Key: string(ext.Component), Value: "gateway"}))
+	router.Use(ginhttp.Middleware(opentracing.GlobalTracer()))
 	router.Use(AuthenticateMiddleware(endpoints.AuthProxy))
 
 	authGroup := router.Group("/auth")
