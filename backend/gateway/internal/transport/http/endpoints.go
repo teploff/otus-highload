@@ -108,11 +108,11 @@ func makeHTTPProxyEndpoint(targetHost string) gin.HandlerFunc {
 
 		if parentSpan := opentracing.SpanFromContext(c.Request.Context()); parentSpan != nil {
 			clientSpan = tracer.StartSpan(
-				c.Request.Method,
+				c.Request.RequestURI,
 				opentracing.ChildOf(parentSpan.Context()),
 			)
 		} else {
-			clientSpan = tracer.StartSpan(c.Request.Method)
+			clientSpan = tracer.StartSpan(c.Request.RequestURI)
 		}
 		defer clientSpan.Finish()
 
