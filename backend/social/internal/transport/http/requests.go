@@ -30,3 +30,19 @@ type WSRequest struct {
 type GetUserFriendships struct {
 	UserID string `json:"user_id" binding:"required" form:"user_id"`
 }
+
+type GetUserIDByAccessTokenRequest struct {
+	Token string `json:"token"`
+}
+
+type GetUsersByAnthroponymRequest struct {
+	Token       string `json:"token"`
+	Anthroponym string `json:"anthroponym"`
+	Offset      int    `json:"offset"`
+	Limit       int    `json:"limit"`
+}
+
+type GetUsersByIDsRequest struct {
+	Token   string   `json:"token"`
+	UserIDs []string `json:"user_ids"`
+}

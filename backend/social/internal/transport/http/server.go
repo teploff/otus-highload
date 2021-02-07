@@ -4,12 +4,14 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	"github.com/opentracing-contrib/go-gin/ginhttp"
+	"github.com/opentracing/opentracing-go"
 )
 
 func NewHTTPServer(addr string, endpoints *Endpoints) *http.Server {
 	router := gin.Default()
 
-	router.Use(TracerMiddleware("social"))
+	router.Use(ginhttp.Middleware(opentracing.GlobalTracer()))
 
 	socialGroup := router.Group("/social")
 	{

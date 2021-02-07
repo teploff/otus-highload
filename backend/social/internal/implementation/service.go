@@ -5,107 +5,68 @@ import (
 	"net"
 	"social/internal/domain"
 	"social/internal/infrastructure/stan"
+	"social/internal/transport/http"
 	stantransport "social/internal/transport/stan"
 	"sort"
-	"strconv"
 	"time"
 
 	"github.com/gobwas/ws"
 	"github.com/gobwas/ws/wsutil"
-	"github.com/imroc/req"
 	uuid "github.com/satori/go.uuid"
 	"go.uber.org/zap"
 )
 
 type authService struct {
-	authAddr string
+	endpoints *http.AuthProxyEndpoints
 }
 
-func NewAuthService(authAddr string) *authService {
-	return &authService{
-		authAddr: authAddr,
-	}
+func NewAuthService(endpoints *http.AuthProxyEndpoints) *authService {
+	return &authService{endpoints: endpoints}
 }
 
-type getUserIDByAccessTokenResponse struct {
-	*domain.User
-}
+func (a *authService) GetUserByToken(ctx context.Context, token string) (*domain.User, error) {
+	request := http.GetUserIDByAccessTokenRequest{Token: token}
 
-func (a *authService) Authenticate(_ context.Context, token string) (*domain.User, error) {
-	header := req.Header{
-		"Accept":        "application/json",
-		"Authorization": token,
-	}
-
-	r, err := req.Get("http://"+a.authAddr+"/auth/user/get-by-token", header)
+	resp, err := a.endpoints.GetUserIDByAccessToken(ctx, request)
 	if err != nil {
 		return nil, err
 	}
 
-	var response getUserIDByAccessTokenResponse
-	if err = r.ToJSON(&response); err != nil {
-		return nil, err
-	}
+	response := resp.(http.GetUserIDByAccessTokenResponse)
 
 	return response.User, nil
 }
 
-type getUsersByAnthroponymResponse struct {
-	Count int            `json:"count"`
-	Users []*domain.User `json:"users"`
-}
-
-func (a *authService) GetUsersByAnthroponym(_ context.Context, token, anthroponym string, offset, limit int) ([]*domain.User, int, error) {
-	header := req.Header{
-		"Accept":        "application/json",
-		"Authorization": token,
+func (a *authService) GetUsersByAnthroponym(ctx context.Context, token, anthroponym string, offset, limit int) ([]*domain.User, int, error) {
+	requset := http.GetUsersByAnthroponymRequest{
+		Token:       token,
+		Anthroponym: anthroponym,
+		Offset:      offset,
+		Limit:       limit,
 	}
 
-	param := req.Param{
-		"anthroponym": anthroponym,
-		"offset":      strconv.Itoa(offset),
-		"limit":       strconv.Itoa(limit),
-	}
-
-	r, err := req.Get("http://"+a.authAddr+"/auth/user/get-by-anthroponym", header, param)
+	resp, err := a.endpoints.GetUsersByAnthroponym(ctx, requset)
 	if err != nil {
 		return nil, 0, err
 	}
 
-	var response getUsersByAnthroponymResponse
-	if err = r.ToJSON(&response); err != nil {
-		return nil, 0, err
-	}
+	response := resp.(http.GetUsersByAnthroponymResponse)
 
 	return response.Users, response.Count, nil
 }
 
-type getUserByIDsRequest struct {
-	UserIDs []string `json:"user_ids" binding:"required"`
-}
-
-type getUserByIDsResponse struct {
-	Users []*domain.User `json:"users"`
-}
-
-func (a *authService) GetUsersByIDs(_ context.Context, ids []string) ([]*domain.User, error) {
-	header := req.Header{
-		"Accept": "application/json",
-	}
-
-	body := getUserByIDsRequest{
+func (a *authService) GetUsersByIDs(ctx context.Context, ids []string) ([]*domain.User, error) {
+	request := http.GetUsersByIDsRequest{
+		Token:   "",
 		UserIDs: ids,
 	}
 
-	r, err := req.Post("http://"+a.authAddr+"/auth/user/get-by-ids", header, req.BodyJSON(body))
+	resp, err := a.endpoints.GetUsersByIDs(ctx, request)
 	if err != nil {
 		return nil, err
 	}
 
-	response := &getUserByIDsResponse{Users: make([]*domain.User, 0, 32)}
-	if err = r.ToJSON(&response); err != nil {
-		return nil, err
-	}
+	response := resp.(http.GetUsersByIDsResponse)
 
 	return response.Users, nil
 }
@@ -123,7 +84,7 @@ func NewProfileService(service domain.AuthService, repository domain.SocialRepos
 }
 
 func (p *profileService) SearchByAnthroponym(ctx context.Context, token, anthroponym string, offset, limit int) ([]*domain.User, int, error) {
-	user, err := p.authSvc.Authenticate(ctx, token)
+	user, err := p.authSvc.GetUserByToken(ctx, token)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -357,7 +318,7 @@ func (s *socialService) paginate(n []*domain.News, skip int, size int) []*domain
 }
 
 func (s *socialService) PublishNews(ctx context.Context, token string, newsContent []string) error {
-	user, err := s.authSvc.Authenticate(ctx, token)
+	user, err := s.authSvc.GetUserByToken(ctx, token)
 	if err != nil {
 		return err
 	}

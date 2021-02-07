@@ -6,7 +6,7 @@ import (
 )
 
 type AuthService interface {
-	Authenticate(ctx context.Context, token string) (*User, error)
+	GetUserByToken(ctx context.Context, token string) (*User, error)
 	GetUsersByAnthroponym(ctx context.Context, token, anthroponym string, offset, limit int) ([]*User, int, error)
 	GetUsersByIDs(ctx context.Context, ids []string) ([]*User, error)
 }

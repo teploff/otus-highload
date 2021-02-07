@@ -33,3 +33,16 @@ type GetNewsResponse struct {
 	News  []*domain.News `json:"news"`
 	Count int            `json:"count"`
 }
+
+type GetUserIDByAccessTokenResponse struct {
+	*domain.User
+}
+
+type GetUsersByAnthroponymResponse struct {
+	Count int            `json:"count"`
+	Users []*domain.User `json:"users"`
+}
+
+type GetUsersByIDsResponse struct {
+	Users []*domain.User `json:"users"`
+}

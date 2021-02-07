@@ -1,11 +1,22 @@
 package http
 
 import (
+	"bytes"
+	"context"
+	"encoding/json"
+	"io/ioutil"
 	"net/http"
+	"net/url"
 	"social/internal/domain"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/go-kit/kit/endpoint"
+	"github.com/go-kit/kit/log"
+	kitopentracing "github.com/go-kit/kit/tracing/opentracing"
+	httptransport "github.com/go-kit/kit/transport/http"
 	"github.com/gobwas/ws"
+	"github.com/opentracing/opentracing-go"
 )
 
 type Endpoints struct {
@@ -59,7 +70,7 @@ func makeWSEndpoint(authSvc domain.AuthService, wsSvc domain.WSService) gin.Hand
 			return
 		}
 
-		user, err := authSvc.Authenticate(c, request.AccessToken)
+		user, err := authSvc.GetUserByToken(c.Request.Context(), request.AccessToken)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized, ErrorResponse{
 				Message: err.Error(),
@@ -130,8 +141,8 @@ func makeSearchProfileByAnthroponym(authSvc domain.AuthService, profileSvc domai
 			*request.Offset = defaultOffset
 		}
 
-		users, count, err := profileSvc.SearchByAnthroponym(c, header.AccessToken, request.Anthroponym, *request.Offset,
-			*request.Limit)
+		users, count, err := profileSvc.SearchByAnthroponym(c.Request.Context(), header.AccessToken,
+			request.Anthroponym, *request.Offset, *request.Limit)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, ErrorResponse{
 				Message: err.Error(),
@@ -188,7 +199,7 @@ func makeCreateFriendshipEndpoint(authSvc domain.AuthService, socialSvc domain.S
 			return
 		}
 
-		user, err := authSvc.Authenticate(c, header.AccessToken)
+		user, err := authSvc.GetUserByToken(c.Request.Context(), header.AccessToken)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized, ErrorResponse{
 				Message: err.Error(),
@@ -240,7 +251,7 @@ func makeConfirmFriendshipEndpoint(authSvc domain.AuthService, socialSvc domain.
 			return
 		}
 
-		user, err := authSvc.Authenticate(c, header.AccessToken)
+		user, err := authSvc.GetUserByToken(c.Request.Context(), header.AccessToken)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized, ErrorResponse{
 				Message: err.Error(),
@@ -292,7 +303,7 @@ func makeRejectFriendshipEndpoint(authSvc domain.AuthService, socialSvc domain.S
 			return
 		}
 
-		user, err := authSvc.Authenticate(c, header.AccessToken)
+		user, err := authSvc.GetUserByToken(c.Request.Context(), header.AccessToken)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized, ErrorResponse{
 				Message: err.Error(),
@@ -344,7 +355,7 @@ func makeSplitUpFriendshipEndpoint(authSvc domain.AuthService, socialSvc domain.
 			return
 		}
 
-		user, err := authSvc.Authenticate(c, header.AccessToken)
+		user, err := authSvc.GetUserByToken(c.Request.Context(), header.AccessToken)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized, ErrorResponse{
 				Message: err.Error(),
@@ -386,7 +397,7 @@ func makeGetFriendsEndpoint(authSvc domain.AuthService, socialSvc domain.SocialS
 			return
 		}
 
-		user, err := authSvc.Authenticate(c, header.AccessToken)
+		user, err := authSvc.GetUserByToken(c.Request.Context(), header.AccessToken)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized, ErrorResponse{
 				Message: err.Error(),
@@ -429,7 +440,7 @@ func makeGetFollowersEndpoint(authSvc domain.AuthService, socialSvc domain.Socia
 			return
 		}
 
-		user, err := authSvc.Authenticate(c, header.AccessToken)
+		user, err := authSvc.GetUserByToken(c.Request.Context(), header.AccessToken)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized, ErrorResponse{
 				Message: err.Error(),
@@ -485,7 +496,7 @@ func makeGetNewsEndpoint(authSvc domain.AuthService, socialSvc domain.SocialServ
 			return
 		}
 
-		user, err := authSvc.Authenticate(c, header.AccessToken)
+		user, err := authSvc.GetUserByToken(c.Request.Context(), header.AccessToken)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized, ErrorResponse{
 				Message: err.Error(),
@@ -522,4 +533,122 @@ func makeGetNewsEndpoint(authSvc domain.AuthService, socialSvc domain.SocialServ
 			Count: count,
 		})
 	}
+}
+
+type AuthProxyEndpoints struct {
+	GetUserIDByAccessToken endpoint.Endpoint
+	GetUsersByAnthroponym  endpoint.Endpoint
+	GetUsersByIDs          endpoint.Endpoint
+}
+
+func NewAuthProxyEndpoints(authAddr string) *AuthProxyEndpoints {
+	return &AuthProxyEndpoints{
+		GetUserIDByAccessToken: kitopentracing.TraceClient(opentracing.GlobalTracer(), "get-user-by-token")(makeGetUserIDByAccessTokenEndpoint("http://" + authAddr)),
+		GetUsersByAnthroponym:  kitopentracing.TraceClient(opentracing.GlobalTracer(), "get-users-by-anthroponym")(makeGetUsersByAnthroponymEndpoint("http://" + authAddr)),
+		GetUsersByIDs:          kitopentracing.TraceClient(opentracing.GlobalTracer(), "get-users-by-ids")(makeGetUsersByIDsEndpoint("http://" + authAddr)),
+	}
+}
+
+func makeGetUserIDByAccessTokenEndpoint(proxyURL string) endpoint.Endpoint {
+	tgt, _ := url.Parse(proxyURL)
+
+	return httptransport.NewClient(
+		"GET",
+		tgt,
+		encodeGetUserIDByAccessTokenRequest,
+		decodeGetUserIDByAccessTokenResponse,
+		httptransport.ClientBefore(kitopentracing.ContextToHTTP(opentracing.GlobalTracer(), log.NewNopLogger())),
+	).Endpoint()
+}
+
+func makeGetUsersByAnthroponymEndpoint(proxyURL string) endpoint.Endpoint {
+	tgt, _ := url.Parse(proxyURL)
+
+	return httptransport.NewClient(
+		"GET",
+		tgt,
+		encodeGetUsersByAnthroponymRequest,
+		decodeGetUsersByAnthroponymResponse,
+		httptransport.ClientBefore(kitopentracing.ContextToHTTP(opentracing.GlobalTracer(), log.NewNopLogger())),
+	).Endpoint()
+}
+
+func makeGetUsersByIDsEndpoint(proxyURL string) endpoint.Endpoint {
+	tgt, _ := url.Parse(proxyURL)
+
+	return httptransport.NewClient(
+		"POST",
+		tgt,
+		encodeGetUsersByIDsRequest,
+		decodeGetUsersByIDsResponse,
+		httptransport.ClientBefore(kitopentracing.ContextToHTTP(opentracing.GlobalTracer(), log.NewNopLogger())),
+	).Endpoint()
+}
+
+func encodeGetUserIDByAccessTokenRequest(_ context.Context, req *http.Request, request interface{}) error {
+	r := request.(GetUserIDByAccessTokenRequest)
+
+	req.URL.Path = "/auth/user/get-by-token"
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", r.Token)
+
+	return nil
+}
+
+func encodeGetUsersByAnthroponymRequest(_ context.Context, req *http.Request, request interface{}) error {
+	r := request.(GetUsersByAnthroponymRequest)
+
+	req.URL.Path = "/auth/user/get-by-anthroponym"
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", r.Token)
+
+	q := req.URL.Query()
+	q.Add("anthroponym", r.Anthroponym)
+	q.Add("offset", strconv.Itoa(r.Offset))
+	q.Add("limit", strconv.Itoa(r.Limit))
+
+	req.URL.RawQuery = q.Encode()
+
+	return nil
+}
+
+func encodeGetUsersByIDsRequest(ctx context.Context, req *http.Request, request interface{}) error {
+	r := request.(GetUsersByIDsRequest)
+
+	req.URL.Path = "/auth/user/get-by-ids"
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", r.Token)
+
+	return encodeRequest(ctx, req, request)
+}
+
+func encodeRequest(_ context.Context, r *http.Request, request interface{}) error {
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(request); err != nil {
+		return err
+	}
+	r.Body = ioutil.NopCloser(&buf)
+
+	return nil
+}
+
+func decodeGetUserIDByAccessTokenResponse(_ context.Context, resp *http.Response) (interface{}, error) {
+	var response GetUserIDByAccessTokenResponse
+	err := json.NewDecoder(resp.Body).Decode(&response)
+
+	return response, err
+}
+
+func decodeGetUsersByAnthroponymResponse(_ context.Context, resp *http.Response) (interface{}, error) {
+	var response GetUsersByAnthroponymResponse
+	err := json.NewDecoder(resp.Body).Decode(&response)
+
+	return response, err
+}
+
+func decodeGetUsersByIDsResponse(_ context.Context, resp *http.Response) (interface{}, error) {
+	var response GetUsersByIDsResponse
+	err := json.NewDecoder(resp.Body).Decode(&response)
+
+	return response, err
 }

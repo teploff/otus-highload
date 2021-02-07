@@ -54,7 +54,7 @@ func NewApp(cfg *config.Config, opts ...Option) *App {
 // Run lunch application.
 func (a *App) Run(mysqlConn *sql.DB, redisPool *cache.Pool, stanClient *stan.Client) {
 	a.stanSrv = stantransport.NewStan(stanClient, a.logger)
-	authSvc := implementation.NewAuthService(a.cfg.Auth.Addr)
+	authSvc := implementation.NewAuthService(httptransport.NewAuthProxyEndpoints(a.cfg.Auth.Addr))
 	wsPoolRep := implementation.NewWSPoolRepository()
 
 	a.wsSvc = implementation.NewWSService(
