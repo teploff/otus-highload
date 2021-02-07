@@ -129,20 +129,15 @@
 git clone https://github.com/teploff/otus-highload.git && cd otus-highload
 ```
 
-Поднимаем инфраструктуру, состоящую из:
-- одного экземпляра MySQL;
-- шести экземпляров ClickHouse (один - cluster, остальные - shard'ы);
-- одного экземпляра Redis;
-- одного экземпляра backend'а
-
-и применяем миграции:
+Поднимаем инфраструктуру и применяем миграции:
 ```shell
 make infrastructure && make migrate && make service
 ```
 
 <a name="work-execute-preparation"></a>
 #### Подготовка
-Для демонстрации работы техники шардирования создадим трех пользователей в системе:
+Для демонстрации работы микросервисного представления системы, на примере осуществления диалогов между пользователями,
+создадим трех пользователей в системе:
  - Боб
  - Алиса
  - Генри
@@ -182,7 +177,7 @@ echo $HENRY_ACCESS_TOKEN
 как он понадобится для указания собеседника. Воспользуемся URL-ом на получения ID пользователя, зная его email:
 ```shell script
 export ALICE_ID=$(curl -X GET -H "Content-Type: application/json" -H "Authorization: ${BOB_ACCESS_TOKEN}" \
-    http://localhost:10000/auth/user?email=alice@email.com | jq -r '.user_id')
+    http://localhost:10000/auth/user/get-by-email?email=alice@email.com | jq -r '.user_id')
 ```
 
 Проверим, что запрос успешно выполнился, применив команду:
@@ -202,8 +197,10 @@ export CHAT_ID=$(curl -X POST -H "Content-Type: application/json" -H "Authorizat
 echo $CHAT_ID
 ```
 
-Теперь отправим Алисе несколько сообщений. Для этого установим три websocket'ных соединений в трех терминальных окнах 
-введем следующие команды:                               
+Теперь необходимо початиться с Алисой. Для этого установим два websocket'ых соединения со стороны Боба и Алисы 
+соответственно. Для этого в двух терминальных окнах введем следующие команды:
+
+В первом терминальном окне, предназначенном для Боба, введем:                              
 ```shell script
 export BOB_ACCESS_TOKEN=$(curl -X POST -H "Content-Type: application/json" \
     -d '{"email": "bob@email.com", "password": "1234567890"}' \
@@ -211,12 +208,27 @@ export BOB_ACCESS_TOKEN=$(curl -X POST -H "Content-Type: application/json" \
 websocat ws://localhost:10000/messenger/ws\?token=${BOB_ACCESS_TOKEN}
 ```
 
-Теперь отправим Алисе несколько сообщений:
+Во втором терминальном окне, предназначенном для Алисы, введем:
+```shell script
+export ALICE_ACCESS_TOKEN=$(curl -X POST -H "Content-Type: application/json" \
+    -d '{"email": "alice@email.com", "password": "1234567890"}' \
+    http://localhost:10000/auth/sign-in | jq -r '.access_token')
+websocat ws://localhost:10000/messenger/ws\?token=${ALICE_ACCESS_TOKEN}
+```
+
+Отправим со стороны Боба Алисе несколько сообщений. Находясь в терминальном окне, в котором открыто websocket-соединение
+Боба с сервером, отправим сообщения:
 ```shell script
 {"topic":"messenger", "action": "send-message", "payload":"{\"chat_id\":\"${CHAT_ID}\", \"messages\":[{\"text\": \"Hello, Alice!\", \"status\": \"created\"}]}"}
 {"topic":"messenger", "action": "send-message", "payload":"{\"chat_id\":\"${CHAT_ID}\", \"messages\":[{\"text\": \"What is up?\", \"status\": \"created\"}]}"}
 {"topic":"messenger", "action": "send-message", "payload":"{\"chat_id\":\"${CHAT_ID}\", \"messages\":[{\"text\": \"I miss you!\", \"status\": \"created\"}]}"}
 ```
+
+Теперь перейдем в терминал Алисы и удостоверимся, что получили все три сообщения от Боба. В терминале должны увидеть 
+следующее:</br>
+<p align="center">
+  <img src="static/get_messages.png">
+</p>
 
 Получим со стороны Алисы, зная CHAT_ID, сообщения, которые ей отослал Боб:
 ```shell script
