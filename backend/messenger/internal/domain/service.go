@@ -6,7 +6,7 @@ import (
 )
 
 type AuthService interface {
-	Authenticate(ctx context.Context, token string) (*User, error)
+	GetUserByToken(ctx context.Context, token string) (*User, error)
 }
 
 type MessengerService interface {
@@ -18,6 +18,6 @@ type MessengerService interface {
 }
 
 type WSService interface {
-	EstablishConn(ctx context.Context, userID string, coon net.Conn)
+	EstablishConn(ctx context.Context, user *User, coon net.Conn)
 	Close()
 }

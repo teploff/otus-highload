@@ -7,3 +7,7 @@ type AuthorizationHeader struct {
 type WSRequest struct {
 	AccessToken string `json:"token"  binding:"required" form:"token"`
 }
+
+type GetUserIDByAccessTokenRequest struct {
+	Token string `json:"token"`
+}

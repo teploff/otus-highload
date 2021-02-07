@@ -2,6 +2,8 @@ package implementation
 
 import (
 	"database/sql"
+	"encoding/binary"
+	"messenger/internal/config"
 	"messenger/internal/domain"
 	"messenger/internal/infrastructure/clickhouse"
 	"net"
@@ -14,10 +16,14 @@ import (
 
 type messengerRepository struct {
 	conn *clickhouse.Storage
+	cfg  config.ShardingConfig
 }
 
-func NewMessengerRepository(conn *clickhouse.Storage) *messengerRepository {
-	return &messengerRepository{conn: conn}
+func NewMessengerRepository(conn *clickhouse.Storage, cfg config.ShardingConfig) *messengerRepository {
+	return &messengerRepository{
+		conn: conn,
+		cfg:  cfg,
+	}
 }
 
 func (m *messengerRepository) CreateChat(masterID, slaveID string) (string, error) {
@@ -91,6 +97,30 @@ func (m *messengerRepository) GetChatWithCompanion(masterID, slaveID string) (*d
 	//}
 
 	return nil, nil
+}
+
+func (m *messengerRepository) GetParticipantsByChatID(userID, chatID string) ([]string, error) {
+	participants := make([]string, 0, 1)
+
+	err := m.conn.DB().QueryRow(`
+		SELECT
+			participants
+		FROM
+			chat
+		WHERE id = ? AND hasAll(participants, [toUUID(?)])`, chatID, userID).Scan(&participants)
+	if err != nil {
+		return nil, err
+	}
+
+	for index, id := range participants {
+		if id == userID {
+			participants[index] = participants[len(participants)-1]
+			participants[len(participants)-1] = ""
+			participants = participants[:len(participants)-1]
+		}
+	}
+
+	return participants, nil
 }
 
 func (m *messengerRepository) GetChatAsParticipant(userID string) (*domain.Chat, error) {
@@ -204,7 +234,9 @@ func (m *messengerRepository) GetChats(userID string, limit, offset int) ([]*dom
 	return chats, nil
 }
 
-func (m *messengerRepository) SendMessages(shardID int, userID, chatID string, messages []*domain.ShortMessage) error {
+func (m *messengerRepository) PersistMessages(userID, chatID string, messages []*domain.ShortMessage) error {
+	shardID := int(binary.BigEndian.Uint64([]byte(userID)) % uint64(m.cfg.CountNodes))
+
 	for _, msg := range messages {
 		now := time.Now().UTC()
 

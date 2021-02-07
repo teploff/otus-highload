@@ -59,11 +59,12 @@ func (a *App) Run(chConn *sql.DB) {
 	a.chStorage = clickhouse.NewStorage(chConn, a.cfg.Clickhouse.PushTimeout, a.logger)
 	go a.chStorage.StartBatching()
 
-	authSvc := implementation.NewAuthService(a.cfg.Auth.Addr)
+	authSvc := implementation.NewAuthService(httptransport.NewAuthProxyEndpoints(a.cfg.Auth.Addr))
 
-	messengerSvc := implementation.NewMessengerService(authSvc, implementation.NewMessengerRepository(a.chStorage),
-		a.cfg.Sharding)
-	wsSvc := implementation.NewWSService(implementation.NewWSPoolRepository(), a.logger)
+	messengerSvc := implementation.NewMessengerService(authSvc,
+		implementation.NewMessengerRepository(a.chStorage, a.cfg.Sharding))
+	wsSvc := implementation.NewWSService(implementation.NewWSPoolRepository(),
+		implementation.NewMessengerRepository(a.chStorage, a.cfg.Sharding), a.logger)
 
 	a.httpSrv = httptransport.NewHTTPServer(a.cfg.HttpAddr, httptransport.MakeEndpoints(authSvc, wsSvc))
 	gRPCListener, err := net.Listen("tcp", a.cfg.GRPCAddr)

@@ -16,6 +16,7 @@ require (
 	github.com/golang/protobuf v1.4.3
 	github.com/google/go-cmp v0.5.4 // indirect
 	github.com/imroc/req v0.3.0
+	github.com/mailru/easyjson v0.0.0-20180823135443-60711f1a8329
 	github.com/opentracing/opentracing-go v1.1.0
 	github.com/pelletier/go-toml v1.4.0 // indirect
 	github.com/rtsoftSG/plugin v0.1.11

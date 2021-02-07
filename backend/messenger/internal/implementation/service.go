@@ -2,64 +2,52 @@ package implementation
 
 import (
 	"context"
-	"encoding/binary"
-	"github.com/gobwas/ws/wsutil"
-	"github.com/imroc/req"
-	"go.uber.org/zap"
-	"messenger/internal/config"
 	"messenger/internal/domain"
+	"messenger/internal/transport/http"
 	"net"
+
+	"github.com/gobwas/ws"
+	"github.com/gobwas/ws/wsutil"
+	"go.uber.org/zap"
 )
 
 type authService struct {
-	authAddr string
+	endpoints *http.AuthProxyEndpoints
 }
 
-func NewAuthService(authAddr string) *authService {
+func NewAuthService(endpoints *http.AuthProxyEndpoints) *authService {
 	return &authService{
-		authAddr: authAddr,
+		endpoints: endpoints,
 	}
 }
 
-type getUserIDByAccessTokenResponse struct {
-	*domain.User
-}
+func (a *authService) GetUserByToken(ctx context.Context, token string) (*domain.User, error) {
+	request := http.GetUserIDByAccessTokenRequest{Token: token}
 
-func (a *authService) Authenticate(_ context.Context, token string) (*domain.User, error) {
-	header := req.Header{
-		"Accept":        "application/json",
-		"Authorization": token,
-	}
-
-	r, err := req.Get("http://"+a.authAddr+"/auth/user/get-by-token", header)
+	resp, err := a.endpoints.GetUserIDByAccessToken(ctx, request)
 	if err != nil {
 		return nil, err
 	}
 
-	var response getUserIDByAccessTokenResponse
-	if err = r.ToJSON(&response); err != nil {
-		return nil, err
-	}
+	response := resp.(http.GetUserIDByAccessTokenResponse)
 
 	return response.User, nil
 }
 
 type messengerService struct {
-	authSvc     domain.AuthService
-	messRep     domain.MessengerRepository
-	shardingCfg config.ShardingConfig
+	authSvc domain.AuthService
+	messRep domain.MessengerRepository
 }
 
-func NewMessengerService(authSvc domain.AuthService, messengerRep domain.MessengerRepository, cfg config.ShardingConfig) *messengerService {
+func NewMessengerService(authSvc domain.AuthService, messengerRep domain.MessengerRepository) *messengerService {
 	return &messengerService{
-		authSvc:     authSvc,
-		messRep:     messengerRep,
-		shardingCfg: cfg,
+		authSvc: authSvc,
+		messRep: messengerRep,
 	}
 }
 
 func (m *messengerService) CreateChat(ctx context.Context, masterToken, slaveID string) (string, error) {
-	user, err := m.authSvc.Authenticate(ctx, masterToken)
+	user, err := m.authSvc.GetUserByToken(ctx, masterToken)
 	if err != nil {
 		return "", err
 	}
@@ -73,7 +61,7 @@ func (m *messengerService) CreateChat(ctx context.Context, masterToken, slaveID 
 }
 
 func (m *messengerService) GetChat(ctx context.Context, masterToken, slaveID string) (*domain.Chat, error) {
-	user, err := m.authSvc.Authenticate(ctx, masterToken)
+	user, err := m.authSvc.GetUserByToken(ctx, masterToken)
 	if err != nil {
 		return nil, err
 	}
@@ -87,7 +75,7 @@ func (m *messengerService) GetChat(ctx context.Context, masterToken, slaveID str
 }
 
 func (m *messengerService) GetChats(ctx context.Context, userToken string, offset, limit int) ([]*domain.Chat, int, error) {
-	user, err := m.authSvc.Authenticate(ctx, userToken)
+	user, err := m.authSvc.GetUserByToken(ctx, userToken)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -106,18 +94,16 @@ func (m *messengerService) GetChats(ctx context.Context, userToken string, offse
 }
 
 func (m *messengerService) SendMessages(ctx context.Context, userToken, chatID string, messages []*domain.ShortMessage) error {
-	user, err := m.authSvc.Authenticate(ctx, userToken)
+	user, err := m.authSvc.GetUserByToken(ctx, userToken)
 	if err != nil {
 		return err
 	}
 
-	shardID := int(binary.BigEndian.Uint64([]byte(user.ID)) % uint64(m.shardingCfg.CountNodes))
-
-	return m.messRep.SendMessages(shardID, user.ID, chatID, messages)
+	return m.messRep.PersistMessages(user.ID, chatID, messages)
 }
 
 func (m *messengerService) GetMessages(ctx context.Context, userToken, chatID string, offset, limit int) ([]*domain.Message, int, error) {
-	user, err := m.authSvc.Authenticate(ctx, userToken)
+	user, err := m.authSvc.GetUserByToken(ctx, userToken)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -143,32 +129,36 @@ func (m *messengerService) GetMessages(ctx context.Context, userToken, chatID st
 // easyjson:json
 type WSRequest struct {
 	Topic   string `json:"topic"`
+	Action  string `json:"action"`
 	Payload string `json:"payload"`
 }
 
 // easyjson:json
 type WSMessagesRequest struct {
-	Content string `json:"content"`
+	ChatID   string                 `json:"chat_id"`
+	Messages []*domain.ShortMessage `json:"messages"`
 }
 
 type wsService struct {
 	wsPoolRep domain.WSPoolRepository
+	messRep   domain.MessengerRepository
 	logger    *zap.Logger
 }
 
-func NewWSService(wsPoolRep domain.WSPoolRepository, logger *zap.Logger) *wsService {
+func NewWSService(wsPoolRep domain.WSPoolRepository, messRep domain.MessengerRepository, logger *zap.Logger) *wsService {
 	return &wsService{
 		wsPoolRep: wsPoolRep,
+		messRep:   messRep,
 		logger:    logger,
 	}
 }
 
-func (w *wsService) EstablishConn(ctx context.Context, userID string, conn net.Conn) {
-	w.wsPoolRep.AddConnection(userID, conn)
+func (w *wsService) EstablishConn(ctx context.Context, user *domain.User, conn net.Conn) {
+	w.wsPoolRep.AddConnection(user.ID, conn)
 
-	go func(userID string) {
+	go func(user *domain.User) {
 		defer conn.Close()
-		defer w.wsPoolRep.RemoveConnection(userID, conn)
+		defer w.wsPoolRep.RemoveConnection(user.ID, conn)
 
 		for {
 			msg, _, err := wsutil.ReadClientData(conn)
@@ -180,89 +170,80 @@ func (w *wsService) EstablishConn(ctx context.Context, userID string, conn net.C
 
 			w.logger.Info(string(msg))
 
-			//if err = w.parseRequest(ctx, user, msg); err != nil {
-			//	w.logger.Error("", zap.Error(err))
-			//}
+			if err = w.parseRequest(ctx, conn, user, msg); err != nil {
+				w.logger.Error("", zap.Error(err))
+			}
 		}
-	}(userID)
+	}(user)
 }
 
-//func (w *wsService) parseRequest(ctx context.Context, user *domain.User, msg []byte) error {
-//	var request WSRequest
-//	if err := request.UnmarshalJSON(msg); err != nil {
-//		return err
-//	}
-//
-//	switch request.Topic {
-//	case "news":
-//		var r WSNewsRequest
-//
-//		if err := r.UnmarshalJSON([]byte(request.Payload)); err != nil {
-//			return err
-//		}
-//
-//		n := &domain.News{
-//			ID: uuid.NewV4().String(),
-//			Owner: struct {
-//				Name    string `json:"name"`
-//				Surname string `json:"surname"`
-//				Sex     string `json:"sex"`
-//			}{
-//				user.Name,
-//				user.Surname,
-//				user.Sex,
-//			},
-//			Content:    r.Content,
-//			CreateTime: time.Now().UTC(),
-//		}
-//		news := []*domain.News{n}
-//
-//		tx, err := w.socialRep.GetTx(ctx)
-//		if err != nil {
-//			return err
-//		}
-//
-//		if err = w.socialRep.PublishNews(tx, user.ID, news); err != nil {
-//			return err
-//		}
-//
-//		if err = tx.Commit(); err != nil {
-//			return err
-//		}
-//
-//		if err = w.stanClient.Publish("news", &stantransport.NewsPersistRequest{OwnerID: user.ID, News: []*domain.News{n}}); err != nil {
-//			return err
-//		}
-//	}
-//
-//	return nil
-//}
+func (w *wsService) parseRequest(ctx context.Context, conn net.Conn, user *domain.User, msg []byte) error {
+	var request WSRequest
+	if err := request.UnmarshalJSON(msg); err != nil {
+		return err
+	}
 
-//func (w *wsService) SendNews(ctx context.Context, ownerID string, news []*domain.News) error {
-//	ids, err := w.socialCacheRep.RetrieveFriendsID(ctx, ownerID)
-//	if err != nil {
-//		return err
-//	}
-//	ids = append(ids, ownerID)
-//
-//	for _, id := range ids {
-//		conns := w.wsPoolRep.RetrieveConnByUserID(id)
-//		for _, conn := range conns {
-//			for _, n := range news {
-//				data, err := n.MarshalJSON()
-//				if err != nil {
-//					return err
-//				}
-//
-//				if err = wsutil.WriteServerMessage(conn, ws.OpText, data); err != nil {
-//					return err
-//				}
-//			}
-//		}
-//	}
-//
-//	return nil
-//}
+	switch request.Topic {
+	case "messenger":
+		var r WSMessagesRequest
+
+		if err := r.UnmarshalJSON([]byte(request.Payload)); err != nil {
+			return err
+		}
+
+		if err := w.messRep.PersistMessages(user.ID, r.ChatID, r.Messages); err != nil {
+			return err
+		}
+
+		if err := w.sendMessage(ctx, conn, user.ID, r.ChatID, r.Messages); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (w *wsService) sendMessage(_ context.Context, c net.Conn, ownerID, chatID string, messages []*domain.ShortMessage) error {
+	ids, err := w.messRep.GetParticipantsByChatID(ownerID, chatID)
+	if err != nil {
+		return err
+	}
+
+	ids = append(ids, ownerID)
+
+	for _, id := range ids {
+		conns := w.wsPoolRep.RetrieveConnByUserID(id)
+
+		for _, conn := range conns {
+			if conn == c {
+				continue
+			}
+
+			bytePayload, err := WSMessagesRequest{
+				ChatID:   chatID,
+				Messages: messages,
+			}.MarshalJSON()
+			if err != nil {
+				return err
+			}
+
+			byteRequest, err := WSRequest{
+				Topic:   "messenger",
+				Action:  "send-message",
+				Payload: string(bytePayload),
+			}.MarshalJSON()
+			if err != nil {
+				return err
+			}
+
+			if err = wsutil.WriteServerMessage(conn, ws.OpText, byteRequest); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
 
 func (w *wsService) Close() {
 	w.wsPoolRep.FlushConnections()
