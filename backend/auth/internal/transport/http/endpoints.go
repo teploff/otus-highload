@@ -229,10 +229,19 @@ func makeAuthenticateEndpoint(svc domain.AuthService) gin.HandlerFunc {
 			return
 		}
 
-		if request.Resource == "/auth/sign-up" || request.Resource == "/auth/sign-in" {
-			c.JSON(http.StatusOK, AuthenticateResponse{IsAuthenticated: true})
+		allowedResources := []string{"/auth/sign-up", "/auth/sign-in", "/swagger/index.html",
+			"/swagger/swagger-ui-standalone-preset.js", "/swagger/swagger-ui.css", "/swagger/swagger-ui-bundle.js",
+			"/swagger/favicon-32x32.png", "/swagger/favicon-16x16.png", "/swagger/doc.json",
+			"/swagger/swagger-ui.css.map", "/swagger/swagger-ui-standalone-preset.js.map",
+			"/swagger/swagger-ui-bundle.js.map",
+		}
 
-			return
+		for _, resource := range allowedResources {
+			if resource == request.Resource {
+				c.JSON(http.StatusOK, AuthenticateResponse{IsAuthenticated: true})
+
+				return
+			}
 		}
 
 		var header AuthorizationHeader
