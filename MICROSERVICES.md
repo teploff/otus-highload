@@ -17,7 +17,7 @@
       - [ Клиентская часть ](#work-technical-moments-client)
 4. [ Итоги ](#results)
 
-<img align="right" width="160" src="static/microservices/preview.png">
+<img align="right" width="480" src="static/microservices/preview.png">
 
 <a name="task"></a>
 ## Задание
