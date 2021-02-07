@@ -219,12 +219,12 @@ websocat ws://localhost:10000/messenger/ws\?token=${ALICE_ACCESS_TOKEN}
 ```shell script
 websocat ws://localhost:10000/messenger/ws\?token=${BOB_ACCESS_TOKEN}
 ```
-И зная ChatID, например, если он имеет значение **a0488fae-9406-4b4d-b9fc-9b4afceeb80d**, отправить сообщения следующего
+И зная ChatID, например, если он имеет значение **e8d3dc26-a218-4ca1-ae4b-da38b27ed9b3**, отправить сообщения следующего
 вида:
 ```shell script
-{"topic":"messenger", "action": "send-message", "payload":"{\"chat_id\":\"a0488fae-9406-4b4d-b9fc-9b4afceeb80d\", \"messages\":[{\"text\": \"Hello, Alice!\", \"status\": \"created\"}]}"}
-{"topic":"messenger", "action": "send-message", "payload":"{\"chat_id\":\"a0488fae-9406-4b4d-b9fc-9b4afceeb80d\", \"messages\":[{\"text\": \"What is up?\", \"status\": \"created\"}]}"}
-{"topic":"messenger", "action": "send-message", "payload":"{\"chat_id\":\"a0488fae-9406-4b4d-b9fc-9b4afceeb80d\", \"messages\":[{\"text\": \"I miss you!\", \"status\": \"created\"}]}"}
+{"topic":"messenger", "action": "send-message", "payload":"{\"chat_id\":\"e8d3dc26-a218-4ca1-ae4b-da38b27ed9b3\", \"messages\":[{\"text\": \"Hello, Alice!\", \"status\": \"created\"}]}"}
+{"topic":"messenger", "action": "send-message", "payload":"{\"chat_id\":\"e8d3dc26-a218-4ca1-ae4b-da38b27ed9b3\", \"messages\":[{\"text\": \"What is up?\", \"status\": \"created\"}]}"}
+{"topic":"messenger", "action": "send-message", "payload":"{\"chat_id\":\"e8d3dc26-a218-4ca1-ae4b-da38b27ed9b3\", \"messages\":[{\"text\": \"I miss you!\", \"status\": \"created\"}]}"}
 ```
 
 Теперь перейдем в терминал Алисы и удостоверимся, что получили все три сообщения от Боба. В терминале должны увидеть 
@@ -243,14 +243,14 @@ websocat ws://localhost:10000/messenger/ws\?token=${BOB_ACCESS_TOKEN}
 Теперь проверим gRPC запросы от **gateway**-я к микросервису **messenger** для выгрузки сообщений по конкретному чату.
 
 Для этого находясь в терминальном окне Алисы и зная id чата (в данном контексте он имеет значение 
-**a0488fae-9406-4b4d-b9fc-9b4afceeb80d**) получим сообщения, которые ей отослал Боб:
+**e8d3dc26-a218-4ca1-ae4b-da38b27ed9b3**) получим сообщения, которые ей отослал Боб:
 ```shell script
 curl -X GET -H "Content-Type: application/json" -H "Authorization: ${ALICE_ACCESS_TOKEN}" \
-http://localhost:10000/messenger/messages?chat_id=a0488fae-9406-4b4d-b9fc-9b4afceeb80d
+http://localhost:10000/messenger/messages?chat_id=e8d3dc26-a218-4ca1-ae4b-da38b27ed9b3
 ```
 
 Если все прошло успешно, должны увидеть нечто похожее: </br>
 <p align="center">
-    <img src="static/websocket/http-get-messages.png">
+    <img src="static/microservices/http-get-messages.png">
 </p>
     
