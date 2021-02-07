@@ -1,0 +1,39 @@
+addr: ":10002"
+
+auth:
+  addr: "localhost:10001"
+
+storage:
+  dsn: "user:password@tcp(127.0.0.1:3307)/social-network?parseTime=true"
+  conn_max_lifetime: "3m"
+  max_open_conns: 10
+  max_idle_conns: 10
+  conn_attempt_count: 10
+
+heater:
+  auth_dsn: "user:password@tcp(127.0.0.1:3306)/auth?parseTime=true"
+  social_dsn: "user:password@tcp(127.0.0.1:3307)/social-network?parseTime=true"
+
+cache:
+  - addr: "localhost:6379"
+    password: "password"
+    db: 1
+  - addr: "localhost:6379"
+    password: "password"
+    db: 2
+
+stan:
+  cluster_id: "stan-cluster"
+  addr: "localhost:4222"
+
+jwt:
+  secret: "some_secret"
+  access_token_time_expire: "1h"
+  refresh_token_time_expire: "24h"
+
+jaeger:
+  agent_addr: "0.0.0.0:6831"
+  service_name: "social"
+
+logger:
+  level: "info"

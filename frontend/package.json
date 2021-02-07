@@ -1,33 +1,48 @@
 {
-  "name": "frontend",
-  "version": "0.1.0",
-  "private": true,
+  "name": "vue-demo",
+  "version": "6.7.2",
+  "description": "MDB Vue Demo App",
+  "author": "MDBootstrap <support@mdbootstrap.com>",
   "scripts": {
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build",
-    "lint": "vue-cli-service lint"
+    "test:unit": "vue-cli-service test:unit",
+    "test:e2e": "vue-cli-service test:e2e",
+    "lint": "vue-cli-service lint",
+    "demo": "vue-cli-service serve --open demo/main.js",
+    "remove-demo": "del-cli demo",
+    "start": "vue-cli-service serve --open"
   },
   "dependencies": {
-    "@smartweb/vue-flash-message": "^0.6.10",
     "axios": "^0.21.1",
+    "axios-case-converter": "^0.7.0",
     "camelcase-keys": "^6.2.2",
-    "core-js": "^3.6.5",
+    "core-js": "^3.1.2",
+    "mdbvue": "./mdb/mdbvue/mdbvue-6.7.2.tgz",
+    "moment": "^2.29.1",
+    "vee-validate": "^3.2.0",
     "vue": "^2.6.11",
-    "vue-material": "^1.0.0-beta-15",
-    "vue-moment": "^4.1.0",
-    "vue-router": "^3.4.9",
-    "vuejs-paginate": "^2.1.0",
-    "vuelidate": "^0.7.6",
-    "vuex": "^3.6.0",
+    "vue-router": "^3.0.3",
+    "vuex": "^3.1.2",
     "vuex-persistedstate": "^4.0.0-beta.3"
   },
   "devDependencies": {
-    "@vue/cli-plugin-babel": "~4.5.0",
-    "@vue/cli-plugin-eslint": "~4.5.0",
-    "@vue/cli-service": "~4.5.0",
-    "babel-eslint": "^10.1.0",
-    "eslint": "^6.7.2",
-    "eslint-plugin-vue": "^6.2.2",
+    "@vue/cli-plugin-babel": "^4.0.2",
+    "@vue/cli-plugin-e2e-cypress": "^4.0.2",
+    "@vue/cli-plugin-eslint": "^4.0.2",
+    "@vue/cli-plugin-unit-jest": "^4.0.2",
+    "@vue/cli-service": "^4.0.2",
+    "@vue/test-utils": "1.0.0-beta.29",
+    "babel-core": "7.0.0-bridge.0",
+    "babel-eslint": "^10.0.1",
+    "babel-jest": "^23.6.0",
+    "del-cli": "^3.0.0",
+    "eslint": "^5.16.0",
+    "eslint-plugin-vue": "^5.0.0",
+    "node-sass": "^4.14.1",
+    "register-service-worker": "^1.6.2",
+    "sass-loader": "^8.0.0",
+    "vue-cli-plugin-mdb": "~2.1.0",
     "vue-template-compiler": "^2.6.11"
   },
   "eslintConfig": {
@@ -39,14 +54,62 @@
       "plugin:vue/essential",
       "eslint:recommended"
     ],
+    "rules": {
+      "no-console": 0
+    },
     "parserOptions": {
       "parser": "babel-eslint"
     },
-    "rules": {}
+    "overrides": [
+      {
+        "files": [
+          "**/__tests__/*.{j,t}s?(x)"
+        ],
+        "env": {
+          "jest": true
+        }
+      }
+    ]
+  },
+  "postcss": {
+    "plugins": {
+      "autoprefixer": {}
+    }
   },
   "browserslist": [
     "> 1%",
-    "last 2 versions",
-    "not dead"
-  ]
+    "last 2 versions"
+  ],
+  "jest": {
+    "moduleFileExtensions": [
+      "js",
+      "jsx",
+      "json",
+      "vue"
+    ],
+    "transform": {
+      "^.+\\.vue$": "vue-jest",
+      ".+\\.(css|styl|less|sass|scss|svg|png|jpg|ttf|woff|woff2)$": "jest-transform-stub",
+      "^.+\\.jsx?$": "babel-jest"
+    },
+    "transformIgnorePatterns": [
+      "/node_modules/"
+    ],
+    "moduleNameMapper": {
+      "^@/(.*)$": "<rootDir>/src/$1"
+    },
+    "snapshotSerializers": [
+      "jest-serializer-vue"
+    ],
+    "testMatch": [
+      "**/tests/unit/**/*.spec.(js|jsx|ts|tsx)|**/__tests__/*.(js|jsx|ts|tsx)"
+    ],
+    "testURL": "http://localhost/",
+    "watchPlugins": [
+      "jest-watch-typeahead/filename",
+      "jest-watch-typeahead/testname"
+    ]
+  },
+  "//": "git+https://oauth2:REPLACE_WITH_YOUR_TOKEN@git.mdbootstrap.com/mdb/vue/vu-pro.git",
+  "license": "SEE LICENSE IN <license.pdf>"
 }

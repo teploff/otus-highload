@@ -3,7 +3,7 @@ export default class WSService {
         this.store = store
     }
     connect = (url) => {
-        this.ws = new WebSocket(url)
+        this.ws = new WebSocket(url + '?token=' + localStorage.getItem('accessToken'))
 
         this.ws.onopen = () => {
             console.log("ws connection is opened")

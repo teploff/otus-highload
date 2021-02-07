@@ -1,425 +1,325 @@
 <template>
-  <div class="page-container">
-    <md-app md-waterfall md-mode="flexible">
-      <md-app-toolbar class="md-large md-primary">
-        <div class="md-toolbar-row">
-          <div class="md-toolbar-section-start">
-            <md-button class="md-icon-button" @click="menuVisible = !menuVisible">
-              <md-icon>menu</md-icon>
-            </md-button>
-          </div>
-
-          <md-autocomplete
-              class="search"
-              v-model.trim="searchPayload.anthroponym"
-              @input="searchPeople"
-              :md-options="[]"
-              md-layout="box">
-            <label>Search people...</label>
-          </md-autocomplete>
-
-          <div class="md-toolbar-section-end">
-            <md-button class="md-icon-button" @click="logOut">
-              <md-icon>login</md-icon>
-            </md-button>
-          </div>
+  <div class="layout">
+    <mdb-side-nav-2 :value="true" :data="navigation" push slim :slim-collapsed="collapsed" @toggleSlim="collapsed = $event">
+      <div slot="header">
+        <div
+            class="d-flex align-items-center my-4"
+            :class="collapsed ? 'justify-content-center' : 'justify-content-start'"
+        >
+          <mdb-avatar :width="40" style="flex: 0 0 auto">
+            <img
+                src="https://mdbootstrap.com/img/Photos/Avatars/avatar-7.jpg"
+                class="img-fluid rounded-circle z-depth-1"
+            />
+          </mdb-avatar>
+          <p class="m-t mb-0 ml-4 p-0" style="flex: 0 2 auto" v-show="!collapsed">
+            <strong>John Smith<mdb-icon color="success" icon="circle" class="ml-2" size="sm"/></strong>
+          </p>
         </div>
-      </md-app-toolbar>
-
-      <md-app-drawer :md-active.sync="menuVisible">
-        <md-list>
-          <md-list-item @click="followHomePage">
-            <md-icon>assignment_ind</md-icon>
-            <span class="md-list-item-text">My profile</span>
-          </md-list-item>
-
-          <md-list-item @click="followNewsPage">
-            <md-icon>fiber_new</md-icon>
-            <span class="md-list-item-text">News</span>
-            <md-badge v-if="countNewsNotify > 0" class="md-primary" v-bind:md-content="countNewsNotify" />
-          </md-list-item>
-
-          <md-list-item @click="followMessengerPage">
-            <md-icon>chat</md-icon>
-            <span class="md-list-item-text">Messenger</span>
-            <md-badge v-if="countMsgNotify > 0" class="md-primary" v-bind:md-content="countMsgNotify" />
-          </md-list-item>
-
-          <md-list-item @click="followFriendsPage">
-            <md-icon>supervisor_account</md-icon>
-            <span class="md-list-item-text">Friends</span>
-            <md-badge v-if="countFriendsNotify > 0" class="md-primary" v-bind:md-content="countFriendsNotify" />
-          </md-list-item>
-        </md-list>
-      </md-app-drawer>
-
-      <md-app-content>
-        <md-tabs md-alignment="centered">
-          <md-tab id="tab-home" md-label="My Friends" md-icon="group" @click="getFriends">
-            <md-empty-state
-                v-show="friends.length === 0"
-                md-rounded
-                md-icon="access_time"
-                md-label="Nothing in Snoozed"
-                md-description="Anything you snooze will go here until it's time for it to return to the inbox.">
-            </md-empty-state>
-            <div v-show="friends.length !== 0">
-              <md-table v-model="friends" md-card @md-selected="selectFriends">
-                <md-table-toolbar>
-                  <h1 class="md-title" id="friend-requests">Friends</h1>
-                </md-table-toolbar>
-
-                <md-table-toolbar id="table-friends-header-toolbar" slot="md-table-alternate-header" slot-scope="{}">
-                  <div class="md-toolbar-section-start">{{ getAlternateLabel() }}</div>
-
-                  <div class="md-toolbar-section-end">
-                    <md-button class="md-icon-button" @click="removeFriends">
-                      <md-icon>delete</md-icon>
-                    </md-button>
-                  </div>
-                </md-table-toolbar>
-
-                <md-table-row slot="md-table-row" slot-scope="{ item }" md-selectable="multiple" md-auto-select>
-                  <md-table-cell md-label="Name" md-sort-by="name">{{ item.name }} {{ item.surname }}</md-table-cell>
-                  <md-table-cell md-label="Email" md-sort-by="email">{{ item.email }}</md-table-cell>
-                  <md-table-cell md-label="Sex" md-sort-by="sex">{{ item.sex }}</md-table-cell>
-                  <md-table-cell md-label="Birthday" md-sort-by="birthday">{{ $moment(item.birthday).format('MMMM Do YYYY') }}</md-table-cell>
-                  <md-table-cell md-label="City" md-sort-by="city">{{ item.city }}</md-table-cell>
-                </md-table-row>
-              </md-table>
-            </div>
-          </md-tab>
-          <md-tab id="tab-pages" md-label="Friend requests" md-icon="group_add" @click="getFollowers">
-            <md-empty-state
-                v-show="followers.length === 0"
-                md-rounded
-                md-icon="access_time"
-                md-label="Nothing in Snoozed"
-                md-description="Anything you snooze will go here until it's time for it to return to the inbox.">
-            </md-empty-state>
-
-            <div v-show="followers.length !== 0">
-              <md-table v-model="followers" md-card @md-selected="selectFollowers">
-                <md-table-toolbar>
-                  <h1 class="md-title" id="followers-requests">My followers</h1>
-                </md-table-toolbar>
-
-                <md-table-toolbar id="table-followers-header-toolbar" slot="md-table-alternate-header" slot-scope="{}">
-                  <div class="md-toolbar-section-start">{{ getAlternateLabel() }}</div>
-
-                  <div class="md-toolbar-section-end">
-                    <md-button class="md-icon-button" @click="acceptFollowers">
-                      <md-icon>add</md-icon>
-                    </md-button>
-                    <md-button class="md-icon-button" @click="removeFollowers">
-                      <md-icon>delete</md-icon>
-                    </md-button>
-                  </div>
-                </md-table-toolbar>
-
-                <md-table-row slot="md-table-row" slot-scope="{ item }" md-selectable="multiple" md-auto-select>
-                  <md-table-cell md-label="Name" md-sort-by="name">{{ item.name }} {{ item.surname }}</md-table-cell>
-                  <md-table-cell md-label="Email" md-sort-by="email">{{ item.email }}</md-table-cell>
-                  <md-table-cell md-label="Sex" md-sort-by="sex">{{ item.sex }}</md-table-cell>
-                  <md-table-cell md-label="Birthday" md-sort-by="birthday">{{ $moment(item.birthday).format('MMMM Do YYYY') }}</md-table-cell>
-                  <md-table-cell md-label="City" md-sort-by="city">{{ item.city }}</md-table-cell>
-                </md-table-row>
-              </md-table>
-            </div>
-          </md-tab>
-        </md-tabs>
-      </md-app-content>
-    </md-app>
-    <FlashMessage :position="'right top'"></FlashMessage>
+        <hr class="w-100" />
+      </div>
+      <div slot="content" class="mt-5 d-flex justify-content-center">
+        <mdb-btn tag="a" gradient="blue" size="sm" class="mx-0" floating :icon="collapsed ? 'chevron-right' : 'chevron-left'" @click="collapsed = !collapsed"></mdb-btn>
+      </div>
+      <mdb-navbar
+          slot="nav"
+          tag="div"
+          :toggler="false"
+          position="top">
+        <mdb-navbar-nav right>
+          <mdb-form-inline class="ml-auto">
+            <mdb-input v-model="searchPayload.anthroponym" class="mr-sm-1" type="text" placeholder="Search people..."/>
+            <mdb-btn tag="a" size="sm" gradient="blue" floating @click="searchPeople()" v-show="searchPayload.anthroponym !== ''"><mdb-icon icon="search"/></mdb-btn>
+          </mdb-form-inline>
+        </mdb-navbar-nav>
+        <mdb-navbar-nav class="nav-flex-icons" right>
+          <mdb-btn tag="a" size="sm" gradient="blue" floating @click="logOut()"><mdb-icon icon="door-open"/></mdb-btn>
+        </mdb-navbar-nav>
+      </mdb-navbar>
+      <div slot="main">
+        <mdb-tabs
+            :active="0"
+            @activeTab="getActiveTabIndex"
+            tabs
+            card
+            class="mb-5"
+            justify
+            color="info"
+            :links="[
+                { text: 'Friends', icon: 'user-friends', slot: 'friends-slot' },
+                { text: 'Followers', icon: 'bullhorn', slot: 'followers-slot'}]"
+        >
+          <template slot="friends-slot">
+            <mdb-container>
+              <mdb-row v-for="(row, i) in friends" v-bind:key="i">
+                <mdb-col sm="4" v-for="friend in row" v-bind:key="friend.id">
+                  <mdb-card testimonial>
+                    <mdb-card-up gradient="blue" class="lighten-1"></mdb-card-up>
+                    <mdb-card-avatar color="white" class="mx-auto">
+                      <img v-if="friend.sex==='female'" src="../assets/girl.png" class="rounded-circle">
+                      <img v-else src="../assets/boy.png" class="rounded-circle">
+                    </mdb-card-avatar>
+                    <mdb-card-body>
+                      <mdb-card-title>{{ friend.name }} {{ friend.surname }}</mdb-card-title>
+                      <hr />
+                      <p>
+                        <mdb-icon icon="quote-left" /> Lorem ipsum dolor sit amet, consectetur adipisicing elit. Eos,
+                        adipisci</p>
+                      <hr />
+                      <mdb-row>
+                        <mdb-col>
+                          <mdb-btn @click="splitUpFriendship(friend)" rounded color="red">Remove</mdb-btn>
+                        </mdb-col>
+                      </mdb-row>
+                    </mdb-card-body>
+                  </mdb-card>
+                </mdb-col>
+              </mdb-row>
+            </mdb-container>
+            <mdb-pagination class="justify-content-center" circle>
+              <mdb-page-item disabled>First</mdb-page-item>
+              <mdb-page-nav prev disabled></mdb-page-nav>
+              <mdb-page-item active>1</mdb-page-item>
+              <mdb-page-item>2</mdb-page-item>
+              <mdb-page-item>3</mdb-page-item>
+              <mdb-page-item>4</mdb-page-item>
+              <mdb-page-item>5</mdb-page-item>
+              <mdb-page-nav next></mdb-page-nav>
+              <mdb-page-item>Last</mdb-page-item>
+            </mdb-pagination>
+          </template>
+          <template slot="followers-slot">
+            <mdb-container>
+              <mdb-row v-for="(row, i) in followers" v-bind:key="i">
+                <mdb-col sm="4" v-for="follower in row" v-bind:key="follower.id">
+                  <mdb-card testimonial>
+                    <mdb-card-up gradient="blue" class="lighten-1"></mdb-card-up>
+                    <mdb-card-avatar color="white" class="mx-auto">
+                      <img v-if="follower.sex==='female'" src="../assets/girl.png" class="rounded-circle">
+                      <img v-else src="../assets/boy.png" class="rounded-circle">
+                    </mdb-card-avatar>
+                    <mdb-card-body>
+                      <mdb-card-title>{{ follower.name }} {{ follower.surname }}</mdb-card-title>
+                      <hr />
+                      <p>
+                        <mdb-icon icon="quote-left" /> Lorem ipsum dolor sit amet, consectetur adipisicing elit. Eos,
+                        adipisci</p>
+                      <hr />
+                      <mdb-row>
+                        <mdb-col class="col-6">
+                          <mdb-btn @click="acceptFollower(follower)" rounded color="primary">Add</mdb-btn>
+                        </mdb-col>
+                        <mdb-col class="col-4">
+                          <mdb-btn @click="refuseFollower(follower)" rounded color="red">Remove</mdb-btn>
+                        </mdb-col>
+                      </mdb-row>
+                    </mdb-card-body>
+                  </mdb-card>
+                </mdb-col>
+              </mdb-row>
+              <mdb-pagination class="justify-content-center" circle>
+                <mdb-page-item disabled>First</mdb-page-item>
+                <mdb-page-nav prev disabled></mdb-page-nav>
+                <mdb-page-item active>1</mdb-page-item>
+                <mdb-page-item>2</mdb-page-item>
+                <mdb-page-item>3</mdb-page-item>
+                <mdb-page-item>4</mdb-page-item>
+                <mdb-page-item>5</mdb-page-item>
+                <mdb-page-nav next></mdb-page-nav>
+                <mdb-page-item>Last</mdb-page-item>
+              </mdb-pagination>
+            </mdb-container>
+          </template>
+        </mdb-tabs>
+      </div>
+    </mdb-side-nav-2>
   </div>
 </template>
 
 <script>
-import {apiUrl, debounce, headers} from "@/const";
-import axios from "axios";
+import {
+  mdbNavbar,
+  mdbNavbarNav,
+  mdbSideNav2,
+  mdbAvatar,
+  mdbBtn,
+  mdbIcon,
+  waves,
+  mdbFormInline,
+  mdbInput,
+  mdbTabs,
+  mdbRow,
+  mdbCol,
+  mdbCard,
+  mdbCardBody,
+  mdbCardTitle,
+  mdbCardUp,
+  mdbCardAvatar,
+  mdbContainer,
+  mdbPagination,
+  mdbPageItem,
+  mdbPageNav,
+} from "mdbvue";
+
+import router from "@/router";
+import {confirmFriendship, getFollowers, getFriends, rejectFriendship, splitUpFriendship} from "@/api/social.api";
 
 export default {
-  name: 'Home',
-  data: () => ({
-    menuVisible: false,
-    countNewsNotify: 0,
-    countMsgNotify: 0,
-    countFriendsNotify: 0,
-    searchPayload: {
-      anthroponym: null,
-    },
-    friends: [],
-    selectedFriends: [],
-    followers: [],
-    selectedFollowers: [],
-  }),
-  beforeMount() {
-    this.getFriends()
+  components: {
+    mdbNavbar,
+    mdbNavbarNav,
+    mdbSideNav2,
+    mdbAvatar,
+    mdbBtn,
+    mdbIcon,
+    mdbFormInline,
+    mdbInput,
+    mdbTabs,
+    mdbRow,
+    mdbCol,
+    mdbCard,
+    mdbCardBody,
+    mdbCardTitle,
+    mdbCardUp,
+    mdbCardAvatar,
+    mdbContainer,
+    mdbPagination,
+    mdbPageItem,
+    mdbPageNav,
   },
+  name: "Friends",
+  async beforeMount() {
+    try {
+      const response = await getFriends()
+      const friends = response.data.friends
+
+      this.friends = [[]]
+
+      let j = 0;
+      for (let i = 0; i < friends.length; i++) {
+        if ((i !== 0) && (i % 4 === 0)) {
+          j++;
+        }
+
+        this.friends[j].push(friends[i])
+      }
+    } catch (error) {
+      this.$notify.error({message: error.response.data.message, position: 'top right', timeOut: 5000});
+    }
+  },
+  data: () => ({
+    show: true,
+    collapsed: false,
+    navigation: [
+      {
+        name: "My profile",
+        icon: "address-card",
+        href: router.resolve({name: 'Home'}).href
+      },
+      {
+        name: "News",
+        icon: "newspaper",
+        href: router.resolve({name: 'News'}).href
+      },
+      {
+        name: "Messenger",
+        icon: "comments",
+        href: router.resolve({name: 'Messenger'}).href
+      },
+      {
+        name: "Friends",
+        icon: "user-friends",
+        href: router.resolve({name: 'Friends'}).href
+      }
+    ],
+    searchPayload: {
+      anthroponym: '',
+    },
+    friends: [[]],
+    followers: [[]],
+  }),
   methods: {
-    followHomePage() {
-      this.$router.push({ name: 'Home' });
+    log(text) {
+      console.log(text)
     },
-    followNewsPage() {
-      this.$router.push({ name: 'News' });
-    },
-    followMessengerPage() {
-      this.$router.push({ name: 'Messenger' });
-    },
-    followFriendsPage() {
-      this.$router.push({ name: 'Friends' }).catch(() => {});
-    },
-    searchPeople: debounce(function (){
+    searchPeople() {
       this.$store.commit("changeAnthroponym", this.searchPayload.anthroponym);
       this.$router.push({ name: 'People' })
-    }, 1000),
-    refreshToken() {
-      const path = `${apiUrl}/auth/token`;
-      const camelcaseKeys = require('camelcase-keys');
+    },
+    async getActiveTabIndex(index) {
+      if (index === 0) {
+        try {
+          const response = await getFriends()
+          const friends = response.data.friends
 
-      const payload = {
-        refresh_token: localStorage.getItem('refreshToken'),
-      };
-      axios.put(path, payload, {transformResponse: [(data) => {
-          return camelcaseKeys(JSON.parse(data), { deep: true })}
-        ]})
-          .then((response) => {
-            this.tokenPair = response.data;
+          this.friends = [[]]
 
-            localStorage.setItem('accessToken', this.tokenPair.accessToken);
-            localStorage.setItem('refreshToken', this.tokenPair.refreshToken);
-
-            this.$router.push({ name: 'People' });
-          })
-          .catch((error) => {
-            const err = JSON.parse(JSON.stringify(error.response));
-            if (err.status === 401) {
-              this.$router.push({ name: 'SignIn' });
+          let j = 0;
+          for (let i = 0; i < friends.length; i++) {
+            if ((i !== 0) && (i%4 === 0)) {
+              j++;
             }
-            this.flashMessage.error({
-              title: 'Error Message Title',
-              message: err.data.message,
-              position: 'center',
-              icon: '../assets/error.svg',
-            });
-          });
+
+            this.friends[j].push(friends[i])
+          }
+        } catch (error) {
+          this.$notify.error({message: error.response.data.message, position: 'top right', timeOut: 5000});
+        }
+      } else {
+        try {
+          const response = await getFollowers()
+          const followers = response.data.followers
+
+          this.followers = [[]]
+
+          let j = 0;
+          for (let i = 0; i < followers.length; i++) {
+            if ((i !== 0) && (i%4 === 0)) {
+              j++;
+            }
+
+            this.followers[j].push(followers[i])
+          }
+        } catch (error) {
+          this.$notify.error({message: error.response.data.message, position: 'top right', timeOut: 5000});
+        }
+      }
+    },
+    async acceptFollower(user) {
+      try {
+        await confirmFriendship([user.id])
+      } catch (error) {
+        this.$notify.error({message: error.response.data.message, position: 'top right', timeOut: 5000});
+      }
+    },
+    async refuseFollower(user) {
+      try {
+        await rejectFriendship([user.id])
+      } catch (error) {
+        this.$notify.error({message: error.response.data.message, position: 'top right', timeOut: 5000});
+      }
+    },
+    async splitUpFriendship(user) {
+      try {
+        await splitUpFriendship([user.id])
+      } catch (error) {
+        this.$notify.error({message: error.response.data.message, position: 'top right', timeOut: 5000});
+      }
     },
     logOut() {
       localStorage.removeItem("accessToken");
       localStorage.removeItem("refreshToken");
 
-      this.$router.push({ name: 'SignIn' });
-    },
-    selectFriends(items) {
-      this.selectedFriends = items
-    },
-    selectFollowers(items) {
-      this.selectedFollowers = items
-    },
-    getAlternateLabel () {
-    },
-    getFriends() {
-      const path = `${apiUrl}/social/friends`;
-      const camelcaseKeys = require('camelcase-keys');
-
-      headers.Authorization = localStorage.getItem('accessToken')
-
-      axios.get(path, {
-        headers: headers,
-        transformResponse: [(data) => {
-          return camelcaseKeys(JSON.parse(data), { deep: true })}
-        ]
-      })
-          .then((response) => {
-            this.friends = response.data.friends;
-          })
-          .catch((error) => {
-            const err = error.response;
-
-            if (err.status === 401) {
-              this.refreshToken();
-            }
-
-            this.flashMessage.setStrategy('single');
-            this.flashMessage.error({
-              title: 'Error Message Title',
-              message: err.data.message,
-              position: 'center',
-              icon: '../assets/error.svg',
-            });
-          });
-    },
-    getFollowers() {
-      const path = `${apiUrl}/social/followers`;
-      const camelcaseKeys = require('camelcase-keys');
-
-      headers.Authorization = localStorage.getItem('accessToken')
-
-      axios.get(path, {
-        headers: headers,
-        transformResponse: [(data) => {
-          return camelcaseKeys(JSON.parse(data), { deep: true })}
-        ]
-      })
-          .then((response) => {
-            this.followers = response.data.followers;
-          })
-          .catch((error) => {
-            const err = error.response;
-
-            if (err.status === 401) {
-              this.refreshToken();
-            }
-
-            this.flashMessage.error({
-              title: 'Error Message Title',
-              message: err.data.message,
-              position: 'center',
-              icon: '../assets/error.svg',
-            });
-          });
-    },
-    removeFriends() {
-      const path = `${apiUrl}/social/break-friendship`;
-      const camelcaseKeys = require('camelcase-keys');
-
-      let friends_id = [];
-      for (let i in this.selectedFriends) {
-        friends_id.push(this.selectedFriends[i].id)
-      }
-
-      const payload = {
-        friends_id: friends_id,
-      };
-
-      axios.post(path, payload, {headers: headers, transformResponse: [(data) => {
-          return camelcaseKeys(JSON.parse(data), { deep: true })}
-        ]})
-          .then(() => {
-            this.friends = this.friends.filter(function(item) {
-              return !friends_id.some(function(s) { return s === item.id && s.lines === item.lines })
-            });
-          })
-          .catch((error) => {
-            const err = JSON.parse(JSON.stringify(error.response));
-            if (err.status === 401) {
-              this.$router.push({ name: 'SignIn' });
-            }
-            this.flashMessage.error({
-              title: 'Error Message Title',
-              message: err.data.message,
-              position: 'center',
-              icon: '../assets/error.svg',
-            });
-          });
-    },
-    acceptFollowers() {
-      const path = `${apiUrl}/social/confirm-friendship`;
-      const camelcaseKeys = require('camelcase-keys');
-
-      let followers_id = [];
-      for (let i in this.selectedFollowers) {
-        followers_id.push(this.selectedFollowers[i].id)
-      }
-
-      const payload = {
-        friends_id: followers_id,
-      };
-
-      axios.post(path, payload, {headers: headers, transformResponse: [(data) => {
-          return camelcaseKeys(JSON.parse(data), { deep: true })}
-        ]})
-          .then(() => {
-            this.followers = this.followers.filter(function(item) {
-              return !followers_id.some(function(s) { return s === item.id && s.lines === item.lines })
-            });
-          })
-          .catch((error) => {
-            const err = JSON.parse(JSON.stringify(error.response));
-            if (err.status === 401) {
-              this.$router.push({ name: 'SignIn' });
-            }
-            this.flashMessage.error({
-              title: 'Error Message Title',
-              message: err.data.message,
-              position: 'center',
-              icon: '../assets/error.svg',
-            });
-          });
-    },
-    removeFollowers() {
-      const path = `${apiUrl}/social/reject-friendship`;
-      const camelcaseKeys = require('camelcase-keys');
-
-      let followers_id = [];
-      for (let i in this.selectedFollowers) {
-        followers_id.push(this.selectedFollowers[i].id)
-      }
-
-      const payload = {
-        friends_id: followers_id,
-      };
-
-      axios.post(path, payload, {headers: headers, transformResponse: [(data) => {
-          return camelcaseKeys(JSON.parse(data), { deep: true })}
-        ]})
-          .then(() => {
-            this.followers = this.followers.filter(function(item) {
-              return !followers_id.some(function(s) { return s === item.id && s.lines === item.lines })
-            });
-          })
-          .catch((error) => {
-            const err = JSON.parse(JSON.stringify(error.response));
-            if (err.status === 401) {
-              this.$router.push({ name: 'SignIn' });
-            }
-            this.flashMessage.error({
-              title: 'Error Message Title',
-              message: err.data.message,
-              position: 'center',
-              icon: '../assets/error.svg',
-            });
-          });
+      this.$router.push({name: 'SignIn'});
     },
   },
-};
+  mixins: [waves]
+}
 </script>
 
 <style scoped>
-.md-app {
-  max-height: 100vh;
-  min-height: 100vh;
-  border: 1px solid rgba(#000, .12);
+.navbar i {
+  cursor: pointer;
+  color: white;
 }
-
-.md-drawer {
-  width: 230px;
-  max-width: calc(100vw - 125px);
-}
-
-.search {
-  max-width: 500px;
-}
-
-.md-toolbar {
-  height: 50px;
-  padding: inherit;
-}
-
-#table-friends-header-toolbar{
-  background-color: #d3e2fb;
-}
-
-#table-followers-header-toolbar {
-  background-color: #d3e2fb;
-}
-
-#friend-requests {
-  text-align: center;
-}
-
-#followers-requests {
-  text-align: center;
-}
-
 </style>

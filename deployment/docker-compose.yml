@@ -1,22 +1,43 @@
 version: '3.7'
 
 services:
-  storage:
+  auth-storage:
     build:
       context: mysql
       dockerfile: Dockerfile
     image: mysql:stage
-    container_name: mysql-storage
+# for debugging
+#    ports:
+#      - "3306:3306"
+    container_name: auth-storage
     command: --default-authentication-plugin=mysql_native_password
-    ports:
-      - '3306:3306'
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+      MYSQL_DATABASE: auth
+    volumes:
+      - auth-storage-data:/var/lib/mysql
+    networks:
+      - otus-highload-network
+
+  social-storage:
+    build:
+      context: mysql
+      dockerfile: Dockerfile
+    image: mysql:stage
+# for debugging
+#    ports:
+#      - "3307:3306"
+    container_name: social-storage
+    command: --default-authentication-plugin=mysql_native_password
     environment:
       MYSQL_ROOT_PASSWORD: password
       MYSQL_USER: user
       MYSQL_PASSWORD: password
       MYSQL_DATABASE: social-network
     volumes:
-      - mysql-storage-data:/var/lib/mysql
+      - social-storage-data:/var/lib/mysql
     networks:
       - otus-highload-network
 
@@ -26,8 +47,9 @@ services:
       dockerfile: Dockerfile
     container_name: redis-cache
     image: redis:stage
-    ports:
-      - "6379:6379"
+    # for debugging
+#    ports:
+#      - "6379:6379"
     volumes:
       - redis-cache-data:/data
     networks:
@@ -36,9 +58,10 @@ services:
   nats-streaming:
     image: nats-streaming
     container_name: nats-streaming
-    ports:
-      - "4222:4222"
-      - "8222:8222"
+    # for debugging
+#    ports:
+#      - "4222:4222"
+#      - "8222:8222"
     command:
       - "--cluster_id=stan-cluster"
       - "--store=file"
@@ -49,53 +72,242 @@ services:
     networks:
       - otus-highload-network
 
-  adminer:
-    image: adminer
-    container_name: adminer
-    ports:
-      - '8080:8080'
-    depends_on:
-      - storage
-    networks:
-      - otus-highload-network
-
-  migrator:
+  auth-migrator:
     build:
       context: ../tools/migrator
       dockerfile: Dockerfile
     image: migrator:mysql
-    container_name: mysql-migrator
+    container_name: auth-migrator
     environment:
       MIGRATIONS_PATH: "./migrations"
-      DSN: "user:password@tcp(mysql-storage:3306)/social-network"
+      DSN: "user:password@tcp(auth-storage:3306)/auth"
       OPERATION: "up"
     volumes:
-      - ../backend/migrations:/app/migrations
+      - ../backend/migrations/mysql/auth:/app/migrations
     depends_on:
-      - storage
+      - auth-storage
     networks:
       - otus-highload-network
 
-  backend:
+  social-migrator:
     build:
-      context: ../backend
+      context: ../tools/migrator
       dockerfile: Dockerfile
-    image: backend:stage
-    container_name: backend
-    ports:
-      - '9999:9999'
+    image: migrator:mysql
+    container_name: social-migrator
     environment:
-      - ADDR=0.0.0.0:9999
-      - STORAGE_DSN=user:password@tcp(mysql-storage:3306)/social-network?parseTime=true
-      - STAN_CLUSTER_ID=stan-cluster
-      - STAN_ADDR=nats://nats-streaming:4222
+      MIGRATIONS_PATH: "./migrations"
+      DSN: "user:password@tcp(social-storage:3306)/social-network"
+      OPERATION: "up"
+    volumes:
+      - ../backend/migrations/mysql/social:/app/migrations
+    depends_on:
+      - social-storage
+    networks:
+      - otus-highload-network
+
+  ch-cluster:
+    image: yandex/clickhouse-server:20.6.6.7
+    container_name: ch-cluster
+    # for debugging
+#    ports:
+#      - "8123:8123"
+#      - "9000:9000"
+    volumes:
+      - ch-cluster-data:/opt/clickhouse/data
+      - ./clickhouse/cluster/config.xml:/etc/clickhouse-server/config.xml
+      - ./clickhouse/cluster/users.xml:/etc/clickhouse-server/users.xml
+    ulimits:
+      nproc: 65535
+      nofile:
+        soft: 262144
+        hard: 262144
+    depends_on:
+      - ch-shard-0
+      - ch-shard-1
+    networks:
+      - otus-highload-network
+
+  ch-shard-0:
+    image: yandex/clickhouse-server:20.6.6.7
+    container_name: ch-shard-0
+    volumes:
+      - ch-shard-0-data:/opt/clickhouse/data
+      - ./clickhouse/shard/config.xml:/etc/clickhouse-server/config.xml
+      - ./clickhouse/shard/users.xml:/etc/clickhouse-server/users.xml
+    ulimits:
+      nproc: 65535
+      nofile:
+        soft: 262144
+        hard: 262144
+    networks:
+      - otus-highload-network
+
+  ch-shard-1:
+    image: yandex/clickhouse-server:20.6.6.7
+    container_name: ch-shard-1
+    volumes:
+      - ch-shard-1-data:/opt/clickhouse/data
+      - ./clickhouse/shard/config.xml:/etc/clickhouse-server/config.xml
+      - ./clickhouse/shard/users.xml:/etc/clickhouse-server/users.xml
+    ulimits:
+      nproc: 65535
+      nofile:
+        soft: 262144
+        hard: 262144
+    networks:
+      - otus-highload-network
+
+  ch-cluster-migrator:
+    build:
+      context: ../tools/ch-migrator
+      dockerfile: Dockerfile
+    image: ch-migrator:sharding
+    container_name: ch-cluster-migrator
+    environment:
+      MIGRATIONS_PATH: "./migrations"
+      DSN: "clickhouse://ch-cluster:9000?database=default&username=default&password=password&x-multi-statement=true"
+      OPERATION: "up"
+    volumes:
+      - ../backend/migrations/clickhouse/cluster:/app/migrations
+    networks:
+      - otus-highload-network
+    depends_on:
+      - ch-cluster
+
+  ch-shard-migrator-0:
+    build:
+      context: ../tools/ch-migrator
+      dockerfile: Dockerfile
+    image: ch-migrator:sharding
+    container_name: ch-migrator-0
+    environment:
+      MIGRATIONS_PATH: "./migrations"
+      DSN: "clickhouse://ch-shard-0:9000?database=default&username=default&password=password&x-multi-statement=true"
+      OPERATION: "up"
+    volumes:
+      - ../backend/migrations/clickhouse/shard:/app/migrations
+    networks:
+      - otus-highload-network
+    depends_on:
+      - ch-shard-0
+
+  ch-shard-migrator-1:
+    build:
+      context: ../tools/ch-migrator
+      dockerfile: Dockerfile
+    image: ch-migrator:sharding
+    container_name: ch-migrator-1
+    environment:
+      MIGRATIONS_PATH: "./migrations"
+      DSN: "clickhouse://ch-shard-1:9000?database=default&username=default&password=password&x-multi-statement=true"
+      OPERATION: "up"
+    volumes:
+      - ../backend/migrations/clickhouse/shard:/app/migrations
+    networks:
+      - otus-highload-network
+    depends_on:
+      - ch-shard-1
+
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: jaeger-otus
+    # for debugging
+    ports:
+#      - '6831:6831/udp'
+      - '16686:16686'
+    networks:
+      - otus-highload-network
+
+  auth:
+    build:
+      context: ../backend/auth
+      dockerfile: Dockerfile
+    image: auth:otus
+    container_name: auth-otus
+    environment:
+      - ADDR=0.0.0.0:10001
+      - STORAGE_DSN=user:password@tcp(auth-storage:3306)/auth?parseTime=true
       - JWT_SECRET=secret
       - JWT_ACCESS_TOKEN_TIME_EXPIRE=1h
       - JWT_REFRESH_TOKEN_TIME_EXPIRE=24h
+      - JAEGER_AGENT_ADDR=jaeger-otus:6831
+      - JAEGER_SERVICE_NAME=auth
+      - LOGGER_LEVEL=info
     depends_on:
-      - storage
+      - auth-storage
+      - jaeger
+    networks:
+      - otus-highload-network
+
+  social:
+    build:
+      context: ../backend/social
+      dockerfile: Dockerfile
+    image: social:otus
+    container_name: social-otus
+    environment:
+      - ADDR=0.0.0.0:10002
+      - AUTH_ADDR=auth-otus:10001
+      - STORAGE_DSN=user:password@tcp(social-storage:3306)/social-network?parseTime=true
+      - HEATER_AUTH_DSN=user:password@tcp(auth-storage:3306)/auth?parseTime=true
+      - HEATER_SOCIAL_DSN=user:password@tcp(social-storage:3306)/social-network?parseTime=true
+      - STAN_CLUSTER_ID=stan-cluster
+      - STAN_ADDR=nats://nats-streaming:4222
+      - JAEGER_AGENT_ADDR=jaeger-otus:6831
+      - JAEGER_SERVICE_NAME=social
+      - LOGGER_LEVEL=info
+    depends_on:
+      - social-storage
       - cache
       - nats-streaming
+      - jaeger
+    networks:
+      - otus-highload-network
+
+  messenger:
+    build:
+      context: ../backend/messenger
+      dockerfile: Dockerfile
+    image: messenger:otus
+    container_name: messenger-otus
+    environment:
+      - HTTP_ADDR=0.0.0.0:10003
+      - GRPC_ADDR=0.0.0.0:10004
+      - AUTH_ADDR=auth-otus:10001
+      - CH_DSN=tcp://ch-cluster:9000?database=default&username=default&password=password
+      - SHARDING_COUNT_NODES=2
+      - JAEGER_AGENT_ADDR=jaeger-otus:6831
+      - JAEGER_SERVICE_NAME=messenger
+    restart: unless-stopped
+    networks:
+      - otus-highload-network
+    depends_on:
+      - ch-cluster
+      - jaeger
+
+  gateway:
+    build:
+      context: ../backend/gateway
+      dockerfile: Dockerfile
+    image: gateway:otus
+    container_name: gateway-otus
+    ports:
+      - '10000:10000'
+    environment:
+      - ADDR=0.0.0.0:10000
+      - AUTH_ADDR=auth-otus:10001
+      - SOCIAL_ADDR=social-otus:10002
+      - MESSENGER_HTTP_ADDR=messenger-otus:10003
+      - MESSENGER_GRPC_ADDR=messenger-otus:10004
+      - JAEGER_AGENT_ADDR=jaeger-otus:6831
+      - JAEGER_SERVICE_NAME=gateway
+      - LOGGER_LEVEL=info
+    depends_on:
+      - auth
+      - social
+      - messenger
+      - jaeger
     networks:
       - otus-highload-network
 
@@ -106,14 +318,16 @@ services:
     image: frontend:stage
     container_name: frontend
     ports:
-      - '8081:80'
-    depends_on:
-      - backend
+      - '8080:80'
     networks:
       - otus-highload-network
 
 volumes:
-  mysql-storage-data:
+  auth-storage-data:
+  social-storage-data:
+  ch-cluster-data:
+  ch-shard-0-data:
+  ch-shard-1-data:
   redis-cache-data:
 
 networks:

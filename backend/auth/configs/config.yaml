@@ -1,0 +1,20 @@
+addr: ":10001"
+
+storage:
+  dsn: "user:password@tcp(127.0.0.1:3306)/auth?parseTime=true"
+  conn_max_lifetime: "3m"
+  max_open_conns: 10
+  max_idle_conns: 10
+  conn_attempt_count: 10
+
+jwt:
+  secret: "some_secret"
+  access_token_time_expire: "1h"
+  refresh_token_time_expire: "24h"
+
+jaeger:
+  agent_addr: "0.0.0.0:6831"
+  service_name: "auth"
+
+logger:
+  level: "info"

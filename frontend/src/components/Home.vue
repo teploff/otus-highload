@@ -1,169 +1,123 @@
 <template>
-  <div class="page-container">
-    <md-app md-waterfall md-mode="flexible">
-      <md-app-toolbar class="md-large md-primary">
-        <div class="md-toolbar-row">
-          <div class="md-toolbar-section-start">
-            <md-button class="md-icon-button" @click="menuVisible = !menuVisible">
-              <md-icon>menu</md-icon>
-            </md-button>
-          </div>
-
-          <md-autocomplete
-              class="search"
-              v-model.trim="searchPayload.anthroponym"
-              @input="searchPeople"
-              :md-options="[]"
-              md-layout="box">
-            <label>Search people...</label>
-          </md-autocomplete>
-
-          <div class="md-toolbar-section-end">
-            <md-button class="md-icon-button" @click="logOut">
-              <md-icon>login</md-icon>
-            </md-button>
-          </div>
+  <div class="layout">
+    <mdb-side-nav-2 :value="true" :data="navigation" push slim :slim-collapsed="collapsed" @toggleSlim="collapsed = $event">
+      <div slot="header">
+        <div
+            class="d-flex align-items-center my-4"
+            :class="collapsed ? 'justify-content-center' : 'justify-content-start'"
+        >
+          <mdb-avatar :width="40" style="flex: 0 0 auto">
+            <img
+                src="https://mdbootstrap.com/img/Photos/Avatars/avatar-7.jpg"
+                class="img-fluid rounded-circle z-depth-1"
+            />
+          </mdb-avatar>
+          <p class="m-t mb-0 ml-4 p-0" style="flex: 0 2 auto" v-show="!collapsed">
+            <strong>John Smith<mdb-icon color="success" icon="circle" class="ml-2" size="sm"/></strong>
+          </p>
         </div>
-      </md-app-toolbar>
-
-      <md-app-drawer :md-active.sync="menuVisible">
-        <md-list>
-          <md-list-item @click="followHomePage">
-            <md-icon>assignment_ind</md-icon>
-            <span class="md-list-item-text">My profile</span>
-          </md-list-item>
-
-          <md-list-item @click="followNewsPage">
-            <md-icon>fiber_new</md-icon>
-            <span class="md-list-item-text">News</span>
-            <md-badge v-if="countNewsNotify > 0" class="md-primary" v-bind:md-content="countNewsNotify" />
-          </md-list-item>
-
-          <md-list-item @click="followMessengerPage">
-            <md-icon>chat</md-icon>
-            <span class="md-list-item-text">Messenger</span>
-            <md-badge v-if="countMsgNotify > 0" class="md-primary" v-bind:md-content="countMsgNotify" />
-          </md-list-item>
-
-          <md-list-item @click="followFriendsPage">
-            <md-icon>supervisor_account</md-icon>
-            <span class="md-list-item-text">Friends</span>
-            <md-badge v-if="countFriendsNotify > 0" class="md-primary" v-bind:md-content="countFriendsNotify" />
-          </md-list-item>
-        </md-list>
-      </md-app-drawer>
-
-      <md-app-content>
-        <md-autocomplete
-            id="news"
-            @input="createNews"
-            v-model="news"
-            :md-options="[]"
-            md-layout="box"
-            md-dense>
-          <label>What's a new?</label>
-        </md-autocomplete>
-      </md-app-content>
-    </md-app>
-    <FlashMessage :position="'right top'"></FlashMessage>
+        <hr class="w-100" />
+      </div>
+      <div slot="content" class="mt-5 d-flex justify-content-center">
+        <mdb-btn tag="a" gradient="blue" size="sm" class="mx-0" floating :icon="collapsed ? 'chevron-right' : 'chevron-left'" @click="collapsed = !collapsed"></mdb-btn>
+      </div>
+      <mdb-navbar
+          slot="nav"
+          tag="div"
+          :toggler="false"
+          position="top">
+        <mdb-navbar-nav right>
+          <mdb-form-inline class="ml-auto">
+            <mdb-input v-model="searchPayload.anthroponym" class="mr-sm-1" type="text" placeholder="Search people..."/>
+            <mdb-btn tag="a" size="sm" gradient="blue" floating @click="searchPeople()" v-show="searchPayload.anthroponym !== ''"><mdb-icon icon="search"/></mdb-btn>
+          </mdb-form-inline>
+        </mdb-navbar-nav>
+        <mdb-navbar-nav class="nav-flex-icons" right>
+          <mdb-btn tag="a" size="sm" gradient="blue" floating @click="logOut()"><mdb-icon icon="door-open"/></mdb-btn>
+        </mdb-navbar-nav>
+      </mdb-navbar>
+      <div slot="main">
+<!--        payload here!-->
+      </div>
+    </mdb-side-nav-2>
   </div>
 </template>
 
 <script>
-import {wsUrl, debounce} from "@/const";
-import WSService from "@/service/ws";
+import {
+  mdbNavbar,
+  mdbNavbarNav,
+  mdbSideNav2,
+  mdbAvatar,
+  mdbBtn,
+  mdbIcon,
+  waves,
+  mdbFormInline,
+  mdbInput
+} from "mdbvue";
+
+import router from "@/router";
 
 export default {
-  name: 'Home',
+  components: {
+    mdbNavbar,
+    mdbNavbarNav,
+    mdbSideNav2,
+    mdbAvatar,
+    mdbBtn,
+    mdbIcon,
+    mdbFormInline,
+    mdbInput
+  },
+  name: "Home",
   data: () => ({
-    ws: null,
-    menuVisible: false,
-    countNewsNotify: 0,
-    countMsgNotify: 0,
-    countFriendsNotify: 0,
+    show: true,
+    collapsed: false,
+    navigation: [
+      {
+        name: "My profile",
+        icon: "address-card",
+        href: router.resolve({name: 'Home'}).href
+      },
+      {
+        name: "News",
+        icon: "newspaper",
+        href: router.resolve({name: 'News'}).href
+      },
+      {
+        name: "Messenger",
+        icon: "comments",
+        href: router.resolve({name: 'Messenger'}).href
+      },
+      {
+        name: "Friends",
+        icon: "user-friends",
+        href: router.resolve({name: 'Friends'}).href
+      }
+    ],
     searchPayload: {
-      anthroponym: null,
-    },
-    news: []
+      anthroponym: '',
+    }
   }),
-  created() {
-    this.ws = new WSService(this.$store)
-    this.ws.connect(wsUrl + localStorage.getItem('accessToken'))
-  },
-  beforeDestroy() {
-    this.ws.disconnect()
-  },
   methods: {
-    followHomePage() {
-      this.$router.push({ name: 'Home' }).catch(() => {});
-    },
-    followNewsPage() {
-      this.$router.push({ name: 'News' });
-    },
-    followMessengerPage() {
-      this.$router.push({ name: 'Messenger' });
-    },
-    followFriendsPage() {
-      this.$router.push({ name: 'Friends' });
-    },
-    searchPeople: debounce(function (){
+    searchPeople() {
       this.$store.commit("changeAnthroponym", this.searchPayload.anthroponym);
       this.$router.push({ name: 'People' })
-    }, 1000),
-    createNews: debounce(function (){
-      if (this.news.length === 0) {
-        return
-      }
-
-      const payload = {
-        topic: "news",
-        payload: JSON.stringify({
-          content: this.news,
-        }),
-      };
-
-      this.ws.send(JSON.stringify(payload))
-      this.flashMessage.setStrategy('single');
-      this.flashMessage.success({
-        title: 'Success',
-        message: 'News were published!'
-      });
-      this.news = []
-    }, 1500),
+    },
     logOut() {
       localStorage.removeItem("accessToken");
       localStorage.removeItem("refreshToken");
 
-      this.$router.push({ name: 'SignIn' });
+      this.$router.push({name: 'SignIn'});
     },
   },
-};
+  mixins: [waves]
+}
 </script>
 
 <style scoped>
-.md-app {
-  max-height: 100vh;
-  min-height: 100vh;
-  border: 1px solid rgba(#000, .12);
-}
-
-.md-drawer {
- width: 230px;
- max-width: calc(100vw - 125px);
-}
-
-.search {
-  max-width: 500px;
-}
-
-.md-toolbar {
-  height: 50px;
-  padding: inherit;
-}
-
-#news {
-  margin-left: auto;
-  margin-right: auto;
-  width: 60%;
+.navbar i {
+  cursor: pointer;
+  color: white;
 }
 </style>

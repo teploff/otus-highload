@@ -1,344 +1,248 @@
 <template>
-  <div class="page-container">
-    <md-app md-waterfall md-mode="flexible">
-      <md-app-toolbar class="md-large md-primary">
-        <div class="md-toolbar-row">
-          <div class="md-toolbar-section-start">
-            <md-button class="md-icon-button" @click="menuVisible = !menuVisible">
-              <md-icon>menu</md-icon>
-            </md-button>
-          </div>
-
-          <md-autocomplete
-              class="search"
-              v-model.trim="searchPayload.anthroponym"
-              @input="searchPeople"
-              :md-options="[]"
-              md-layout="box">
-            <label>Search people...</label>
-          </md-autocomplete>
-
-          <div class="md-toolbar-section-end">
-            <md-button class="md-icon-button" @click="logOut">
-              <md-icon>login</md-icon>
-            </md-button>
-          </div>
+  <div class="layout">
+    <mdb-side-nav-2 :value="true" :data="navigation" push slim :slim-collapsed="collapsed" @toggleSlim="collapsed = $event">
+      <div slot="header">
+        <div
+            class="d-flex align-items-center my-4"
+            :class="collapsed ? 'justify-content-center' : 'justify-content-start'"
+        >
+          <mdb-avatar :width="40" style="flex: 0 0 auto">
+            <img
+                src="https://mdbootstrap.com/img/Photos/Avatars/avatar-7.jpg"
+                class="img-fluid rounded-circle z-depth-1"
+            />
+          </mdb-avatar>
+          <p class="m-t mb-0 ml-4 p-0" style="flex: 0 2 auto" v-show="!collapsed">
+            <strong>John Smith<mdb-icon color="success" icon="circle" class="ml-2" size="sm"/></strong>
+          </p>
         </div>
-      </md-app-toolbar>
-
-      <md-app-drawer :md-active.sync="menuVisible">
-        <md-list>
-          <md-list-item @click="followHomePage">
-            <md-icon>assignment_ind</md-icon>
-            <span class="md-list-item-text">My profile</span>
-          </md-list-item>
-
-          <md-list-item @click="followNewsPage">
-            <md-icon>fiber_new</md-icon>
-            <span class="md-list-item-text">News</span>
-            <md-badge v-if="countNewsNotify > 0" class="md-primary" v-bind:md-content="countNewsNotify" />
-          </md-list-item>
-
-          <md-list-item @click="followMessengerPage">
-            <md-icon>chat</md-icon>
-            <span class="md-list-item-text">Messenger</span>
-            <md-badge v-if="countMsgNotify > 0" class="md-primary" v-bind:md-content="countMsgNotify" />
-          </md-list-item>
-
-          <md-list-item @click="followFriendsPage">
-            <md-icon>supervisor_account</md-icon>
-            <span class="md-list-item-text">Friends</span>
-            <md-badge v-if="countFriendsNotify > 0" class="md-primary" v-bind:md-content="countFriendsNotify" />
-          </md-list-item>
-        </md-list>
-      </md-app-drawer>
-
-      <md-app-content>
-        <div v-show="cards.count === 0">
-          <md-empty-state
-              v-show="cards.count === 0"
-              md-rounded
-              md-icon="star"
-              md-label="You are the first!"
-              md-description="Congratulation you are the first user in this portal!
-        While there aren't other people but they will appear soon"
-              style="width: 600px; height: 600px; position: center">
-          </md-empty-state>
-        </div>
-        <md-table v-show="cards.count !== 0">
-          <md-table-row>
-            <div class="card-expansion">
-              <md-card v-for="card in cards.questionnaires" v-bind:key="card.email">
-                <md-card-media>
-                  <img v-if="card.sex === 'male'" src="../assets/boy.png" alt="People">
-                  <img v-else src="../assets/girl.png" alt="People">
-                </md-card-media>
-
-                <md-card-header>
-                  <div class="md-title">{{ card.name }} {{ card.surname }}</div>
-                  <div class="md-subhead">{{ card.email }}</div>
-                </md-card-header>
-
-                <md-card-expand>
-                  <md-card-actions md-alignment="space-between">
-                    <div>
-                      <md-button v-show="card.friendshipStatus === 'noname'" @click="addFriend(card.id)">Add Friend</md-button>
-                      <md-button v-show="card.friendshipStatus === 'expected'" disabled>Pending</md-button>
-                      <md-button v-show="card.friendshipStatus === 'confirmed'">Confirm Friend</md-button>
-                      <md-button v-show="card.friendshipStatus === 'accepted'" disabled>Your friend</md-button>
-                    </div>
-                    <md-card-expand-trigger>
-                      <md-button class="learn-more-button" style="color: #337ab7">Learn more</md-button>
-                    </md-card-expand-trigger>
-                  </md-card-actions>
-
-                  <md-card-expand-content>
-                    <md-card-content>
-                      <p style="text-align: left"> <b>Sex:</b> {{ card.sex }} </p>
-                      <p style="text-align: left">
-                        <b>Birthday:</b> {{ $moment(card.birthday).format('Do MMMM YYYY') }}
-                      </p>
-                      <p style="text-align: left"> <b>City:</b> {{ card.city }} </p>
-                      <p style="text-align: left"> <b>Interests:</b> {{ card.interests }} </p>
-                    </md-card-content>
-                  </md-card-expand-content>
-                </md-card-expand>
-              </md-card>
-            </div>
-          </md-table-row>
-          <md-table-row class="pagination-row">
-            <div>
-              <paginate
-                  v-model="page"
-                  :page-count="Math.ceil(cards.count / countCardsInWindow)"
-                  :click-handler="paginatorClick"
-                  :prev-text="'Prev'"
-                  :next-text="'Next'"
-                  :container-class="'pagination'"
-                  :page-class="'page-item'"
-                  :first-last-button="true"
-              >
-              </paginate>
-            </div>
-          </md-table-row>
-        </md-table>
-      </md-app-content>
-    </md-app>
-    <FlashMessage :position="'right top'"></FlashMessage>
+        <hr class="w-100" />
+      </div>
+      <div slot="content" class="mt-5 d-flex justify-content-center">
+        <mdb-btn tag="a" gradient="blue" size="sm" class="mx-0" floating :icon="collapsed ? 'chevron-right' : 'chevron-left'" @click="collapsed = !collapsed"></mdb-btn>
+      </div>
+      <mdb-navbar slot="nav" tag="div" :toggler="false" position="top">
+        <mdb-navbar-nav right>
+          <mdb-form-inline class="ml-auto">
+            <mdb-input v-model="searchPayload.anthroponym" class="mr-sm-1" type="text" placeholder="Search people..."/>
+            <mdb-btn tag="a" size="sm" gradient="blue" floating @click="searchPeople()" v-show="searchPayload.anthroponym !== ''"><mdb-icon icon="search"/></mdb-btn>
+          </mdb-form-inline>
+        </mdb-navbar-nav>
+        <mdb-navbar-nav class="nav-flex-icons" right>
+          <mdb-btn tag="a" size="sm" gradient="blue" floating @click="logOut()"><mdb-icon icon="door-open"/></mdb-btn>
+        </mdb-navbar-nav>
+      </mdb-navbar>
+      <div slot="main">
+        <mdb-flipping-card v-for="card in cards.people" v-bind:key="card.id"
+            :flipped="flipped"
+            innerClass="text-center h-100 w-100"
+            style="max-width: 22rem; height: 416px;">
+          <mdb-card class="face front" style="height: 416px;">
+            <mdb-card-up>
+              <img
+                  class="card-image-top"
+                  src="https://mdbootstrap.com/img/Photos/Others/photo7.jpg"
+                  alt="a photo of a house facade"
+              />
+            </mdb-card-up>
+            <mdb-avatar class="mx-auto white" circle>
+              <img v-if="card.sex === 'male'" src="../assets/boy.png" class="rounded-circle"/>
+              <img v-else src="../assets/girl.png" class="rounded-circle"/>
+            </mdb-avatar>
+            <mdb-card-body>
+              <h4 class="font-weight-bold mb-3">{{card.name}} {{card.surname}}</h4>
+              <p class="font-weight-bold blue-text">{{card.email}}</p>
+              <p><b>Birthday:</b> {{ moment(card.birthday).format('Do MMMM YYYY') }}</p>
+              <a class="rotate-btn" @click="flipped=true">
+                <mdb-icon class="pr-2" icon="redo" />Learn more
+              </a>
+            </mdb-card-body>
+          </mdb-card>
+          <mdb-card class="face back" style="height: 416px;">
+            <mdb-card-body>
+              <h4 class="font-weight-bold">About me</h4>
+              <hr />
+              <p>Hi there! I'm {{card.name}} {{card.surname}}.</p>
+              <p>I'm from {{card.city}}.</p>
+              <p>My interests: {{card.interests}}</p>
+              <hr />
+              <ul class="list-inline py-2">
+                <li class="list-inline-item">
+                  <mdb-tooltip v-if="card.friendshipStatus === 'noname'" material trigger="hover" :options="{placement: 'left'}">
+                    <span slot="tip">Make friendship</span>
+                      <mdb-btn @click="addFriend(card.id)" slot="reference" tag="a" gradient="blue" floating><mdb-icon icon="plus"/></mdb-btn>
+                  </mdb-tooltip>
+                  <mdb-tooltip v-if="card.friendshipStatus === 'expected'" material trigger="hover" :options="{placement: 'left'}">
+                    <span slot="tip">Pending request</span>
+                    <mdb-btn slot="reference" tag="a" gradient="heavy-rain" floating><mdb-icon icon="clock"/></mdb-btn>
+                  </mdb-tooltip>
+                  <mdb-tooltip v-if="card.friendshipStatus === 'accepted'" material trigger="hover" :options="{placement: 'left'}">
+                    <span slot="tip">Your fiend</span>
+                    <mdb-btn slot="reference" tag="a" gradient="green" disabled floating><mdb-icon icon="check"/></mdb-btn>
+                  </mdb-tooltip>
+                </li>
+                <li class="list-inline-item">
+                  <mdb-tooltip v-if="card.friendshipStatus === 'accepted'" material trigger="hover" :options="{placement: 'right'}">
+                    <span slot="tip">Start chatting</span>
+                    <mdb-btn slot="reference" tag="a" gradient="peach" floating><mdb-icon icon="comment"/></mdb-btn>
+                  </mdb-tooltip>
+                </li>
+              </ul>
+              <a class="rotate-btn" @click="flipped=false">
+                <mdb-icon class="pr-2" icon="undo" />Back to preview
+              </a>
+            </mdb-card-body>
+          </mdb-card>
+        </mdb-flipping-card>
+        <mdb-pagination class="justify-content-center" circle>
+          <mdb-page-item disabled>First</mdb-page-item>
+          <mdb-page-nav prev disabled></mdb-page-nav>
+          <mdb-page-item active>1</mdb-page-item>
+          <mdb-page-item>2</mdb-page-item>
+          <mdb-page-item>3</mdb-page-item>
+          <mdb-page-item>4</mdb-page-item>
+          <mdb-page-item>5</mdb-page-item>
+          <mdb-page-nav next></mdb-page-nav>
+          <mdb-page-item>Last</mdb-page-item>
+        </mdb-pagination>
+      </div>
+    </mdb-side-nav-2>
   </div>
 </template>
 
 <script>
-import axios from "axios";
-import {apiUrl, debounce, headers} from "@/const";
+import {
+  mdbNavbar,
+  mdbNavbarNav,
+  mdbSideNav2,
+  mdbAvatar,
+  mdbBtn,
+  mdbIcon,
+  waves,
+  mdbInput,
+  mdbFormInline,
+  mdbCard,
+  mdbCardBody,
+  mdbCardUp,
+  mdbFlippingCard,
+  mdbPagination,
+  mdbPageItem,
+  mdbPageNav,
+  mdbTooltip,
+} from "mdbvue";
+
+import router from "@/router";
+import store from "@/store"
+import {createFriendship, searchByAnthroponym} from "@/api/social.api";
 
 export default {
-  name: 'People',
+  components: {
+    mdbNavbar,
+    mdbNavbarNav,
+    mdbSideNav2,
+    mdbAvatar,
+    mdbBtn,
+    mdbIcon,
+    mdbFormInline,
+    mdbInput,
+    mdbCard,
+    mdbCardBody,
+    mdbCardUp,
+    mdbFlippingCard,
+    mdbPagination,
+    mdbPageItem,
+    mdbPageNav,
+    mdbTooltip,
+  },
+name: "People",
   data: () => ({
-    menuVisible: false,
-    countNewsNotify: 0,
-    countMsgNotify: 0,
-    countFriendsNotify: 0,
+    moment: require('moment'),
+    show: true,
+    collapsed: false,
+    navigation: [
+      {
+        name: "My profile",
+        icon: "address-card",
+        href: router.resolve({name: 'Home'}).href
+      },
+      {
+        name: "News",
+        icon: "newspaper",
+        href: router.resolve({name: 'News'}).href
+      },
+      {
+        name: "Messenger",
+        icon: "comments",
+        href: router.resolve({name: 'Messenger'}).href
+      },
+      {
+        name: "Friends",
+        icon: "user-friends",
+        href: router.resolve({name: 'Friends'}).href
+      }
+    ],
     searchPayload: {
-      anthroponym: null,
+      anthroponym: store.getters.searchAnthroponym,
       limit: 10,
       offset: 0,
     },
+    flipped: false,
     cards: {
-      questionnaires: null,
+      people: [],
       count: 0,
-    },
-    countCardsInWindow: 10,
-    page: 1,
-    tokenPair: {
-      accessToken: null,
-      refreshToken: null
     }
   }),
-  created: function () {
+  methods: {
+    searchPeople() {
+      this.$store.commit("changeAnthroponym", this.searchPayload.anthroponym);
+
+      this.getPeopleByAnthroponym();
+    },
+    async getPeopleByAnthroponym() {
+      try {
+        const response = await searchByAnthroponym(this.searchPayload)
+
+        this.cards.people = response.data.users
+        this.cards.count = response.data.count
+      } catch (error) {
+        this.$notify.error({message: error.response.data.message, position: 'top right', timeOut: 5000});
+      }
+    },
+    async addFriend(friendID) {
+      try {
+        await createFriendship([friendID])
+
+        for (let i = 0; i < this.cards.people.length; i++) {
+          if (this.cards.people[i].id === friendID) {
+            this.cards.people[i].friendshipStatus = "expected"
+          }
+        }
+      } catch (error) {
+        this.$notify.error({message: error.response.data.message, position: 'top right', timeOut: 5000});
+      }
+    },
+    logOut() {
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
+
+      this.$router.push({name: 'SignIn'});
+    },
+  },
+  created() {
     if (this.$store.getters.searchAnthroponym !== null && this.$store.getters.searchAnthroponym !== '') {
-      this.getPeopleByAnthroponym(this.$store.getters.searchAnthroponym)
+      this.getPeopleByAnthroponym();
     }
   },
   beforeDestroy() {
     this.$store.commit("changeAnthroponym", null);
   },
-  methods: {
-    followHomePage() {
-      this.$router.push({ name: 'Home' });
-    },
-    followNewsPage() {
-      this.$router.push({ name: 'News' });
-    },
-    followMessengerPage() {
-      this.$router.push({ name: 'Messenger' });
-    },
-    followFriendsPage() {
-      this.$router.push({ name: 'Friends' }).catch(() => {});
-    },
-    getPeopleByAnthroponym(anthroponym) {
-      const path = `${apiUrl}/profile/search/anthroponym`;
-      const camelcaseKeys = require('camelcase-keys');
-
-      this.searchPayload.anthroponym = anthroponym
-      headers.Authorization = localStorage.getItem('accessToken')
-
-      axios.get(path, {
-        headers: headers,
-        params: this.searchPayload,
-        transformResponse: [(data) => {
-          return camelcaseKeys(JSON.parse(data), { deep: true })}
-        ]
-      })
-          .then((response) => {
-            this.cards = response.data;
-          })
-          .catch((error) => {
-            const err = error.response;
-
-            if (err.status === 401) {
-              this.refreshToken();
-            }
-
-            this.flashMessage.error({
-              title: 'Error Message Title',
-              message: err.data.message,
-              position: 'center',
-              icon: '../assets/error.svg',
-            });
-          });
-    },
-    refreshToken() {
-      const path = `${apiUrl}/auth/token`;
-      const camelcaseKeys = require('camelcase-keys');
-
-      const payload = {
-        refresh_token: localStorage.getItem('refreshToken'),
-      };
-      axios.put(path, payload, {transformResponse: [(data) => {
-          return camelcaseKeys(JSON.parse(data), { deep: true })}
-        ]})
-          .then((response) => {
-            this.tokenPair = response.data;
-
-            localStorage.setItem('accessToken', this.tokenPair.accessToken);
-            localStorage.setItem('refreshToken', this.tokenPair.refreshToken);
-
-            this.$router.push({ name: 'People' });
-          })
-          .catch((error) => {
-            const err = JSON.parse(JSON.stringify(error.response));
-            if (err.status === 401) {
-              this.$router.push({ name: 'SignIn' });
-            }
-            this.flashMessage.error({
-              title: 'Error Message Title',
-              message: err.data.message,
-              position: 'center',
-              icon: '../assets/error.svg',
-            });
-          });
-    },
-    paginatorClick(pageNum) {
-      this.searchPayload.offset = (pageNum - 1) * this.countCardsInWindow;
-
-      this.getPeopleByAnthroponym(this.$store.getters.searchAnthroponym)
-    },
-    searchPeople: debounce(function (){
-      if (this.searchPayload.anthroponym !== '') {
-        this.searchPayload.offset = 0
-        this.$store.commit("changeAnthroponym", this.searchPayload.anthroponym);
-
-        this.getPeopleByAnthroponym(this.$store.getters.searchAnthroponym)
-      }
-    }, 1000),
-    logOut() {
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("refreshToken");
-
-      this.$router.push({ name: 'SignIn' });
-    },
-    addFriend(fiendID) {
-      const path = `${apiUrl}/social/create-friendship`;
-      const camelcaseKeys = require('camelcase-keys');
-
-      headers.Authorization = localStorage.getItem('accessToken')
-      const payload = {
-        friends_id: [fiendID],
-      };
-
-      axios.post(path, payload, {headers: headers, transformResponse: [(data) => {
-          return camelcaseKeys(JSON.parse(data), { deep: true })}
-        ]})
-          .then(() => {
-            for (let i = 0; i < this.cards.questionnaires.length; i++) {
-              if (this.cards.questionnaires[i].id === fiendID) {
-                this.cards.questionnaires[i].friendshipStatus = "expected"
-              }
-            }
-          })
-          .catch((error) => {
-            const err = error.response;
-            if (err.status === 401) {
-              this.$router.push({ name: 'SignIn' });
-            }
-
-            this.flashMessage.error({
-              title: 'Error Message Title',
-              message: err.data.message,
-              position: 'center',
-              icon: '../assets/error.svg',
-            });
-          });
-    }
-  },
-};
+  mixins: [waves]
+}
 </script>
 
 <style scoped>
-.md-app {
-  max-height: 100vh;
-  min-height: 100vh;
-  border: 1px solid rgba(#000, .12);
+.navbar i {
+  cursor: pointer;
+  color: white;
 }
-
-.md-drawer {
-  width: 230px;
-  max-width: calc(100vw - 125px);
-}
-
-.search {
-  max-width: 500px;
-}
-
-.md-toolbar {
-  height: 50px;
-  padding: inherit;
-}
-
-.card-expansion {
-  margin: 0 175px 10px 175px;
-  text-align: center;
-}
-
-.md-card {
-  width: 250px;
-  margin: 4px;
-  display: inline-block;
-  vertical-align: top;
-}
-
-.pagination-row {
-  text-align: center;
-  margin-bottom: 75px;
-}
-
-.md-empty-state {
-  max-width: 600px;
-}
-
-.learn-more-button{
-  font-weight: bolder;
-}
-
 </style>

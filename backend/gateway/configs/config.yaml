@@ -1,0 +1,18 @@
+addr: ":10000"
+
+auth:
+  addr: "localhost:10001"
+
+social:
+  addr: "localhost:10002"
+
+messenger:
+  http_addr: "localhost:10003"
+  grpc_addr: "localhost:10004"
+
+jaeger:
+  agent_addr: "0.0.0.0:6831"
+  service_name: "gateway"
+
+logger:
+  level: "info"

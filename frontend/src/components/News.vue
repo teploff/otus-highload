@@ -1,268 +1,123 @@
 <template>
-  <div class="page-container">
-    <md-app md-waterfall md-mode="flexible">
-      <md-app-toolbar class="md-large md-primary">
-        <div class="md-toolbar-row">
-          <div class="md-toolbar-section-start">
-            <md-button class="md-icon-button" @click="menuVisible = !menuVisible">
-              <md-icon>menu</md-icon>
-            </md-button>
-          </div>
-
-          <md-autocomplete
-              class="search"
-              v-model.trim="searchPayload.anthroponym"
-              @input="searchPeople"
-              :md-options="[]"
-              md-layout="box">
-            <label>Search people...</label>
-          </md-autocomplete>
-
-          <div class="md-toolbar-section-end">
-            <md-button class="md-icon-button" @click="logOut">
-              <md-icon>login</md-icon>
-            </md-button>
-          </div>
+  <div class="layout">
+    <mdb-side-nav-2 :value="true" :data="navigation" push slim :slim-collapsed="collapsed" @toggleSlim="collapsed = $event">
+      <div slot="header">
+        <div
+            class="d-flex align-items-center my-4"
+            :class="collapsed ? 'justify-content-center' : 'justify-content-start'"
+        >
+          <mdb-avatar :width="40" style="flex: 0 0 auto">
+            <img
+                src="https://mdbootstrap.com/img/Photos/Avatars/avatar-7.jpg"
+                class="img-fluid rounded-circle z-depth-1"
+            />
+          </mdb-avatar>
+          <p class="m-t mb-0 ml-4 p-0" style="flex: 0 2 auto" v-show="!collapsed">
+            <strong>John Smith<mdb-icon color="success" icon="circle" class="ml-2" size="sm"/></strong>
+          </p>
         </div>
-      </md-app-toolbar>
-
-      <md-app-drawer :md-active.sync="menuVisible">
-        <md-list>
-          <md-list-item @click="followHomePage">
-            <md-icon>assignment_ind</md-icon>
-            <span class="md-list-item-text">My profile</span>
-          </md-list-item>
-
-          <md-list-item @click="followNewsPage">
-            <md-icon>fiber_new</md-icon>
-            <span class="md-list-item-text">News</span>
-            <md-badge v-if="countNewsNotify > 0" class="md-primary" v-bind:md-content="countNewsNotify" />
-          </md-list-item>
-
-          <md-list-item @click="followMessengerPage">
-            <md-icon>chat</md-icon>
-            <span class="md-list-item-text">Messenger</span>
-            <md-badge v-if="countMsgNotify > 0" class="md-primary" v-bind:md-content="countMsgNotify" />
-          </md-list-item>
-
-          <md-list-item @click="followFriendsPage">
-            <md-icon>supervisor_account</md-icon>
-            <span class="md-list-item-text">Friends</span>
-            <md-badge v-if="countFriendsNotify > 0" class="md-primary" v-bind:md-content="countFriendsNotify" />
-          </md-list-item>
-        </md-list>
-      </md-app-drawer>
-
-      <md-app-content>
-        <md-table v-show="this.$store.getters.news.count !== 0">
-          <md-table-row>
-            <div class="card-expansion">
-        <md-card v-for="card in this.$store.getters.news.data" v-bind:key="card.id">
-          <md-card-header>
-            <md-card-header-text>
-              <div class="md-title" id="news-card-title">{{ card.owner.name }} {{ card.owner.surname }}</div>
-              <div class="md-subhead">{{ $moment(card.createTime).format('MMMM Do YYYY kk:mm:ss') }}</div>
-            </md-card-header-text>
-            <md-card-media>
-              <img src="../assets/news.png" alt="People">
-            </md-card-media>
-          </md-card-header>
-          <md-card-content>
-            {{ card.content }}
-          </md-card-content>
-        </md-card>
-
-            </div>
-          </md-table-row>
-          <md-table-row class="pagination-row">
-            <div>
-              <paginate
-                  v-model="page"
-                  :page-count="Math.ceil(this.$store.getters.news.count / countCardsInWindow)"
-                  :click-handler="paginatorClick"
-                  :prev-text="'Prev'"
-                  :next-text="'Next'"
-                  :container-class="'pagination'"
-                  :page-class="'page-item'"
-                  :first-last-button="true"
-              >
-              </paginate>
-            </div>
-          </md-table-row>
-        </md-table>
-      </md-app-content>
-    </md-app>
-    <FlashMessage :position="'right top'"></FlashMessage>
+        <hr class="w-100" />
+      </div>
+      <div slot="content" class="mt-5 d-flex justify-content-center">
+        <mdb-btn tag="a" gradient="blue" size="sm" class="mx-0" floating :icon="collapsed ? 'chevron-right' : 'chevron-left'" @click="collapsed = !collapsed"></mdb-btn>
+      </div>
+      <mdb-navbar
+          slot="nav"
+          tag="div"
+          :toggler="false"
+          position="top">
+        <mdb-navbar-nav right>
+          <mdb-form-inline class="ml-auto">
+            <mdb-input v-model="searchPayload.anthroponym" class="mr-sm-1" type="text" placeholder="Search people..."/>
+            <mdb-btn tag="a" size="sm" gradient="blue" floating @click="searchPeople()" v-show="searchPayload.anthroponym !== ''"><mdb-icon icon="search"/></mdb-btn>
+          </mdb-form-inline>
+        </mdb-navbar-nav>
+        <mdb-navbar-nav class="nav-flex-icons" right>
+          <mdb-btn tag="a" size="sm" gradient="blue" floating @click="logOut()"><mdb-icon icon="door-open"/></mdb-btn>
+        </mdb-navbar-nav>
+      </mdb-navbar>
+      <div slot="main">
+        <!--        payload here!-->
+      </div>
+    </mdb-side-nav-2>
   </div>
 </template>
 
 <script>
-import {apiUrl, debounce, headers, wsUrl} from "@/const";
-import axios from "axios";
-import WSService from "@/service/ws";
+import {
+  mdbNavbar,
+  mdbNavbarNav,
+  mdbSideNav2,
+  mdbAvatar,
+  mdbBtn,
+  mdbIcon,
+  waves,
+  mdbFormInline,
+  mdbInput
+} from "mdbvue";
+
+import router from "@/router";
 
 export default {
-  name: 'Home',
+  components: {
+    mdbNavbar,
+    mdbNavbarNav,
+    mdbSideNav2,
+    mdbAvatar,
+    mdbBtn,
+    mdbIcon,
+    mdbFormInline,
+    mdbInput
+  },
+  name: "News",
   data: () => ({
-    menuVisible: false,
-    countNewsNotify: 0,
-    countMsgNotify: 0,
-    countFriendsNotify: 0,
+    show: true,
+    collapsed: false,
+    navigation: [
+      {
+        name: "My profile",
+        icon: "address-card",
+        href: router.resolve({name: 'Home'}).href
+      },
+      {
+        name: "News",
+        icon: "newspaper",
+        href: router.resolve({name: 'News'}).href
+      },
+      {
+        name: "Messenger",
+        icon: "comments",
+        href: router.resolve({name: 'Messenger'}).href
+      },
+      {
+        name: "Friends",
+        icon: "user-friends",
+        href: router.resolve({name: 'Friends'}).href
+      }
+    ],
     searchPayload: {
-      anthroponym: null,
-    },
-    countCardsInWindow: 40,
-    offset: 0,
-    page: 1,
+      anthroponym: '',
+    }
   }),
-  beforeDestroy() {
-    this.ws.disconnect()
-  },
-  created() {
-    this.ws = new WSService(this.$store)
-    this.ws.connect(wsUrl + localStorage.getItem('accessToken'))
-    this.getNews();
-  },
   methods: {
-    followHomePage() {
-      this.$router.push({ name: 'Home' });
-    },
-    followNewsPage() {
-      this.$router.push({ name: 'News' }).catch(() => {});
-    },
-    followMessengerPage() {
-      this.$router.push({ name: 'Messenger' });
-    },
-    followFriendsPage() {
-      this.$router.push({ name: 'Friends' });
-    },
-    searchPeople: debounce(function (){
+    searchPeople() {
       this.$store.commit("changeAnthroponym", this.searchPayload.anthroponym);
       this.$router.push({ name: 'People' })
-    }, 1000),
-    paginatorClick(pageNum) {
-      this.offset = (pageNum - 1) * this.countCardsInWindow;
-
-      this.getNews()
-    },
-    getNews() {
-      const path = `${apiUrl}/social/news`;
-      const camelcaseKeys = require('camelcase-keys');
-
-      headers.Authorization = localStorage.getItem('accessToken')
-
-      axios.get(path, {
-        headers: headers,
-        params: {
-          limit: this.countCardsInWindow,
-          offset: this.offset
-        },
-        transformResponse: [(data) => {
-          return camelcaseKeys(JSON.parse(data), { deep: true })}
-        ]
-      })
-          .then((response) => {
-            console.log(response.data)
-            this.$store.commit('setNews', response.data);
-          })
-          .catch((error) => {
-            const err = error.response;
-
-            if (err.status === 401) {
-              this.refreshToken();
-            }
-
-            this.flashMessage.error({
-              title: 'Error Message Title',
-              message: err.data.message,
-              position: 'center',
-              icon: '../assets/error.svg',
-            });
-          });
-    },
-    refreshToken() {
-      const path = `${apiUrl}/auth/token`;
-      const camelcaseKeys = require('camelcase-keys');
-
-      const payload = {
-        refresh_token: localStorage.getItem('refreshToken'),
-      };
-      axios.put(path, payload, {transformResponse: [(data) => {
-          return camelcaseKeys(JSON.parse(data), { deep: true })}
-        ]})
-          .then((response) => {
-            this.tokenPair = response.data;
-
-            localStorage.setItem('accessToken', this.tokenPair.accessToken);
-            localStorage.setItem('refreshToken', this.tokenPair.refreshToken);
-
-            this.$router.push({ name: 'People' });
-          })
-          .catch((error) => {
-            const err = JSON.parse(JSON.stringify(error.response));
-            if (err.status === 401) {
-              this.$router.push({ name: 'SignIn' });
-            }
-            this.flashMessage.error({
-              title: 'Error Message Title',
-              message: err.data.message,
-              position: 'center',
-              icon: '../assets/error.svg',
-            });
-          });
     },
     logOut() {
       localStorage.removeItem("accessToken");
       localStorage.removeItem("refreshToken");
 
-      this.$router.push({ name: 'SignIn' });
+      this.$router.push({name: 'SignIn'});
     },
   },
-};
+  mixins: [waves]
+}
 </script>
 
 <style scoped>
-.md-app {
-  max-height: 100vh;
-  min-height: 100vh;
-  border: 1px solid rgba(#000, .12);
+.navbar i {
+  cursor: pointer;
+  color: white;
 }
-
-.md-drawer {
-  width: 230px;
-  max-width: calc(100vw - 125px);
-}
-
-.search {
-  max-width: 500px;
-}
-
-.md-toolbar {
-  height: 50px;
-  padding: inherit;
-}
-
-
-.card-expansion {
-  margin: 0 175px 10px 175px;
-  text-align: center;
-}
-
-.md-card {
-  width: 250px;
-  margin: 4px;
-  display: inline-block;
-  vertical-align: top;
-}
-
-.pagination-row {
-  text-align: center;
-  margin-bottom: 75px;
-}
-
-#news-card-title {
-  font-style: italic;
-  font-size: medium;
-}
-
 </style>
