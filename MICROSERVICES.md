@@ -11,7 +11,7 @@
 3. [ Ход работы ](#work)
     - [ Предложенный вариант решения ](#work-solution)
         - [ Преимущества и смысловая нагрузка микросервиса Gateway ](#work-solution-gateway)
-        - [ Разработанная микросервисная инфраструктура ](#work-solution-microservice-infrastructure") 
+        - [ Разработанная микросервисная инфраструктура ](#work-solution-microservice-infrastructure) 
     - [ Выполнение ](#work-execute)
         - [ Подготовка ](#work-execute-preparation)
     - [ Технические моменты ](#work-technical-moments)
