@@ -27,6 +27,7 @@ func NewHTTPServer(addr string, endpoints *Endpoints) *http.Server {
 			profileGroup.GET("/get-by-anthroponym", endpoints.Auth.GetUsersByAnthroponym)
 			profileGroup.GET("/get-by-token", endpoints.Auth.GetUserByAccessToken)
 			profileGroup.POST("/get-by-ids", endpoints.Auth.GetUserByIDs)
+			profileGroup.GET("/get-by-email", endpoints.Auth.GetUserIDByEmail)
 		}
 	}
 
