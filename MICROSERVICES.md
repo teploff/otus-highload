@@ -21,8 +21,9 @@
         - [ Окончание переписки ](#work-execute-stop-chatting)
         - [ Историческая выгрузка сообщений ](#work-execute-history-dump)
     - [ Технические моменты ](#work-technical-moments)
-      - [ Серверная часть ](#work-technical-moments-server)
-      - [ Клиентская часть ](#work-technical-moments-client)
+      - [ Модернизация микросервиса диалогов ](#work-technical-moments-messenger)
+      - [ OpenAPI.Swagger ](#work-technical-moments-swagger)
+      - [ Opentracing. Jaeger ](#work-technical-moments-jaeger)
 4. [ Итоги ](#results)
 
 <img align="right" width="480" src="static/microservices/preview.png">
@@ -254,3 +255,47 @@ http://localhost:10000/messenger/messages?chat_id=e8d3dc26-a218-4ca1-ae4b-da38b2
     <img src="static/microservices/http-get-messages.png">
 </p>
     
+<a name="work-technical-moments"></a>
+### Технические моменты
+В ходе выполнения задания так же необходимо упомянуть, что были разработаны или доработаны следующие технические 
+решения. 
+<a name="work-technical-moments-messenger"></a>
+#### Модернизация микросервиса диалогов
+В процессе декомпозиции монолита на микросервисы, микросервис **messenger** был существенно доработан, а именно:
+- создание чата и выгрузка сообщений осуществляется с помощью gRPC;
+- отправка и прием сообщения осуществляется по Websocket-у;
+
+Т.е. простого решения в виде чистого REST-а уже нет. Все по серьезному:)
+<a name="work-technical-moments-swagger"></a>
+#### OpenAPI. Swagger
+Появилась спецификация в виде Swagger endpoint'а на стороне gateway-я, в которой можно посмотреть и ознакомиться со
+всеми доступными endpoint-ами извне конечному интегратору, будь то Web или Mobile - решения.
+
+Endpoint Swagger-а располагается по адресу: http://localhost:10000/swagger/index.html.
+
+Пример спецификации swagger, доступного по endpoint-у:</br>
+<p align="center">
+ <img src="static/microservices/swagger-example.png">
+</p>
+
+<a name="work-technical-moments-jaeger"></a>
+#### Opentracing. Jaeger
+Появилась возможность сквозного логирования и трассировки запросов в виде Jaeger-решения. В нем можно конкретно
+отследить затраченное время на тот или иной скачок к тому или иному микросервису.
+
+Jaeger располагается по адресу: http://localhost:16686.
+
+Пример трассировки запроса на регистрацию пользователя в системе:</br>
+<p align="center">
+ <img src="static/microservices/jaeger-example.png">
+</p>
+
+<a name="results"></a>
+## Итоги
+В ходе выполнения задания:
+- был описан процесс сборки и конфигурирования программного комплекса;
+- был декомпозирована монолитная инфраструктура на микросервисы;
+- был существенно доработан сервис диалогов между пользователями (gRPC & WS);
+- был внедрен механизм opentracing в виде jaeger-библиотеки;
+- был реализован API Gateway сервис, являющий revers-proxy и одной точкой входа в систему;
+- был внедрен OpenAPI на стороне микросервиса gateway;
