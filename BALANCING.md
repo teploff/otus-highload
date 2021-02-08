@@ -26,7 +26,7 @@
       - [ Opentracing. Jaeger ](#work-technical-moments-jaeger)
 4. [ Итоги ](#results)
 
-<img align="right" width="480" src="static/balancing/preview.jpeg">
+<img align="right" width="600" src="static/balancing/preview.jpeg">
 
 <a name="task"></a>
 ## Задание
