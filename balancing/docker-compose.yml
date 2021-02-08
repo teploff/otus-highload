@@ -1,0 +1,177 @@
+version: '3.7'
+services:
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: jaeger-otus
+    # for debugging
+    ports:
+#      - '6831:6831/udp'
+      - '16686:16686'
+    networks:
+      - otus-app-network
+
+  auth-storage-slave-1:
+    build:
+      context: ../deployment/mysql
+      dockerfile: Dockerfile
+    image: mysql:stage
+    # for debugging
+    #    ports:
+    #      - "3307:3306"
+    container_name: auth-storage-slave-1
+    command: --default-authentication-plugin=mysql_native_password
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+      MYSQL_DATABASE: auth
+    volumes:
+      - auth-storage-slave-1-data:/var/lib/mysql
+    depends_on:
+      - auth-storage-master
+    networks:
+      - otus-haproxy-network
+
+  auth-storage-slave-2:
+    build:
+      context: ../deployment/mysql
+      dockerfile: Dockerfile
+    image: mysql:stage
+    # for debugging
+    #    ports:
+    #      - "3308:3306"
+    container_name: auth-storage-slave-2
+    command: --default-authentication-plugin=mysql_native_password
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+      MYSQL_DATABASE: auth
+    volumes:
+      - auth-storage-slave-2-data:/var/lib/mysql
+    depends_on:
+      - auth-storage-master
+    networks:
+      - otus-haproxy-network
+
+  haproxy:
+    image: haproxy:2.1.7
+    container_name: haproxy-otus
+    restart: "no"
+    volumes:
+      - "./haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg"
+    depends_on:
+      - auth-storage-slave-1
+      - auth-storage-slave-2
+    networks:
+      - otus-app-network
+      - otus-haproxy-network
+
+  auth-storage-master:
+    build:
+      context: ../deployment/mysql
+      dockerfile: Dockerfile
+    image: mysql:stage
+    # for debugging
+    #    ports:
+    #      - "3306:3306"
+    container_name: auth-storage-master
+    command: --default-authentication-plugin=mysql_native_password
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+      MYSQL_DATABASE: auth
+    volumes:
+      - auth-storage-data:/var/lib/mysql
+    depends_on:
+      - haproxy
+    networks:
+      - otus-app-network
+
+  auth-migrator:
+    build:
+      context: ../tools/migrator
+      dockerfile: Dockerfile
+    image: migrator:mysql
+    container_name: auth-migrator
+    environment:
+      MIGRATIONS_PATH: "./migrations"
+      DSN: "user:password@tcp(auth-storage-master:3306)/auth"
+      OPERATION: "up"
+    volumes:
+      - ../backend/migrations/mysql/auth:/app/migrations
+    depends_on:
+      - auth-storage-master
+    networks:
+      - otus-app-network
+
+  auth-1:
+    build:
+      context: ../backend/auth
+      dockerfile: Dockerfile
+    image: auth:otus
+    container_name: auth-1-otus
+    environment:
+      - ADDR=0.0.0.0:10001
+      - STORAGE_DSN=user:password@tcp(auth-storage-master:3306)/auth?parseTime=true
+      - JWT_SECRET=secret
+      - JWT_ACCESS_TOKEN_TIME_EXPIRE=1h
+      - JWT_REFRESH_TOKEN_TIME_EXPIRE=24h
+      - JAEGER_AGENT_ADDR=jaeger-otus:6831
+      - JAEGER_SERVICE_NAME=auth
+      - LOGGER_LEVEL=info
+    depends_on:
+      - auth-storage-master
+      - jaeger
+    networks:
+      - otus-app-network
+
+  auth-2:
+    build:
+      context: ../backend/auth
+      dockerfile: Dockerfile
+    image: auth:otus
+    container_name: auth-2-otus
+    environment:
+      - ADDR=0.0.0.0:10001
+      - STORAGE_DSN=user:password@tcp(auth-storage-master:3306)/auth?parseTime=true
+      - JWT_SECRET=secret
+      - JWT_ACCESS_TOKEN_TIME_EXPIRE=1h
+      - JWT_REFRESH_TOKEN_TIME_EXPIRE=24h
+      - JAEGER_AGENT_ADDR=jaeger-otus:6831
+      - JAEGER_SERVICE_NAME=auth
+      - LOGGER_LEVEL=info
+    depends_on:
+      - auth-storage-master
+      - jaeger
+    networks:
+      - otus-app-network
+
+  nginx:
+    image: nginx:1.19.0
+    container_name: nginx-otus
+    restart: on-failure
+    volumes:
+      - "./nginx/default.conf:/etc/nginx/conf.d/default.conf"
+    ports:
+      - "80:80"
+    networks:
+      - otus-app-network
+      - otus-gateway-network
+
+volumes:
+  auth-storage-data:
+  auth-storage-slave-1-data:
+  auth-storage-slave-2-data:
+
+networks:
+  otus-gateway-network:
+    name: otus-gateway-network
+    driver: bridge
+  otus-app-network:
+    name: otus-app-network
+    driver: bridge
+  otus-haproxy-network:
+    name: otus-haproxy-network
+    driver: bridge
