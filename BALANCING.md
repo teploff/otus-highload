@@ -291,8 +291,14 @@ make migrate
 
 Теперь перейдем в контейнеры slave-ов и проверим, что в базе данных **auth** появились таблицы. Ниже представлен пример 
 для первого slave-а.
-```mysql based
+
+Переходим в оболочку MySQL:
+```shell script
 docker exec -it auth-storage-slave-1 -uroot -ppassword auth
+```
+
+И выводим список таблиц в распоряжении БД **auth**
+```mysql based
 show tables;
 ```
 
