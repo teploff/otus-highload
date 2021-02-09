@@ -11,17 +11,16 @@
 3. [ Ход работы ](#work)
    - [ Разработанная инфраструктура ](#work-infrastructure) 
    - [ Выполнение ](#work-execute)
-        - [ Подготовка ](#work-execute-preparation)
-        - [ Начало обмена сообщениями ](#work-execute-start-chatting)
-            - [ Терминальное окно Боба ](#work-execute-start-chatting-bob-term)
-            - [ Терминальное окно Алисы ](#work-execute-start-chatting-alice-term)
-            - [ Отправка сообщений ](#work-execute-start-chatting-send-msg)
-        - [ Окончание переписки ](#work-execute-stop-chatting)
-        - [ Историческая выгрузка сообщений ](#work-execute-history-dump)
-    - [ Технические моменты ](#work-technical-moments)
-      - [ Модернизация микросервиса диалогов ](#work-technical-moments-messenger)
-      - [ OpenAPI.Swagger ](#work-technical-moments-swagger)
-      - [ Opentracing. Jaeger ](#work-technical-moments-jaeger)
+        - [ Настройка асинхронной репликации ](#work-execute-async-replica)
+            - [ Конфигурирование master-а ](#work-execute-async-replica-master-config)
+            - [ Конфигурирование первого slave-а ](#work-execute-async-replica-first-slave-config)
+            - [ Конфигурирование второго slave-а ](#work-execute-async-replica-second-slave-config)
+            - [ Применение миграций ](#work-execute-async-replica-migration)
+        - [ Запуск остальной части инфраструктуры ](#work-execute-launch-remaining-infrastructure)
+        - [ Нагрузочное тестирование на чтение ](#work-execute-read-stress-testing)
+            - [ Подготовка ](#work-execute-read-stress-testing-preparation)
+            - [ Выполнение ](#work-execute-read-stress-testing-implementation)
+            - [ Результаты ](#work-execute-read-results-stress-testing-implementation)
 4. [ Итоги ](#results)
 
 <img align="right" width="600" src="static/balancing/preview.jpeg">
@@ -95,162 +94,155 @@
 ### Выполнение
 Склонируем наш проект:
 ```shell
-git clone https://github.com/teploff/otus-highload.git && cd otus-highload
+git clone https://github.com/teploff/otus-highload.git && cd otus-highload/balancing
 ```
 
-Поднимаем инфраструктуру и применяем миграции:
+Поднимаем инфраструктуру без экземпляров приложений, т.к. необходимо настроить репликацию:
 ```shell
-make infrastructure && make migrate && make service
+make init
 ```
 
-<a name="work-execute-preparation"></a>
+<a name="work-execute-async-replica"></a>
+#### Настройка асинхронной репликации
+
+<a name="work-execute-async-replica-master-config"></a>
+#### Конфигурирование master-а
+Заходим в master-container и открываем конфигурацию, которая располагается по пути **/etc/mysql/conf.d/mysql.cnf**, 
+c помощью **nano**:
+```shell script
+docker exec -it auth-storage-master nano /etc/mysql/conf.d/mysql.cnf
+```
+
+Дописываем в секцию **[mysqld]** следующие строки:
+```textmate
+[mysqld]
+server-id = 1
+default_authentication_plugin=mysql_native_password
+log-bin = /var/log/mysql/mysql-bin.log
+tmpdir = /tmp
+binlog_format = STATEMENT
+max_binlog_size = 500M
+sync_binlog = 1
+``` 
+
+Выходим из контейнера и рестартуем его:
+```shell script
+exit
+docker restart auth-storage-master
+```
+
+Переходим в оболочку mysql:
+```shell script
+docker exec -it auth-storage-master mysql -uroot -ppassword
+```
+
+Создаем пользователя для репликации:
+```mysql based
+create user 'replica'@'%' IDENTIFIED BY 'oTUSlave#2020';
+```
+
+Наделяем созданного пользователя полномочиями:
+```mysql based
+GRANT REPLICATION SLAVE ON *.* TO 'replica'@'%';
+```
+
+Вызываем команду *show master* для того, чтобы определить **MASTER_LOG_FILE** и **MASTER_LOG_POS**, которые понадобятся
+нам в дальнейшем для настройки slave-ов:
+```mysql based
+show master status;
+```
+
+Результат может отличаться, но формат будет таким:<br />
+<p align="center">
+    <img src="static/balancing/show-master-status.png">
+</p>
+
+Выходим из оболочки MySQL командой:
+```mysql based
+exit
+```
+
+<a name="work-execute-async-replica-first-slave-config"></a>
+#### Конфигурирование первого slave-а
+Заходим в первый slave-container и открываем конфигурацию, которая располагается по пути 
+**/etc/mysql/conf.d/mysql.cnf**, c помощью **nano**:
+```shell script
+docker exec -it auth-storage-slave-1 nano /etc/mysql/conf.d/mysql.cnf
+```
+
+Дописываем в секцию **[mysqld]** следующие строки:
+```textmate
+[mysqld]
+server-id = 2
+default_authentication_plugin=mysql_native_password
+log_bin = /var/log/mysql/mysql-bin.log
+tmpdir = /tmp
+binlog_format = STATEMENT
+max_binlog_size = 500M
+sync_binlog = 1
+``` 
+Выходим из контейнера и рестартуем его:
+```shell script
+exit
+docker restart auth-storage-slave-1
+```
+
+Переходим в оболочку mysql контейнера:
+```shell script
+docker exec -it auth-storage-slave-1 mysql -uroot -ppassword
+```
+
+Вносим информацию о master-е:
+```mysql based
+CHANGE MASTER TO
+    MASTER_HOST='master',
+    MASTER_USER='replica',
+    MASTER_PASSWORD='oTUSlave#2020',
+    MASTER_LOG_FILE='mysql-bin.000001',
+    MASTER_LOG_POS=665;
+```
+
+Запускаем slave:
+```mysql based
+start slave;
+```
+
+Выводим сводную информацию о состоянии slave-а:
+```mysql based
+show slave status\G
+```
+
+Если видим следующее, то все у нас в порядке:<br />
+<p align="center">
+    <img src="static/balancing/status-slave.png">
+</p>
+
+<a name="work-execute-async-replica-second-slave-config"></a>
+#### Конфигурирование второго slave-а
+
+<a name="work-execute-async-replica-migration"></a>
+#### Применение миграций
+
+
+<a name="work-execute-launch-remaining-infrastructure"></a>
+#### Запуск остальной части инфраструктуры
+
+
+<a name="work-execute-read-stress-testing"></a>
+#### Нагрузочное тестирование на чтение
+
+
+<a name="work-execute-read-stress-testing-preparation"></a>
 #### Подготовка
-Для демонстрации работы микросервисного представления системы, на примере осуществления диалогов между пользователями,
-создадим двух пользователей в системе: **Боба** и **Алису**.
-```shell script
-curl -X POST -H "Content-Type: application/json" \
-    -d '{"email": "bob@email.com", "password": "1234567890", "name": "Bob", "surname": "Tallor", "birthday": "1994-04-10T20:21:25+00:00", "sex": "male", "city": "New Yourk", "interests": "programming"}' \
-    http://localhost:10000/auth/sign-up
-curl -X POST -H "Content-Type: application/json" \
-    -d '{"email": "alice@email.com", "password": "1234567890", "name": "Alice", "surname": "Swift", "birthday": "1995-10-10T20:21:25+00:00", "sex": "female", "city": "California", "interests": "running"}' \
-    http://localhost:10000/auth/sign-up
-```
 
-<a name="work-execute-start-chatting"></a>
-#### Начало обмена сообщениями
-Для того, чтобы начать обмениваться сообщениями, необходимо открыть два терминальных окна. Одно будет принадлежать Бобу,
-другое Алисе.
 
-<a name="work-execute-start-chatting-bob-term"></a>
-##### Терминальное окно Боба
-В первом терминальном окне, предназначенном для Боба, получим access token командой:
-```shell script
-export BOB_ACCESS_TOKEN=$(curl -X POST -H "Content-Type: application/json" \
-    -d '{"email": "bob@email.com", "password": "1234567890"}' \
-    http://localhost:10000/auth/sign-in | jq -r '.access_token')
-``` 
+<a name="work-execute-read-stress-testing-implementation"></a>
+#### Выполнение
 
-Проверим наличие access token-а:
-```shell script
-echo $BOB_ACCESS_TOKEN
-```
 
-Для того, чтобы от лица Боба создать чат с Алисой, необходимо получить ее ID, так как он понадобится для указания 
-собеседника. Воспользуемся endpoint-ом на получения ID пользователя, зная его email:
-```shell script
-export ALICE_ID=$(curl -X GET -H "Content-Type: application/json" -H "Authorization: ${BOB_ACCESS_TOKEN}" \
-    http://localhost:10000/auth/user/get-by-email?email=alice@email.com | jq -r '.user_id')
-```
+<a name="work-execute-read-results-stress-testing-implementation"></a>
+#### Результаты
 
-Проверим, что запрос успешно выполнился, применив команду:
-```shell script
-echo $ALICE_ID
-```
-
-Создадим чат от лица Боба с Алисой:
-```shell script
-export CHAT_ID=$(curl -X POST -H "Content-Type: application/json" -H "Authorization: ${BOB_ACCESS_TOKEN}" \
-    -d '{"companion_id": "'"$ALICE_ID"'"}' \
-    http://localhost:10000/messenger/create-chat | jq -r '.chat_id')
-```
-
-Проверим, что в переменной окружения находится UUID созданного чата:
-```shell script
-echo $CHAT_ID
-```
-
-<a name="work-execute-start-chatting-alice-term"></a>
-##### Терминальное окно Алисы
-Во втором терминальном окне, предназначенном для Алисы, получим access token командой:
-```shell script
-export ALICE_ACCESS_TOKEN=$(curl -X POST -H "Content-Type: application/json" \
-    -d '{"email": "alice@email.com", "password": "1234567890"}' \
-    http://localhost:10000/auth/sign-in | jq -r '.access_token')
-``` 
-
-Для установления websocket-ного соединения со стороны Алисы к серверу необходимо ввести команду:
-```shell script
-websocat ws://localhost:10000/messenger/ws\?token=${ALICE_ACCESS_TOKEN}
-```
-
-<a name="work-execute-start-chatting-send-msg"></a>
-##### Отправка сообщений
-Теперь, когда Алиса установила websocket-ное соединение с сервером, она готова принимать сообщения от Боба.
-
-Для этого необходимо вернуться в первое терминальное окно, принадлежащее Бобу. Установить также websocket-ное содениение
-командой:
-```shell script
-websocat ws://localhost:10000/messenger/ws\?token=${BOB_ACCESS_TOKEN}
-```
-И зная ChatID, например, если он имеет значение **e8d3dc26-a218-4ca1-ae4b-da38b27ed9b3**, отправить сообщения следующего
-вида:
-```shell script
-{"topic":"messenger", "action": "send-message", "payload":"{\"chat_id\":\"e8d3dc26-a218-4ca1-ae4b-da38b27ed9b3\", \"messages\":[{\"text\": \"Hello, Alice!\", \"status\": \"created\"}]}"}
-{"topic":"messenger", "action": "send-message", "payload":"{\"chat_id\":\"e8d3dc26-a218-4ca1-ae4b-da38b27ed9b3\", \"messages\":[{\"text\": \"What is up?\", \"status\": \"created\"}]}"}
-{"topic":"messenger", "action": "send-message", "payload":"{\"chat_id\":\"e8d3dc26-a218-4ca1-ae4b-da38b27ed9b3\", \"messages\":[{\"text\": \"I miss you!\", \"status\": \"created\"}]}"}
-```
-
-Теперь перейдем в терминал Алисы и удостоверимся, что получили все три сообщения от Боба. В терминале должны увидеть 
-следующее:</br>
-<p align="center">
-  <img src="static/microservices/websocket-get-messages.png">
-</p>
-
-<a name="work-execute-stop-chatting"></a>
-#### Окончание переписки
-Для того, чтобы закрыть websocket-ные соединения от каждого из пользователей с сервером, необходимо в каждом 
-терминальном окне ввести сочетание клавиш **Ctrl+C**.
-
-<a name="work-execute-history-dump"></a>
-#### Историческая выгрузка сообщений
-Теперь проверим gRPC запросы от **gateway**-я к микросервису **messenger** для выгрузки сообщений по конкретному чату.
-
-Для этого находясь в терминальном окне Алисы и зная id чата (в данном контексте он имеет значение 
-**e8d3dc26-a218-4ca1-ae4b-da38b27ed9b3**) получим сообщения, которые ей отослал Боб:
-```shell script
-curl -X GET -H "Content-Type: application/json" -H "Authorization: ${ALICE_ACCESS_TOKEN}" \
-http://localhost:10000/messenger/messages?chat_id=e8d3dc26-a218-4ca1-ae4b-da38b27ed9b3
-```
-
-Если все прошло успешно, должны увидеть нечто похожее: </br>
-<p align="center">
-    <img src="static/microservices/http-get-messages.png">
-</p>
-    
-<a name="work-technical-moments"></a>
-### Технические моменты
-В ходе выполнения задания так же необходимо упомянуть, что были разработаны или доработаны следующие технические 
-решения. 
-<a name="work-technical-moments-messenger"></a>
-#### Модернизация микросервиса диалогов
-В процессе декомпозиции монолита на микросервисы, микросервис **messenger** был существенно доработан, а именно:
-- создание чата и выгрузка сообщений осуществляется с помощью gRPC;
-- отправка и прием сообщения осуществляется по Websocket-у;
-
-Т.е. простого решения в виде чистого REST-а уже нет. Все по серьезному:)
-<a name="work-technical-moments-swagger"></a>
-#### OpenAPI. Swagger
-Появилась спецификация в виде Swagger endpoint'а на стороне gateway-я, в которой можно посмотреть и ознакомиться со
-всеми доступными endpoint-ами извне конечному интегратору, будь то Web или Mobile - решения.
-
-Endpoint Swagger-а располагается по адресу: http://localhost:10000/swagger/index.html.
-
-Пример спецификации swagger, доступного по endpoint-у:</br>
-<p align="center">
- <img src="static/microservices/swagger-example.png">
-</p>
-
-<a name="work-technical-moments-jaeger"></a>
-#### Opentracing. Jaeger
-Появилась возможность сквозного логирования и трассировки запросов в виде Jaeger-решения. В нем можно конкретно
-отследить затраченное время на тот или иной скачок к тому или иному микросервису.
-
-Jaeger располагается по адресу: http://localhost:16686.
-
-Пример трассировки запроса на регистрацию пользователя в системе:</br>
-<p align="center">
- <img src="static/microservices/jaeger-example.png">
-</p>
 
 <a name="results"></a>
 ## Итоги
