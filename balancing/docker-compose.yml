@@ -100,7 +100,7 @@ services:
     depends_on:
       - auth-storage-master
     networks:
-      - otus-app-network
+      - otus-haproxy-network
 
   auth-1:
     build:
