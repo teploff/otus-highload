@@ -110,12 +110,12 @@ services:
     container_name: auth-1-otus
     environment:
       - ADDR=0.0.0.0:10001
-      - STORAGE_DSN=user:password@tcp(auth-storage-master:3306)/auth?parseTime=true
+      - STORAGE_DSN=user:password@tcp(haproxy-otus:3306)/auth?parseTime=true
       - JWT_SECRET=secret
       - JWT_ACCESS_TOKEN_TIME_EXPIRE=1h
       - JWT_REFRESH_TOKEN_TIME_EXPIRE=24h
       - JAEGER_AGENT_ADDR=jaeger-otus:6831
-      - JAEGER_SERVICE_NAME=auth
+      - JAEGER_SERVICE_NAME=auth-1
       - LOGGER_LEVEL=info
     depends_on:
       - haproxy
@@ -131,12 +131,12 @@ services:
     container_name: auth-2-otus
     environment:
       - ADDR=0.0.0.0:10001
-      - STORAGE_DSN=user:password@tcp(auth-storage-master:3306)/auth?parseTime=true
+      - STORAGE_DSN=user:password@tcp(haproxy-otus:3306)/auth?parseTime=true
       - JWT_SECRET=secret
       - JWT_ACCESS_TOKEN_TIME_EXPIRE=1h
       - JWT_REFRESH_TOKEN_TIME_EXPIRE=24h
       - JAEGER_AGENT_ADDR=jaeger-otus:6831
-      - JAEGER_SERVICE_NAME=auth
+      - JAEGER_SERVICE_NAME=auth-2
       - LOGGER_LEVEL=info
     depends_on:
       - haproxy
@@ -145,16 +145,30 @@ services:
       - otus-app-network
 
   nginx:
-    image: nginx:1.19.0
+    build:
+      context: nginx
+      dockerfile: Dockerfile
+    image: nginx-otus:stage
     container_name: nginx-otus
     restart: on-failure
-    volumes:
-      - "./nginx/default.conf:/etc/nginx/conf.d/default.conf"
     ports:
       - "80:80"
+    depends_on:
+      - auth-1
+      - auth-2
     networks:
       - otus-app-network
       - otus-gateway-network
+
+  wrk_1:
+    echo ${ACCESS_TOKEN} ;\
+    docker run --rm --net=host \
+    williamyeh/wrk  \
+    -H "Authorization: ${ACCESS_TOKEN}" \
+    -t 10 \
+    -c 10 \
+    -d 1m \
+    http://localhost/auth/user/get-by-email?email=otus@email.ru ;\
 
 volumes:
   auth-storage-data:

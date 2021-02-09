@@ -57,6 +57,7 @@
 ### Используемые инструменты
 Для выполнения задания понадобятся следующие инструменты:
 - [docker](https://docs.docker.com/get-docker/) (>= version 19.03.8) & [docker compose](https://docs.docker.com/compose/install/) (>= version 1.25.5);
+- [curl](https://curl.haxx.se/download.html) (>= version 7.68.0);
 
 <a name="information-computer"></a>
 ### Характеристики железа
@@ -314,7 +315,10 @@ exit
 
 <a name="work-execute-launch-remaining-infrastructure"></a>
 #### Запуск остальной части инфраструктуры
-
+Для того, чтобы поднять экземпляр **nginx** с двумя экземплярами микросервисов **auth**, необходимо ввести команду:
+```shell script
+make app
+```
 
 <a name="work-execute-read-stress-testing"></a>
 #### Нагрузочное тестирование на чтение
@@ -322,7 +326,13 @@ exit
 
 <a name="work-execute-read-stress-testing-preparation"></a>
 #### Подготовка
-
+Перед тем, как осуществить нагрузку на master-slave узлы баз дынных MySQL необходимо зарегистрировать пользователя в 
+системе. Для этого **curl**-ом сделаем запрос следующего вида:
+```shell script
+curl -X POST -H "Content-Type: application/json" \
+    -d '{"email": "teploff@email.com", "password": "1234567890", "name": "Alexander", "surname": "Teplov", "birthday": "1994-04-10T20:21:25+00:00", "sex": "male", "city": "Moscow", "interests": "Programming"}' \
+    http://localhost/auth/sign-up
+```
 
 <a name="work-execute-read-stress-testing-implementation"></a>
 #### Выполнение
