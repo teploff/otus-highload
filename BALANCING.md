@@ -294,7 +294,7 @@ make migrate
 
 Переходим в оболочку MySQL:
 ```shell script
-docker exec -it auth-storage-slave-1 -uroot -ppassword auth
+docker exec -it auth-storage-slave-1 mysql -uroot -ppassword auth
 ```
 
 И выводим список таблиц в распоряжении БД **auth**
@@ -307,6 +307,10 @@ show tables;
    <img src="static/balancing/migration-result.png">
 </p>
 
+Для того, чтобы выйти из контейнера, необходимо ввести:
+```mysql based
+exit
+```
 
 <a name="work-execute-launch-remaining-infrastructure"></a>
 #### Запуск остальной части инфраструктуры
