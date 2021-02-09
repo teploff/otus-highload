@@ -27,8 +27,6 @@ services:
       MYSQL_DATABASE: auth
     volumes:
       - auth-storage-slave-1-data:/var/lib/mysql
-    depends_on:
-      - auth-storage-master
     networks:
       - otus-haproxy-network
 
@@ -49,8 +47,6 @@ services:
       MYSQL_DATABASE: auth
     volumes:
       - auth-storage-slave-2-data:/var/lib/mysql
-    depends_on:
-      - auth-storage-master
     networks:
       - otus-haproxy-network
 
