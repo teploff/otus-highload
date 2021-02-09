@@ -50,19 +50,6 @@ services:
     networks:
       - otus-haproxy-network
 
-  haproxy:
-    image: haproxy:2.1.7
-    container_name: haproxy-otus
-    restart: "no"
-    volumes:
-      - "./haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg"
-    depends_on:
-      - auth-storage-slave-1
-      - auth-storage-slave-2
-    networks:
-      - otus-app-network
-      - otus-haproxy-network
-
   auth-storage-master:
     build:
       context: ../deployment/mysql
@@ -81,9 +68,22 @@ services:
     volumes:
       - auth-storage-data:/var/lib/mysql
     depends_on:
-      - haproxy
+      - auth-storage-slave-1
+      - auth-storage-slave-2
+    networks:
+      - otus-haproxy-network
+
+  haproxy:
+    image: haproxy:2.1.7
+    container_name: haproxy-otus
+    restart: "no"
+    volumes:
+      - "./haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg"
+    depends_on:
+      - auth-storage-master
     networks:
       - otus-app-network
+      - otus-haproxy-network
 
   auth-migrator:
     build:
@@ -118,7 +118,7 @@ services:
       - JAEGER_SERVICE_NAME=auth
       - LOGGER_LEVEL=info
     depends_on:
-      - auth-storage-master
+      - haproxy
       - jaeger
     networks:
       - otus-app-network
@@ -139,7 +139,7 @@ services:
       - JAEGER_SERVICE_NAME=auth
       - LOGGER_LEVEL=info
     depends_on:
-      - auth-storage-master
+      - haproxy
       - jaeger
     networks:
       - otus-app-network

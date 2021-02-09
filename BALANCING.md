@@ -125,13 +125,12 @@ max_binlog_size = 500M
 sync_binlog = 1
 ``` 
 
-Выходим из контейнера и рестартуем его:
+Сохраняем изменения сочетанием клавиш **CTRL+O**, закрываем конфиг **CTRL+X** и рестартуем docker-container:
 ```shell script
-exit
 docker restart auth-storage-master
 ```
 
-Переходим в оболочку mysql:
+Переходим в оболочку mysql master-узла MySQL:
 ```shell script
 docker exec -it auth-storage-master mysql -uroot -ppassword
 ```
@@ -181,9 +180,9 @@ binlog_format = STATEMENT
 max_binlog_size = 500M
 sync_binlog = 1
 ``` 
-Выходим из контейнера и рестартуем его:
+
+Сохраняем изменения сочетанием клавиш **CTRL+O**, закрываем конфиг **CTRL+X** и рестартуем docker-container::
 ```shell script
-exit
 docker restart auth-storage-slave-1
 ```
 
@@ -195,7 +194,7 @@ docker exec -it auth-storage-slave-1 mysql -uroot -ppassword
 Вносим информацию о master-е:
 ```mysql based
 CHANGE MASTER TO
-    MASTER_HOST='master',
+    MASTER_HOST='auth-storage-master',
     MASTER_USER='replica',
     MASTER_PASSWORD='oTUSlave#2020',
     MASTER_LOG_FILE='mysql-bin.000001',
@@ -219,6 +218,58 @@ show slave status\G
 
 <a name="work-execute-async-replica-second-slave-config"></a>
 #### Конфигурирование второго slave-а
+Заходим во второй slave-container и открываем конфигурацию, которая располагается по пути 
+**/etc/mysql/conf.d/mysql.cnf**, c помощью **nano**:
+```shell script
+docker exec -it auth-storage-slave-2 nano /etc/mysql/conf.d/mysql.cnf
+```
+
+Дописываем в секцию **[mysqld]** следующие строки:
+```textmate
+[mysqld]
+server-id = 3
+default_authentication_plugin=mysql_native_password
+log_bin = /var/log/mysql/mysql-bin.log
+tmpdir = /tmp
+binlog_format = STATEMENT
+max_binlog_size = 500M
+sync_binlog = 1
+``` 
+
+Сохраняем изменения сочетанием клавиш **CTRL+O**, закрываем конфиг **CTRL+X** и рестартуем docker-container::
+```shell script
+docker restart auth-storage-slave-2
+```
+
+Переходим в оболочку mysql контейнера:
+```shell script
+docker exec -it auth-storage-slave-2 mysql -uroot -ppassword
+```
+
+Вносим информацию о master-е:
+```mysql based
+CHANGE MASTER TO
+    MASTER_HOST='auth-storage-master',
+    MASTER_USER='replica',
+    MASTER_PASSWORD='oTUSlave#2020',
+    MASTER_LOG_FILE='mysql-bin.000001',
+    MASTER_LOG_POS=665;
+```
+
+Запускаем slave:
+```mysql based
+start slave;
+```
+
+Выводим сводную информацию о состоянии slave-а:
+```mysql based
+show slave status\G
+```
+
+Если видим следующее, то все у нас в порядке:<br />
+<p align="center">
+    <img src="static/balancing/status-slave.png">
+</p>
 
 <a name="work-execute-async-replica-migration"></a>
 #### Применение миграций
