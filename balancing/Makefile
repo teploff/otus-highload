@@ -5,8 +5,8 @@ init:
 	docker image prune -f ;\
 
 migrate:
-	docker-compose -f docker-compose.yml up --build auth-storage-master ;\
-	docker rm -f auth-storage-master ;\
+	docker-compose -f docker-compose.yml up --build auth-migrator ;\
+	docker rm -f auth-migrator ;\
 	docker image prune -f ;\
 
 down:

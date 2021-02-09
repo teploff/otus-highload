@@ -216,6 +216,11 @@ show slave status\G
     <img src="static/balancing/status-slave.png">
 </p>
 
+Для того, чтобы выйти из контейнера, необходимо ввести:
+```mysql based
+exit
+```
+
 <a name="work-execute-async-replica-second-slave-config"></a>
 #### Конфигурирование второго slave-а
 Заходим во второй slave-container и открываем конфигурацию, которая располагается по пути 
@@ -271,8 +276,30 @@ show slave status\G
     <img src="static/balancing/status-slave.png">
 </p>
 
+Для того, чтобы выйти из контейнера, необходимо ввести:
+```mysql based
+exit
+```
+
 <a name="work-execute-async-replica-migration"></a>
 #### Применение миграций
+Еще одним хорошим способом проверки работы реплик является применение на master-узле MySQL миграций. Для того, чтобы 
+накатить миграции выполним:
+```shell script
+make migrate
+```
+
+Теперь перейдем в контейнеры slave-ов и проверим, что в базе данных **auth** появились таблицы. Ниже представлен пример 
+для первого slave-а.
+```mysql based
+docker exec -it auth-storage-slave-1 -uroot -ppassword auth
+show tables;
+```
+
+Если процесс миграции завершился успехом, должны увидеть следующее:<br />
+<p align="center">
+   <img src="static/balancing/migration-result.png">
+</p>
 
 
 <a name="work-execute-launch-remaining-infrastructure"></a>
