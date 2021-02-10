@@ -158,9 +158,9 @@ show master status;
 </p>
 
 Теперь необходимо создать пользователя **haproxy_user**. Этот пользователь будет проверять жив ли master. Для этого
-перейдем в контейнер:
+сменим БД на **mysql** командой:
 ```shell
-docker exec -it auth-storage-master mysql -uroot -ppassword mysql
+USE mysql;
 ```
 
 И создадим пользователя:
@@ -237,9 +237,9 @@ show slave status\G
 </p>
 
 Теперь необходимо создать пользователя **haproxy_user**. Этот пользователь будет проверять жив ли slave. Для этого
-перейдем в контейнер:
+сменим БД на **mysql** командой:
 ```shell
-docker exec -it auth-storage-slave-1 mysql -uroot -ppassword mysql
+USE mysql;
 ```
 
 И создадим пользователя:
@@ -316,9 +316,9 @@ show slave status\G
 </p>
 
 Теперь необходимо создать пользователя **haproxy_user**. Этот пользователь будет проверять жив ли slave. Для этого
-перейдем в контейнер:
+сменим БД на **mysql** командой:
 ```shell
-docker exec -it auth-storage-slave-2 mysql -uroot -ppassword mysql
+USE mysql;
 ```
 
 И создадим пользователя:
