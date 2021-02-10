@@ -157,23 +157,11 @@ show master status;
     <img src="static/balancing/show-master-status.png">
 </p>
 
-Теперь необходимо создать пользователя **haproxy_user**. Этот пользователь будет проверять жив ли master. Для этого
-сменим БД на **mysql** командой:
-```shell
-USE mysql;
-```
-
-И создадим пользователя:
+Теперь необходимо создать пользователя **haproxy_user**. Этот пользователь будет проверять жив ли master и slave 
+экземпляры MySQL. Достаточно будет пользователя добавить на стороне master-узла, т.к. затем это информация 
+среплицируется на slave-узлы.Для этого создадим пользователя:
 ```mysql
-INSERT INTO user (HOST, USER) VALUES('haproxy-otus', 'haproxy_user');
-flush privileges;
-```
-
-Далее необходимо создать пользователя **haproxy_root**, который бы принимал root права и мел доступ к БД от HAProxy. Для
-этого:
-```mysql
-GRANT ALL PRIVILEGES ON *.* TO 'haproxy_root'@'haproxy-otus' IDENTIFIED BY 'haproxy_root_pass' WITH GRANT OPTION;
-flush privileges;
+CREATE USER 'haproxy_user'@'%';
 ```
 
 Выходим из оболочки MySQL командой:
@@ -236,25 +224,6 @@ show slave status\G
     <img src="static/balancing/status-slave.png">
 </p>
 
-Теперь необходимо создать пользователя **haproxy_user**. Этот пользователь будет проверять жив ли slave. Для этого
-сменим БД на **mysql** командой:
-```shell
-USE mysql;
-```
-
-И создадим пользователя:
-```mysql
-INSERT INTO user (HOST, USER) VALUES('haproxy-otus', 'haproxy_user');
-flush privileges;
-```
-
-Далее необходимо создать пользователя **haproxy_root**, который бы принимал root права и мел доступ к БД от HAProxy. Для
-этого:
-```mysql
-GRANT ALL PRIVILEGES ON *.* TO 'haproxy_root'@'haproxy-otus' IDENTIFIED BY 'haproxy_root_pass' WITH GRANT OPTION;
-flush privileges;
-```
-
 Для того, чтобы выйти из контейнера, необходимо ввести:
 ```mysql based
 exit
@@ -315,25 +284,6 @@ show slave status\G
     <img src="static/balancing/status-slave.png">
 </p>
 
-Теперь необходимо создать пользователя **haproxy_user**. Этот пользователь будет проверять жив ли slave. Для этого
-сменим БД на **mysql** командой:
-```shell
-USE mysql;
-```
-
-И создадим пользователя:
-```mysql
-INSERT INTO user (HOST, USER) VALUES('haproxy-otus', 'haproxy_user');
-flush privileges;
-```
-
-Далее необходимо создать пользователя **haproxy_root**, который бы принимал root права и мел доступ к БД от HAProxy. Для
-этого:
-```mysql
-GRANT ALL PRIVILEGES ON *.* TO 'haproxy_root'@'haproxy-otus' IDENTIFIED BY 'haproxy_root_pass' WITH GRANT OPTION;
-flush privileges;
-```
-
 Для того, чтобы выйти из контейнера, необходимо ввести:
 ```mysql based
 exit
@@ -383,28 +333,77 @@ make app
 
 <a name="work-execute-read-stress-testing-preparation"></a>
 #### Подготовка
-Перед тем, как осуществить нагрузку на master-slave узлы баз дынных MySQL необходимо зарегистрировать пользователя в 
-системе. Для этого **curl**-ом сделаем запрос следующего вида:
+Перед тем, как осуществить нагрузку на чтение, необходимо зарегистрировать пользователя и получаем его access_token, 
+который понадобится в дальнейшем. Для этого **curl**-ом сделаем запросы следующего вида:
 ```shell script
 curl -X POST -H "Content-Type: application/json" \
     -d '{"email": "teploff@email.com", "password": "1234567890", "name": "Alexander", "surname": "Teplov", "birthday": "1994-04-10T20:21:25+00:00", "sex": "male", "city": "Moscow", "interests": "Programming"}' \
     http://localhost/auth/sign-up
+export ACCESS_TOKEN=$(curl -X POST -H "Content-Type: application/json" \
+    -d '{"email": "teploff@email.com", "password": "1234567890"}' \
+    http://localhost/auth/sign-in | jq -r '.access_token')
+```
+
+Проверим наличие access token-а:
+```shell script
+echo $ACCESS_TOKEN
 ```
 
 <a name="work-execute-read-stress-testing-implementation"></a>
 #### Выполнение
+Запускаем нагрузочное тестирование командой:
+```shell script
+make wrk
+```
 
+Замеряем нагрузку на первом slave-узле MySQL и первом экземпляре микросервиса auth, т.к. второй slave-узел MySQL и 
+второй экземпляр auth будет отключать спустя время. Для этого введем следующие команды в двух разных терминалах:
+```shell script
+docker stats auth-storage-slave-1 > load-slave.txt
+```
+и
+```shell script
+docker stats auth-1-otus > load-auth.txt
+```
+
+Спустя 30s в отдельном терминальном окне останавливаем docker-контейнеры:
+```shell script
+docker stop auth-2-otus
+docker stop auth-storage-slave-1 
+```
+
+Ждем окончания нагрузочного теста, который идет 60s, и прекращаем дампить статистику нагрузки с docker-контейнеров. В
+каждом терминальном окне жмем **Ctrl + C**.
 
 <a name="work-execute-read-results-stress-testing-implementation"></a>
 #### Результаты
+Детально с результатами метрик в процессе нагрузочного тестирования на работающий MySQL-slave узле и экземпляре 
+микросервиса auth можно ознакомиться 
+[тут](https://github.com/teploff/otus-highload/blob/main/replication/only_mysql/metrics/master_dump_before.txt) и
+[тут](https://github.com/teploff/otus-highload/blob/main/replication/only_mysql/metrics/master_dump_after.txt).
 
+Из результатов видно, что при отключении slave-узла на втором slave-узле нагрузка на:
+- CPU выросла c ***~995.11%*** на ***~0.09%***;
+- RAM выросла с ***~3.12%*** на ***~3.10%***;
+- NET I/O возросла с ***~435MB/985MB*** на ***~440MB/1.85GB***;
+- BLOCK I/O возросла с ***~127MB/3.81GB*** на ***~131MB/3.81GB***;
+
+Так же при отключении экземпляра микросервиса auth на втором экземпляре нагрузка на:
+- CPU выросла c ***~995.11%*** на ***~0.09%***;
+- RAM выросла с ***~3.12%*** на ***~3.10%***;
+- NET I/O возросла с ***~435MB/985MB*** на ***~440MB/1.85GB***;
+- BLOCK I/O возросла с ***~127MB/3.81GB*** на ***~131MB/3.81GB***;
+
+Все выше описанные метрики говорят, что доступные экземпляры будь то slave-узел MySQL или экземпляр сервиса auth
+получили на себя всю нагрузку и сам результат wrk не вернул ни одной трехсотой, четырех сотой или пятисотой ошибки. Это
+говорит, что балансировка отработала успешна и инструменты в виде Nginx и HAProxy справились со своей задачей. 
 
 <a name="results"></a>
 ## Итоги
 В ходе выполнения задания:
 - был описан процесс сборки и конфигурирования программного комплекса;
-- был декомпозирована монолитная инфраструктура на микросервисы;
-- был существенно доработан сервис диалогов между пользователями (gRPC & WS);
-- был внедрен механизм opentracing в виде jaeger-библиотеки;
-- был реализован API Gateway сервис, являющий revers-proxy и одной точкой входа в систему;
-- был внедрен OpenAPI на стороне микросервиса gateway;
+- была настроена async MySQL репликация между master и двумя slave-узлами;
+- был верно сконфигурирован HAProxy, выступающий балансировщиком между доступными MySQL узлами;
+- был верно сконфигурирован nginx, выступающий reverse-proxy и балансировщиком перед пользователем;
+- был проведено нагрузочное тестирование, показавшее устойчивую инфраструктуру в случае сбоев; 
+- были проанализированы результаты нагрузочного тестирования, доказывающие пригодность предложенной инфраструктуры;
