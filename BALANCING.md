@@ -117,6 +117,7 @@ docker exec -it auth-storage-master nano /etc/mysql/conf.d/mysql.cnf
 Дописываем в конец секции **[mysqld]** следующие строки:
 ```textmate
 [mysqld]
+...
 server-id = 1
 default_authentication_plugin=mysql_native_password
 log-bin = /var/log/mysql/mysql-bin.log
@@ -181,6 +182,7 @@ docker exec -it auth-storage-slave-1 nano /etc/mysql/conf.d/mysql.cnf
 Дописываем в конец секции **[mysqld]** следующие строки:
 ```textmate
 [mysqld]
+...
 server-id = 2
 default_authentication_plugin=mysql_native_password
 log_bin = /var/log/mysql/mysql-bin.log
@@ -241,6 +243,7 @@ docker exec -it auth-storage-slave-2 nano /etc/mysql/conf.d/mysql.cnf
 Дописываем в конец секции **[mysqld]** следующие строки:
 ```textmate
 [mysqld]
+...
 server-id = 3
 default_authentication_plugin=mysql_native_password
 log_bin = /var/log/mysql/mysql-bin.log
