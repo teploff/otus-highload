@@ -20,7 +20,7 @@ wrk:
 		-H "Authorization: ${ACCESS_TOKEN}" \
 		-t 10 \
 		-c 10 \
-		-d 15s \
+		-d 1m \
 		http://localhost/auth/user/get-by-email?email=teploff@email.com ;\
 
 down:

@@ -114,7 +114,7 @@ c помощью **nano**:
 docker exec -it auth-storage-master nano /etc/mysql/conf.d/mysql.cnf
 ```
 
-Дописываем в секцию **[mysqld]** следующие строки:
+Дописываем в конец секции **[mysqld]** следующие строки:
 ```textmate
 [mysqld]
 server-id = 1
@@ -158,8 +158,9 @@ show master status;
 </p>
 
 Теперь необходимо создать пользователя **haproxy_user**. Этот пользователь будет проверять жив ли master и slave 
-экземпляры MySQL. Достаточно будет пользователя добавить на стороне master-узла, т.к. затем это информация 
-среплицируется на slave-узлы.Для этого создадим пользователя:
+экземпляры MySQL со стороны HAProxy. Достаточно будет пользователя добавить на стороне master-узла, т.к. затем эта 
+информация среплицируется на slave-узлы. Важно, что пароль указывать не надо, иначе haproxy не сможет достучаться до
+ экземпляров MySQL. Создадим пользователя:
 ```mysql
 CREATE USER 'haproxy_user'@'%';
 ```
@@ -177,7 +178,7 @@ exit
 docker exec -it auth-storage-slave-1 nano /etc/mysql/conf.d/mysql.cnf
 ```
 
-Дописываем в секцию **[mysqld]** следующие строки:
+Дописываем в конец секции **[mysqld]** следующие строки:
 ```textmate
 [mysqld]
 server-id = 2
@@ -237,7 +238,7 @@ exit
 docker exec -it auth-storage-slave-2 nano /etc/mysql/conf.d/mysql.cnf
 ```
 
-Дописываем в секцию **[mysqld]** следующие строки:
+Дописываем в конец секции **[mysqld]** следующие строки:
 ```textmate
 [mysqld]
 server-id = 3
@@ -333,7 +334,7 @@ make app
 
 <a name="work-execute-read-stress-testing-preparation"></a>
 #### Подготовка
-Перед тем, как осуществить нагрузку на чтение, необходимо зарегистрировать пользователя и получаем его access_token, 
+Перед тем, как осуществить нагрузку на чтение, необходимо зарегистрировать пользователя и получить его access_token, 
 который понадобится в дальнейшем. Для этого **curl**-ом сделаем запросы следующего вида:
 ```shell script
 curl -X POST -H "Content-Type: application/json" \
@@ -369,7 +370,7 @@ docker stats auth-1-otus > load-auth.txt
 Спустя 30s в отдельном терминальном окне останавливаем docker-контейнеры:
 ```shell script
 docker stop auth-2-otus
-docker stop auth-storage-slave-1 
+docker stop auth-storage-slave-2 
 ```
 
 Ждем окончания нагрузочного теста, который идет 60s, и прекращаем дампить статистику нагрузки с docker-контейнеров. В
