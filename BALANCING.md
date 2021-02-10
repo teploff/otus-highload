@@ -157,6 +157,25 @@ show master status;
     <img src="static/balancing/show-master-status.png">
 </p>
 
+Теперь необходимо создать пользователя **haproxy_user**. Этот пользователь будет проверять жив ли master. Для этого
+перейдем в контейнер:
+```shell
+docker exec -it auth-storage-master mysql -uroot -ppassword mysql
+```
+
+И создадим пользователя:
+```mysql
+INSERT INTO user (HOST, USER) VALUES('haproxy-otus', 'haproxy_user');
+flush privileges;
+```
+
+Далее необходимо создать пользователя **haproxy_root**, который бы принимал root права и мел доступ к БД от HAProxy. Для
+этого:
+```mysql
+GRANT ALL PRIVILEGES ON *.* TO 'haproxy_root'@'haproxy-otus' IDENTIFIED BY 'haproxy_root_pass' WITH GRANT OPTION;
+flush privileges;
+```
+
 Выходим из оболочки MySQL командой:
 ```mysql based
 exit
@@ -217,6 +236,25 @@ show slave status\G
     <img src="static/balancing/status-slave.png">
 </p>
 
+Теперь необходимо создать пользователя **haproxy_user**. Этот пользователь будет проверять жив ли slave. Для этого
+перейдем в контейнер:
+```shell
+docker exec -it auth-storage-slave-1 mysql -uroot -ppassword mysql
+```
+
+И создадим пользователя:
+```mysql
+INSERT INTO user (HOST, USER) VALUES('haproxy-otus', 'haproxy_user');
+flush privileges;
+```
+
+Далее необходимо создать пользователя **haproxy_root**, который бы принимал root права и мел доступ к БД от HAProxy. Для
+этого:
+```mysql
+GRANT ALL PRIVILEGES ON *.* TO 'haproxy_root'@'haproxy-otus' IDENTIFIED BY 'haproxy_root_pass' WITH GRANT OPTION;
+flush privileges;
+```
+
 Для того, чтобы выйти из контейнера, необходимо ввести:
 ```mysql based
 exit
@@ -276,6 +314,25 @@ show slave status\G
 <p align="center">
     <img src="static/balancing/status-slave.png">
 </p>
+
+Теперь необходимо создать пользователя **haproxy_user**. Этот пользователь будет проверять жив ли slave. Для этого
+перейдем в контейнер:
+```shell
+docker exec -it auth-storage-slave-2 mysql -uroot -ppassword mysql
+```
+
+И создадим пользователя:
+```mysql
+INSERT INTO user (HOST, USER) VALUES('haproxy-otus', 'haproxy_user');
+flush privileges;
+```
+
+Далее необходимо создать пользователя **haproxy_root**, который бы принимал root права и мел доступ к БД от HAProxy. Для
+этого:
+```mysql
+GRANT ALL PRIVILEGES ON *.* TO 'haproxy_root'@'haproxy-otus' IDENTIFIED BY 'haproxy_root_pass' WITH GRANT OPTION;
+flush privileges;
+```
 
 Для того, чтобы выйти из контейнера, необходимо ввести:
 ```mysql based
