@@ -61,7 +61,7 @@
 ### Контейнеризация с помощью docker
 
 <a name="work-auto-discovery"></a>
-#### Механизм auto discovery и consul
+### Механизм auto discovery и consul
 
 
 <a name="results"></a>
