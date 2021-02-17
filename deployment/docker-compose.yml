@@ -219,6 +219,16 @@ services:
     networks:
       - otus-highload-network
 
+  consul-server:
+    image: consul
+    container_name: consul-server
+    command: agent -server -ui -node=server-1 -bootstrap-expect=1 -client=consul-client
+    ports:
+      - '8500:8500'
+      - '8600:8600/udp'
+    networks:
+      - otus-highload-network
+
   auth:
     build:
       context: ../backend/auth
@@ -233,10 +243,12 @@ services:
       - JWT_REFRESH_TOKEN_TIME_EXPIRE=24h
       - JAEGER_AGENT_ADDR=jaeger-otus:6831
       - JAEGER_SERVICE_NAME=auth
+      - CONSUL_ADDR=consul-server:8500
       - LOGGER_LEVEL=info
     depends_on:
       - auth-storage
       - jaeger
+      - consul-server
     networks:
       - otus-highload-network
 
@@ -262,6 +274,7 @@ services:
       - cache
       - nats-streaming
       - jaeger
+      - consul-server
     networks:
       - otus-highload-network
 
@@ -285,6 +298,7 @@ services:
     depends_on:
       - ch-cluster
       - jaeger
+      - consul-server
 
   gateway:
     build:
@@ -308,6 +322,7 @@ services:
       - social
       - messenger
       - jaeger
+      - consul-server
     networks:
       - otus-highload-network
 
