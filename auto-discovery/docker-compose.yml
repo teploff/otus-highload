@@ -353,6 +353,8 @@ services:
       - MESSENGER_GRPC_ADDR=messenger-otus:10004
       - JAEGER_AGENT_ADDR=jaeger-otus:6831
       - JAEGER_SERVICE_NAME=gateway
+      - CONSUL_ADDR=consul-server:8500
+      - CONSUL_SERVICE_NAME=messenger-otus
       - LOGGER_LEVEL=info
     depends_on:
       - auth
