@@ -244,9 +244,9 @@ services:
       - JAEGER_AGENT_ADDR=jaeger-otus:6831
       - JAEGER_SERVICE_NAME=auth
       - CONSUL_ADDR=consul-server:8500
-      - CONSUL_AGENT_ADDR=auth:10001
-      - CONSUL_SERVICE_ID=auth-service
-      - CONSUL_SERVICE_NAME=auth
+      - CONSUL_AGENT_ADDR=auth-otus:10001
+      - CONSUL_SERVICE_ID=auth-otus-service
+      - CONSUL_SERVICE_NAME=auth-otus
       - LOGGER_LEVEL=info
     depends_on:
       - auth-storage
@@ -271,6 +271,10 @@ services:
       - STAN_ADDR=nats://nats-streaming:4222
       - JAEGER_AGENT_ADDR=jaeger-otus:6831
       - JAEGER_SERVICE_NAME=social
+      - CONSUL_ADDR=consul-server:8500
+      - CONSUL_AGENT_ADDR=social-otus:10002
+      - CONSUL_SERVICE_ID=social-otus-service
+      - CONSUL_SERVICE_NAME=social-otus
       - LOGGER_LEVEL=info
     depends_on:
       - social-storage
@@ -281,12 +285,12 @@ services:
     networks:
       - otus-auto-discovery-network
 
-  messenger:
+  messenger-1:
     build:
       context: ../backend/messenger
       dockerfile: Dockerfile
     image: messenger:otus
-    container_name: messenger-otus
+    container_name: messenger-otus-1
     environment:
       - HTTP_ADDR=0.0.0.0:10003
       - GRPC_ADDR=0.0.0.0:10004
@@ -294,7 +298,37 @@ services:
       - CH_DSN=tcp://ch-cluster:9000?database=default&username=default&password=password
       - SHARDING_COUNT_NODES=2
       - JAEGER_AGENT_ADDR=jaeger-otus:6831
-      - JAEGER_SERVICE_NAME=messenger
+      - JAEGER_SERVICE_NAME=messenger-1
+      - CONSUL_ADDR=consul-server:8500
+      - CONSUL_AGENT_ADDR=messenger-otus-1:10003
+      - CONSUL_SERVICE_ID=messenger-otus-service-1
+      - CONSUL_SERVICE_NAME=messenger-otus
+    restart: unless-stopped
+    networks:
+      - otus-auto-discovery-network
+    depends_on:
+      - ch-cluster
+      - jaeger
+      - consul-server
+
+  messenger-2:
+    build:
+      context: ../backend/messenger
+      dockerfile: Dockerfile
+    image: messenger:otus
+    container_name: messenger-otus-2
+    environment:
+      - HTTP_ADDR=0.0.0.0:10003
+      - GRPC_ADDR=0.0.0.0:10004
+      - AUTH_ADDR=auth-otus:10001
+      - CH_DSN=tcp://ch-cluster:9000?database=default&username=default&password=password
+      - SHARDING_COUNT_NODES=2
+      - JAEGER_AGENT_ADDR=jaeger-otus:6831
+      - JAEGER_SERVICE_NAME=messenger-2
+      - CONSUL_ADDR=consul-server:8500
+      - CONSUL_AGENT_ADDR=messenger-otus-2:10003
+      - CONSUL_SERVICE_ID=messenger-otus-service-2
+      - CONSUL_SERVICE_NAME=messenger-otus
     restart: unless-stopped
     networks:
       - otus-auto-discovery-network
@@ -323,7 +357,8 @@ services:
     depends_on:
       - auth
       - social
-      - messenger
+      - messenger-1
+      - messenger-2
       - jaeger
       - consul-server
     networks:

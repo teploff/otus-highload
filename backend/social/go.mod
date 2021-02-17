@@ -12,6 +12,7 @@ require (
 	github.com/gobwas/httphead v0.1.0 // indirect
 	github.com/gobwas/pool v0.2.1 // indirect
 	github.com/gobwas/ws v1.0.4
+	github.com/hashicorp/consul/api v1.1.0
 	github.com/mailru/easyjson v0.7.6
 	github.com/nats-io/nats-streaming-server v0.20.0 // indirect
 	github.com/nats-io/stan.go v0.8.2

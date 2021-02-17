@@ -7,6 +7,7 @@ import (
 	_ "messenger/api/swagger"
 	"messenger/internal/app"
 	"messenger/internal/config"
+	"messenger/internal/infrastructure/consul"
 	zaplogger "messenger/internal/infrastructure/logger"
 	"messenger/internal/infrastructure/tracer"
 	"os"
@@ -54,6 +55,23 @@ func main() {
 		logger.Fatal("fail to connect jaeger", zap.Error(err))
 	}
 	defer closer.Close()
+
+	consulClient, err := consul.NewClient(cfg.Consul)
+	if err != nil {
+		logger.Fatal("fail to connect Consul", zap.Error(err))
+	}
+
+	if err = consulClient.Register(); err != nil {
+		logger.Fatal("", zap.Error(err))
+	}
+
+	defer func() {
+		if err = consulClient.Deregister(); err != nil {
+			logger.Fatal("", zap.Error(err))
+		}
+
+		logger.Info("service auth deregister in consul")
+	}()
 
 	chConn, err := sql.Open("clickhouse", cfg.Clickhouse.DSN)
 	if err != nil {

@@ -12,7 +12,7 @@ migrate:
 	docker image prune -f ;\
 
 app:
-	docker-compose -f docker-compose.yml up -d --build auth social messenger gateway ;\
+	docker-compose -f docker-compose.yml up -d --build auth social messenger-1 messenger-2 gateway ;\
 	docker image prune -f ;\
 
 down:

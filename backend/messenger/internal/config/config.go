@@ -15,6 +15,7 @@ type Config struct {
 	Auth       AuthConfig       `mapstructure:"auth"`
 	Clickhouse ClickhouseConfig `mapstructure:"ch"`
 	Jaeger     JaegerConfig     `mapstructure:"jaeger"`
+	Consul     ConsulConfig     `mapstructure:"consul"`
 	Logger     LoggerConfig     `mapstructure:"logger"`
 	Sharding   ShardingConfig   `mapstructure:"sharding"`
 }
@@ -38,6 +39,13 @@ type LoggerConfig struct {
 
 type JaegerConfig struct {
 	AgentAddr   string `mapstructure:"agent_addr"`
+	ServiceName string `mapstructure:"service_name"`
+}
+
+type ConsulConfig struct {
+	Addr        string `mapstructure:"addr"`
+	AgentAddr   string `mapstructure:"agent_addr"`
+	ServiceID   string `mapstructure:"service_id"`
 	ServiceName string `mapstructure:"service_name"`
 }
 
