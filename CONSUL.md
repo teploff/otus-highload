@@ -64,7 +64,8 @@
 - gateway;
 - auth;
 - messenger;
-- social;
+- social.
+
 Сборка docker-image'ов представляла собой multi-stage-сборку. Т.е. изначально собирался binary-файл и уже на втором
 этапе прокидывался в пустой image, в котором отсутствует лишнее. Подробнее о multi-stage сборке, можно узнать [здесь](https://docs.docker.com/develop/develop-images/multistage-build/).
   
@@ -73,6 +74,16 @@
 - [Dockerfile для auth](https://github.com/teploff/otus-highload/blob/features/configuration-system/backend/auth/Dockerfile);
 - [Dockerfile для messenger](https://github.com/teploff/otus-highload/tree/features/configuration-system/backend/messenger);
 - [Dockerfile для social](https://github.com/teploff/otus-highload/blob/features/configuration-system/backend/social/Dockerfile).
+
+Кроме того, были докеризированы и инфраструктуры не компоненты системы, а именно:
+- MySQL БД для микросервисов auth и social;
+- Redis для кеширования ленты новостей на стороне микросерврисы social;
+- Шина данных Nats-Streaming;
+- Кластер Clickhouse, состоящий из одного cluster узла и двух шардов;
+- Jaeger для трассировки запросов между микросервисами;
+- и собственно сам Consul.
+
+Вся представленная выше инфраструктура собрана в виде docker-compose файла, который располагается [здесь](https://github.com/teploff/otus-highload/blob/features/configuration-system/auto-discovery/docker-compose.yml).
 
 <a name="work-auto-discovery"></a>
 ### Механизм auto discovery и механизм балансировки через consul
