@@ -1,6 +1,11 @@
 package domain
 
-import "time"
+import (
+	"fmt"
+	"math/rand"
+	"sync"
+	"time"
+)
 
 type Chat struct {
 	ID           string         `json:"id"`
@@ -35,4 +40,32 @@ type GetMessagesResponse struct {
 	Limit    int32      `json:"limit"`
 	Offset   int32      `json:"offset"`
 	Messages []*Message `json:"messages"`
+}
+
+type ServerAvailableList struct {
+	servers []string
+
+	sync.Mutex
+}
+
+func NewServerAvailableList() *ServerAvailableList {
+	return &ServerAvailableList{servers: make([]string, 0, 1)}
+}
+
+func (s *ServerAvailableList) GetAddr() (string, error) {
+	s.Lock()
+	defer s.Unlock()
+
+	if len(s.servers) == 0 {
+		return "", fmt.Errorf("all severs are not available")
+	}
+
+	return s.servers[rand.Intn(len(s.servers))], nil
+}
+
+func (s *ServerAvailableList) Update(servers []string) {
+	s.Lock()
+	defer s.Unlock()
+
+	s.servers = servers
 }

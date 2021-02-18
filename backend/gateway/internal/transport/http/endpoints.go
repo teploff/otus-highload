@@ -6,6 +6,11 @@ import (
 	"encoding/json"
 	"gateway/internal/config"
 	"gateway/internal/domain"
+	"io/ioutil"
+	"net/http"
+	"net/http/httputil"
+	"net/url"
+
 	"github.com/gin-gonic/gin"
 	"github.com/go-kit/kit/endpoint"
 	"github.com/go-kit/kit/log"
@@ -13,10 +18,6 @@ import (
 	httptransport "github.com/go-kit/kit/transport/http"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/ext"
-	"io/ioutil"
-	"net/http"
-	"net/http/httputil"
-	"net/url"
 )
 
 type Endpoints struct {
@@ -27,7 +28,7 @@ type Endpoints struct {
 	Messenger *MessengerEndpoints
 }
 
-func MakeEndpoints(cfg *config.Config, service domain.GRPCMessengerProxyService) *Endpoints {
+func MakeEndpoints(cfg *config.Config, service domain.GRPCMessengerProxyService, messengerAddr *domain.ServerAvailableList) *Endpoints {
 	return &Endpoints{
 		cfg: cfg,
 		Auth: &AuthEndpoints{
@@ -57,7 +58,7 @@ func MakeEndpoints(cfg *config.Config, service domain.GRPCMessengerProxyService)
 			},
 		},
 		Messenger: &MessengerEndpoints{
-			WS:          makeHTTPProxyEndpoint(cfg.Messenger.HTTPAddr),
+			WS:          makeHTTPProxyWithBalanceEndpoint(messengerAddr),
 			CreateChat:  makeCreateChatEndpoint(service),
 			GetChats:    makeGetChatsEndpoint(service),
 			GetMessages: makeGetMessagesEndpoint(service),
@@ -94,6 +95,50 @@ type SocialEndpoints struct {
 
 func makeHTTPProxyEndpoint(targetHost string) gin.HandlerFunc {
 	return func(c *gin.Context) {
+		proxy := httputil.ReverseProxy{
+			Director: func(request *http.Request) {
+				request.Header.Add("X-Forwarded-Host", request.Host)
+				request.Header.Add("X-Origin-Host", targetHost)
+				request.URL.Scheme = "http"
+				request.URL.Host = targetHost
+			},
+		}
+
+		var clientSpan opentracing.Span
+		tracer := opentracing.GlobalTracer()
+
+		if parentSpan := opentracing.SpanFromContext(c.Request.Context()); parentSpan != nil {
+			clientSpan = tracer.StartSpan(
+				c.Request.RequestURI,
+				opentracing.ChildOf(parentSpan.Context()),
+			)
+		} else {
+			clientSpan = tracer.StartSpan(c.Request.RequestURI)
+		}
+		defer clientSpan.Finish()
+
+		ext.SpanKindRPCClient.Set(clientSpan)
+		c.Request = c.Request.WithContext(opentracing.ContextWithSpan(c.Request.Context(), clientSpan))
+
+		if span := opentracing.SpanFromContext(c.Request.Context()); span != nil {
+			opentracing.GlobalTracer().Inject(
+				span.Context(),
+				opentracing.HTTPHeaders,
+				opentracing.HTTPHeadersCarrier(c.Request.Header),
+			)
+		}
+
+		proxy.ServeHTTP(c.Writer, c.Request)
+	}
+}
+
+func makeHTTPProxyWithBalanceEndpoint(targetHosts *domain.ServerAvailableList) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		targetHost, err := targetHosts.GetAddr()
+		if err != nil {
+			c.AbortWithStatus(http.StatusBadGateway)
+		}
+
 		proxy := httputil.ReverseProxy{
 			Director: func(request *http.Request) {
 				request.Header.Add("X-Forwarded-Host", request.Host)
