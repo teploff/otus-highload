@@ -10,7 +10,7 @@
    - [ Характеристики железа ](#information-computer)
 3. [ Ход работы ](#work)
    - [ Контейнеризация с помощью docker ](#work-docker-containerization) 
-   - [ Механизм auto discovery и consul ](#work-auto-discovery) 
+   - [ Механизм auto-discovery и consul ](#work-auto-discovery) 
 4. [ Итоги ](#results)
 
 <img align="right" width="600" src="static/consul/preview.png">
@@ -86,7 +86,32 @@
 Вся представленная выше инфраструктура собрана в виде docker-compose файла, который располагается [здесь](https://github.com/teploff/otus-highload/blob/features/configuration-system/auto-discovery/docker-compose.yml).
 
 <a name="work-auto-discovery"></a>
-### Механизм auto discovery и механизм балансировки через consul
+### Механизм auto-discovery и механизм балансировки через consul
+Механизм auto-discovery представлен достаточно просто. Для этого необходимо, пользуясь API Consul:
+- зарегистрировать сервис, при его запуске;
+- выполнить обратную операцию регистрации, называемую *deregister* в API Consul'а, при завершения работы сервиса;
+- реализовать health-check endpoint для Consul'а, с помощью которого Consul будет определять "живучесть" микросервиса.
+
+GO-имплементация вышесказанного на примере микросервиса **auth** представлена [здесь](https://github.com/teploff/otus-highload/blob/features/configuration-system/backend/auth/internal/infrastructure/consul/consul.go).
+
+Механизм балансировки через consul осуществляется так же через его API.
+Для этого необходимо, зная интересующее наименование микросервиса, в данном случае это *messenger-service*, периодически (в отдельной 
+горутине) получать адреса активных экземпляров через consul API;
+
+GO-имплементация вышесказанного на примере микросервиса **gateway**, который балансирует нагрузку, представлена [здесь](https://github.com/teploff/otus-highload/blob/features/configuration-system/backend/gateway/internal/infrastructure/consul/consul.go).
+
+
+Зарегистрированные микросервисы у UI consul'а принимают следующее представление:<br />
+<p align="center">
+   <img src="static/consul/all-services.png">
+</p>
+
+
+Так же в нем отчетливо можно увидеть несколько зарегистрированных экземпляров одного и того же микросервиса по одному 
+наименованию:<br />
+<p align="center">
+   <img src="static/consul/messenger-instances.png">
+</p>
 
 
 <a name="results"></a>
