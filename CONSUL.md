@@ -124,7 +124,7 @@ git clone https://github.com/teploff/otus-highload.git && cd otus-highload
 
 Переходим в ветку **configuration-system**:
 ```shell
-git checkout configuration-system && cd auto-discovery
+git checkout features/configuration-system && cd auto-discovery
 ```
 
 Поднимаем инфраструктуру:
