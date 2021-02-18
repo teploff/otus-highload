@@ -11,7 +11,7 @@
 3. [ Ход работы ](#work)
    - [ Контейнеризация с помощью docker ](#work-docker-containerization) 
    - [ Механизм auto-discovery и consul ](#work-auto-discovery)
-   - [ Сборка и запуск инфраструктуры ] (#work-build-infrastructure)
+   - [ Сборка и запуск инфраструктуры ](#work-build-infrastructure)
 4. [ Итоги ](#results)
 
 <img align="right" width="600" src="static/consul/preview.png">
