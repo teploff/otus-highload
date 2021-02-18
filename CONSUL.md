@@ -69,10 +69,10 @@
 этапе прокидывался в пустой image, в котором отсутствует лишнее. Подробнее о multi-stage сборке, можно узнать [здесь](https://docs.docker.com/develop/develop-images/multistage-build/).
   
 Сами docker-файлы микросервисов:
-- [Dockerfile для gateway]();
-- [Dockerfile для auth]();
-- [Dockerfile для messenger]();
-- [Dockerfile для social]().
+- [Dockerfile для gateway](https://github.com/teploff/otus-highload/blob/features/configuration-system/backend/gateway/Dockerfile);
+- [Dockerfile для auth](https://github.com/teploff/otus-highload/blob/features/configuration-system/backend/auth/Dockerfile);
+- [Dockerfile для messenger](https://github.com/teploff/otus-highload/tree/features/configuration-system/backend/messenger);
+- [Dockerfile для social](https://github.com/teploff/otus-highload/blob/features/configuration-system/backend/social/Dockerfile).
 
 <a name="work-auto-discovery"></a>
 ### Механизм auto discovery и механизм балансировки через consul
