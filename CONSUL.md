@@ -10,7 +10,8 @@
    - [ Характеристики железа ](#information-computer)
 3. [ Ход работы ](#work)
    - [ Контейнеризация с помощью docker ](#work-docker-containerization) 
-   - [ Механизм auto-discovery и consul ](#work-auto-discovery) 
+   - [ Механизм auto-discovery и consul ](#work-auto-discovery)
+   - [ Сборка и запуск инфраструктуры ] (#work-build-infrastructure)
 4. [ Итоги ](#results)
 
 <img align="right" width="600" src="static/consul/preview.png">
@@ -113,6 +114,23 @@ GO-имплементация вышесказанного на примере �
    <img src="static/consul/messenger-instances.png">
 </p>
 
+
+<a name="work-build-infrastructure"></a>
+## Сборка и запуск инфраструктуры
+Клонируем наш проект:
+```shell
+git clone https://github.com/teploff/otus-highload.git
+```
+
+Переходим в ветку **configuration-system**:
+```shell
+git checkout configuration-system && && cd otus-highload/auto-discovery
+```
+
+Поднимаем инфраструктуру:
+```shell
+make init && make migrate && make app
+```
 
 <a name="results"></a>
 ## Итоги
