@@ -1,0 +1,380 @@
+version: '3.7'
+
+services:
+  auth-storage:
+    build:
+      context: ../deployment/mysql
+      dockerfile: Dockerfile
+    image: mysql:stage
+    # for debugging
+    #    ports:
+    #      - "3306:3306"
+    container_name: auth-storage
+    command: --default-authentication-plugin=mysql_native_password
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+      MYSQL_DATABASE: auth
+    volumes:
+      - auth-storage-data:/var/lib/mysql
+    networks:
+      - otus-auto-discovery-network
+
+  social-storage:
+    build:
+      context: ../deployment/mysql
+      dockerfile: Dockerfile
+    image: mysql:stage
+    # for debugging
+    #    ports:
+    #      - "3307:3306"
+    container_name: social-storage
+    command: --default-authentication-plugin=mysql_native_password
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+      MYSQL_DATABASE: social-network
+    volumes:
+      - social-storage-data:/var/lib/mysql
+    networks:
+      - otus-auto-discovery-network
+
+  cache:
+    build:
+      context: ../deployment/redis
+      dockerfile: Dockerfile
+    container_name: redis-cache
+    image: redis:stage
+    # for debugging
+    #    ports:
+    #      - "6379:6379"
+    volumes:
+      - redis-cache-data:/data
+    networks:
+      - otus-auto-discovery-network
+
+  nats-streaming:
+    image: nats-streaming
+    container_name: nats-streaming
+    # for debugging
+    #    ports:
+    #      - "4222:4222"
+    #      - "8222:8222"
+    command:
+      - "--cluster_id=stan-cluster"
+      - "--store=file"
+      - "--dir=datastore"
+      - "--http_port=8222"
+      - "--max_age=1h"
+      - "--max_inactivity=1h"
+    networks:
+      - otus-auto-discovery-network
+
+  auth-migrator:
+    build:
+      context: ../tools/migrator
+      dockerfile: Dockerfile
+    image: migrator:mysql
+    container_name: auth-migrator
+    environment:
+      MIGRATIONS_PATH: "./migrations"
+      DSN: "user:password@tcp(auth-storage:3306)/auth"
+      OPERATION: "up"
+    volumes:
+      - ../backend/migrations/mysql/auth:/app/migrations
+    depends_on:
+      - auth-storage
+    networks:
+      - otus-auto-discovery-network
+
+  social-migrator:
+    build:
+      context: ../tools/migrator
+      dockerfile: Dockerfile
+    image: migrator:mysql
+    container_name: social-migrator
+    environment:
+      MIGRATIONS_PATH: "./migrations"
+      DSN: "user:password@tcp(social-storage:3306)/social-network"
+      OPERATION: "up"
+    volumes:
+      - ../backend/migrations/mysql/social:/app/migrations
+    depends_on:
+      - social-storage
+    networks:
+      - otus-auto-discovery-network
+
+  ch-cluster:
+    image: yandex/clickhouse-server:20.6.6.7
+    container_name: ch-cluster
+    # for debugging
+    #    ports:
+    #      - "8123:8123"
+    #      - "9000:9000"
+    volumes:
+      - ch-cluster-data:/opt/clickhouse/data
+      - ../deployment/clickhouse/cluster/config.xml:/etc/clickhouse-server/config.xml
+      - ../deployment/clickhouse/cluster/users.xml:/etc/clickhouse-server/users.xml
+    ulimits:
+      nproc: 65535
+      nofile:
+        soft: 262144
+        hard: 262144
+    depends_on:
+      - ch-shard-0
+      - ch-shard-1
+    networks:
+      - otus-auto-discovery-network
+
+  ch-shard-0:
+    image: yandex/clickhouse-server:20.6.6.7
+    container_name: ch-shard-0
+    volumes:
+      - ch-shard-0-data:/opt/clickhouse/data
+      - ../deployment/clickhouse/shard/config.xml:/etc/clickhouse-server/config.xml
+      - ../deployment/clickhouse/shard/users.xml:/etc/clickhouse-server/users.xml
+    ulimits:
+      nproc: 65535
+      nofile:
+        soft: 262144
+        hard: 262144
+    networks:
+      - otus-auto-discovery-network
+
+  ch-shard-1:
+    image: yandex/clickhouse-server:20.6.6.7
+    container_name: ch-shard-1
+    volumes:
+      - ch-shard-1-data:/opt/clickhouse/data
+      - ../deployment/clickhouse/shard/config.xml:/etc/clickhouse-server/config.xml
+      - ../deployment/clickhouse/shard/users.xml:/etc/clickhouse-server/users.xml
+    ulimits:
+      nproc: 65535
+      nofile:
+        soft: 262144
+        hard: 262144
+    networks:
+      - otus-auto-discovery-network
+
+  ch-cluster-migrator:
+    build:
+      context: ../tools/ch-migrator
+      dockerfile: Dockerfile
+    image: ch-migrator:sharding
+    container_name: ch-cluster-migrator
+    environment:
+      MIGRATIONS_PATH: "./migrations"
+      DSN: "clickhouse://ch-cluster:9000?database=default&username=default&password=password&x-multi-statement=true"
+      OPERATION: "up"
+    volumes:
+      - ../backend/migrations/clickhouse/cluster:/app/migrations
+    networks:
+      - otus-auto-discovery-network
+    depends_on:
+      - ch-cluster
+
+  ch-shard-migrator-0:
+    build:
+      context: ../tools/ch-migrator
+      dockerfile: Dockerfile
+    image: ch-migrator:sharding
+    container_name: ch-migrator-0
+    environment:
+      MIGRATIONS_PATH: "./migrations"
+      DSN: "clickhouse://ch-shard-0:9000?database=default&username=default&password=password&x-multi-statement=true"
+      OPERATION: "up"
+    volumes:
+      - ../backend/migrations/clickhouse/shard:/app/migrations
+    networks:
+      - otus-auto-discovery-network
+    depends_on:
+      - ch-shard-0
+
+  ch-shard-migrator-1:
+    build:
+      context: ../tools/ch-migrator
+      dockerfile: Dockerfile
+    image: ch-migrator:sharding
+    container_name: ch-migrator-1
+    environment:
+      MIGRATIONS_PATH: "./migrations"
+      DSN: "clickhouse://ch-shard-1:9000?database=default&username=default&password=password&x-multi-statement=true"
+      OPERATION: "up"
+    volumes:
+      - ../backend/migrations/clickhouse/shard:/app/migrations
+    networks:
+      - otus-auto-discovery-network
+    depends_on:
+      - ch-shard-1
+
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    container_name: jaeger-otus
+    # for debugging
+    ports:
+      #      - '6831:6831/udp'
+      - '16686:16686'
+    networks:
+      - otus-auto-discovery-network
+
+  consul-server:
+    image: consul
+    container_name: consul-server
+    command: agent -server -ui -node=server-1 -bootstrap-expect=1 -client=0.0.0.0
+    ports:
+      - '8500:8500'
+      - '8600:8600/udp'
+    networks:
+      - otus-auto-discovery-network
+
+  auth:
+    build:
+      context: ../backend/auth
+      dockerfile: Dockerfile
+    image: auth:otus
+    container_name: auth-otus
+    environment:
+      - ADDR=0.0.0.0:10001
+      - STORAGE_DSN=user:password@tcp(auth-storage:3306)/auth?parseTime=true
+      - JWT_SECRET=secret
+      - JWT_ACCESS_TOKEN_TIME_EXPIRE=1h
+      - JWT_REFRESH_TOKEN_TIME_EXPIRE=24h
+      - JAEGER_AGENT_ADDR=jaeger-otus:6831
+      - JAEGER_SERVICE_NAME=auth
+      - CONSUL_ADDR=consul-server:8500
+      - CONSUL_AGENT_ADDR=auth-otus:10001
+      - CONSUL_SERVICE_ID=auth-otus-service
+      - CONSUL_SERVICE_NAME=auth-otus
+      - LOGGER_LEVEL=info
+    depends_on:
+      - auth-storage
+      - jaeger
+      - consul-server
+    networks:
+      - otus-auto-discovery-network
+
+  social:
+    build:
+      context: ../backend/social
+      dockerfile: Dockerfile
+    image: social:otus
+    container_name: social-otus
+    environment:
+      - ADDR=0.0.0.0:10002
+      - AUTH_ADDR=auth-otus:10001
+      - STORAGE_DSN=user:password@tcp(social-storage:3306)/social-network?parseTime=true
+      - HEATER_AUTH_DSN=user:password@tcp(auth-storage:3306)/auth?parseTime=true
+      - HEATER_SOCIAL_DSN=user:password@tcp(social-storage:3306)/social-network?parseTime=true
+      - STAN_CLUSTER_ID=stan-cluster
+      - STAN_ADDR=nats://nats-streaming:4222
+      - JAEGER_AGENT_ADDR=jaeger-otus:6831
+      - JAEGER_SERVICE_NAME=social
+      - CONSUL_ADDR=consul-server:8500
+      - CONSUL_AGENT_ADDR=social-otus:10002
+      - CONSUL_SERVICE_ID=social-otus-service
+      - CONSUL_SERVICE_NAME=social-otus
+      - LOGGER_LEVEL=info
+    depends_on:
+      - social-storage
+      - cache
+      - nats-streaming
+      - jaeger
+      - consul-server
+    networks:
+      - otus-auto-discovery-network
+
+  messenger-1:
+    build:
+      context: ../backend/messenger
+      dockerfile: Dockerfile
+    image: messenger:otus
+    container_name: messenger-otus-1
+    environment:
+      - HTTP_ADDR=0.0.0.0:10003
+      - GRPC_ADDR=0.0.0.0:10004
+      - AUTH_ADDR=auth-otus:10001
+      - CH_DSN=tcp://ch-cluster:9000?database=default&username=default&password=password
+      - SHARDING_COUNT_NODES=2
+      - JAEGER_AGENT_ADDR=jaeger-otus:6831
+      - JAEGER_SERVICE_NAME=messenger-1
+      - CONSUL_ADDR=consul-server:8500
+      - CONSUL_AGENT_ADDR=messenger-otus-1:10003
+      - CONSUL_SERVICE_ID=messenger-otus-service-1
+      - CONSUL_SERVICE_NAME=messenger-otus
+    restart: unless-stopped
+    networks:
+      - otus-auto-discovery-network
+    depends_on:
+      - ch-cluster
+      - jaeger
+      - consul-server
+
+  messenger-2:
+    build:
+      context: ../backend/messenger
+      dockerfile: Dockerfile
+    image: messenger:otus
+    container_name: messenger-otus-2
+    environment:
+      - HTTP_ADDR=0.0.0.0:10003
+      - GRPC_ADDR=0.0.0.0:10004
+      - AUTH_ADDR=auth-otus:10001
+      - CH_DSN=tcp://ch-cluster:9000?database=default&username=default&password=password
+      - SHARDING_COUNT_NODES=2
+      - JAEGER_AGENT_ADDR=jaeger-otus:6831
+      - JAEGER_SERVICE_NAME=messenger-2
+      - CONSUL_ADDR=consul-server:8500
+      - CONSUL_AGENT_ADDR=messenger-otus-2:10003
+      - CONSUL_SERVICE_ID=messenger-otus-service-2
+      - CONSUL_SERVICE_NAME=messenger-otus
+    restart: unless-stopped
+    networks:
+      - otus-auto-discovery-network
+    depends_on:
+      - ch-cluster
+      - jaeger
+      - consul-server
+
+  gateway:
+    build:
+      context: ../backend/gateway
+      dockerfile: Dockerfile
+    image: gateway:otus
+    container_name: gateway-otus
+    ports:
+      - '10000:10000'
+    environment:
+      - ADDR=0.0.0.0:10000
+      - AUTH_ADDR=auth-otus:10001
+      - SOCIAL_ADDR=social-otus:10002
+      - MESSENGER_HTTP_ADDR=messenger-otus:10003
+      - MESSENGER_GRPC_ADDR=messenger-otus:10004
+      - JAEGER_AGENT_ADDR=jaeger-otus:6831
+      - JAEGER_SERVICE_NAME=gateway
+      - CONSUL_ADDR=consul-server:8500
+      - CONSUL_SERVICE_NAME=messenger-otus
+      - LOGGER_LEVEL=info
+    depends_on:
+      - auth
+      - social
+      - messenger-1
+      - messenger-2
+      - jaeger
+      - consul-server
+    networks:
+      - otus-auto-discovery-network
+
+volumes:
+  auth-storage-data:
+  social-storage-data:
+  ch-cluster-data:
+  ch-shard-0-data:
+  ch-shard-1-data:
+  redis-cache-data:
+
+networks:
+  otus-auto-discovery-network:
+    name: otus-auto-discovery-network
+    driver: bridge

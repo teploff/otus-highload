@@ -38,6 +38,10 @@ func NewHTTPServer(addr string, endpoints *Endpoints) *http.Server {
 		}
 	}
 
+	router.GET("/health-check", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{})
+	})
+
 	return &http.Server{
 		Addr:    addr,
 		Handler: router,

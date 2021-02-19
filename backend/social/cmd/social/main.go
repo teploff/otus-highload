@@ -9,6 +9,7 @@ import (
 	"social/internal/app"
 	"social/internal/config"
 	"social/internal/infrastructure/cache"
+	"social/internal/infrastructure/consul"
 	zaplogger "social/internal/infrastructure/logger"
 	"social/internal/infrastructure/stan"
 	"social/internal/infrastructure/tracer"
@@ -55,6 +56,23 @@ func main() {
 		logger.Fatal("fail to connect jaeger", zap.Error(err))
 	}
 	defer closer.Close()
+
+	consulClient, err := consul.NewClient(cfg.Consul)
+	if err != nil {
+		logger.Fatal("fail to connect Consul", zap.Error(err))
+	}
+
+	if err = consulClient.Register(); err != nil {
+		logger.Fatal("", zap.Error(err))
+	}
+
+	defer func() {
+		if err = consulClient.Deregister(); err != nil {
+			logger.Fatal("", zap.Error(err))
+		}
+
+		logger.Info("service auth deregister in consul")
+	}()
 
 	mysqlConn, err := sql.Open("mysql", cfg.Storage.DSN)
 	if err != nil {

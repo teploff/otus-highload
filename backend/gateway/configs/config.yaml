@@ -14,5 +14,9 @@ jaeger:
   agent_addr: "0.0.0.0:6831"
   service_name: "gateway"
 
+consul:
+  addr: "localhost:8500"
+  service_name: "auth"
+
 logger:
   level: "info"

@@ -14,6 +14,7 @@ type Config struct {
 	Messenger MessengerConfig `mapstructure:"messenger"`
 	Social    SocialConfig    `mapstructure:"social"`
 	Jaeger    JaegerConfig    `mapstructure:"jaeger"`
+	Consul    ConsulConfig    `mapstructure:"consul"`
 	Logger    LoggerConfig    `mapstructure:"logger"`
 }
 
@@ -41,6 +42,11 @@ type SocialConfig struct {
 
 type JaegerConfig struct {
 	AgentAddr   string `mapstructure:"agent_addr"`
+	ServiceName string `mapstructure:"service_name"`
+}
+
+type ConsulConfig struct {
+	Addr        string `mapstructure:"addr"`
 	ServiceName string `mapstructure:"service_name"`
 }
 

@@ -13,7 +13,13 @@ sharding:
 
 jaeger:
   agent_addr: "0.0.0.0:6831"
-  service_name: "social"
+  service_name: "messenger"
+
+consul:
+  addr: "localhost:8500"
+  agent_addr: "127.0.0.1:10003"
+  service_id: "messenger-service"
+  service_name: "messenger"
 
 logger:
   level: "info"

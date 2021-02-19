@@ -31,6 +31,10 @@ func NewHTTPServer(addr string, endpoints *Endpoints) *http.Server {
 		}
 	}
 
+	router.GET("/health-check", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{})
+	})
+
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	return &http.Server{

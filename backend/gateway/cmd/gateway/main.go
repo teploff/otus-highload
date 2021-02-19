@@ -6,11 +6,12 @@ import (
 	"gateway/internal/config"
 	zapLogger "gateway/internal/infrastructure/logger"
 	"gateway/internal/infrastructure/tracer"
-	"go.uber.org/zap"
-	"google.golang.org/grpc"
 	"os"
 	"os/signal"
 	"syscall"
+
+	"go.uber.org/zap"
+	"google.golang.org/grpc"
 )
 
 func main() {

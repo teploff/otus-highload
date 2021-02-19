@@ -18,6 +18,7 @@ type Config struct {
 	Stan    StanConfig    `mapstructure:"stan"`
 	JWT     JWTConfig     `mapstructure:"jwt"`
 	Jaeger  JaegerConfig  `mapstructure:"jaeger"`
+	Consul  ConsulConfig  `mapstructure:"consul"`
 	Logger  LoggerConfig  `mapstructure:"logger"`
 }
 
@@ -65,6 +66,13 @@ type JWTConfig struct {
 
 type JaegerConfig struct {
 	AgentAddr   string `mapstructure:"agent_addr"`
+	ServiceName string `mapstructure:"service_name"`
+}
+
+type ConsulConfig struct {
+	Addr        string `mapstructure:"addr"`
+	AgentAddr   string `mapstructure:"agent_addr"`
+	ServiceID   string `mapstructure:"service_id"`
 	ServiceName string `mapstructure:"service_name"`
 }
 
