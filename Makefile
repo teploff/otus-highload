@@ -1,8 +1,8 @@
-.PHONY: infrastructure migrate service reload_auth reload_social reload_messenger reload_gateway reload_frontend down
+.PHONY: init migrate app frontend reload_auth reload_social reload_messenger reload_gateway reload_frontend down
 
-infrastructure:
+init:
 	docker-compose -f deployment/docker-compose.yml up -d --build ch-cluster ch-shard-0 ch-shard-1 auth-storage \
-		social-storage cache nats-streaming jaeger ;\
+		social-storage cache nats-streaming jaeger zabbix-web-nginx ;\
 
 migrate:
 	docker-compose -f deployment/docker-compose.yml up --build auth-migrator social-migrator ch-cluster-migrator \
@@ -10,9 +10,13 @@ migrate:
 	docker rm -f auth-migrator social-migrator ch-cluster-migrator ch-migrator-0 ch-migrator-1 ;\
 	docker image prune -f ;\
 
-service:
+app:
 	docker-compose -f deployment/docker-compose.yml up -d --build auth social messenger gateway ;\
 	docker image prune -f ;\
+
+frontend:
+	docker-compose -f deployment/docker-compose.yml up -d --build frontend ;\
+    docker image prune -f ;\
 
 reload_auth:
 	docker rm -f auth-otus ;\

@@ -222,10 +222,47 @@ services:
   consul-server:
     image: consul
     container_name: consul-server
-    command: agent -server -ui -node=server-1 -bootstrap-expect=1 -client=consul-client
+    command: agent -server -ui -node=server-1 -bootstrap-expect=1 -client=0.0.0.0
     ports:
       - '8500:8500'
       - '8600:8600/udp'
+    networks:
+      - otus-highload-network
+
+  pg-zabbix:
+    container_name: pg-zabbix
+    image: postgres:12-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: zabbix
+    networks:
+      - otus-highload-network
+
+  zabbix-server:
+    image: zabbix/zabbix-server-pgsql:alpine-latest
+    container_name: zabbix-server
+    environment:
+      - DB_SERVER_HOST=pg-zabbix
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+    depends_on:
+      - pg-zabbix
+    networks:
+      - otus-highload-network
+
+  zabbix-web-nginx:
+    image: zabbix/zabbix-web-nginx-pgsql:alpine-latest
+    container_name: zabbix-web-nginx
+    environment:
+      - DB_SERVER_HOST=pg-zabbix
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+      - ZBX_SERVER_HOST=zabbix-server
+    ports:
+      - '8085:8080'
+    depends_on:
+      - zabbix-server
     networks:
       - otus-highload-network
 
@@ -244,6 +281,9 @@ services:
       - JAEGER_AGENT_ADDR=jaeger-otus:6831
       - JAEGER_SERVICE_NAME=auth
       - CONSUL_ADDR=consul-server:8500
+      - CONSUL_AGENT_ADDR=auth-otus:10001
+      - CONSUL_SERVICE_ID=auth-otus-service
+      - CONSUL_SERVICE_NAME=auth-otus
       - LOGGER_LEVEL=info
     depends_on:
       - auth-storage
@@ -268,6 +308,10 @@ services:
       - STAN_ADDR=nats://nats-streaming:4222
       - JAEGER_AGENT_ADDR=jaeger-otus:6831
       - JAEGER_SERVICE_NAME=social
+      - CONSUL_ADDR=consul-server:8500
+      - CONSUL_AGENT_ADDR=social-otus:10002
+      - CONSUL_SERVICE_ID=social-otus-service
+      - CONSUL_SERVICE_NAME=social-otus
       - LOGGER_LEVEL=info
     depends_on:
       - social-storage
@@ -292,6 +336,10 @@ services:
       - SHARDING_COUNT_NODES=2
       - JAEGER_AGENT_ADDR=jaeger-otus:6831
       - JAEGER_SERVICE_NAME=messenger
+      - CONSUL_ADDR=consul-server:8500
+      - CONSUL_AGENT_ADDR=messenger-otus-2:10003
+      - CONSUL_SERVICE_ID=messenger-otus-service-2
+      - CONSUL_SERVICE_NAME=messenger-otus
     restart: unless-stopped
     networks:
       - otus-highload-network
@@ -299,6 +347,7 @@ services:
       - ch-cluster
       - jaeger
       - consul-server
+      - zabbix-server
 
   gateway:
     build:
@@ -316,6 +365,8 @@ services:
       - MESSENGER_GRPC_ADDR=messenger-otus:10004
       - JAEGER_AGENT_ADDR=jaeger-otus:6831
       - JAEGER_SERVICE_NAME=gateway
+      - CONSUL_ADDR=consul-server:8500
+      - CONSUL_SERVICE_NAME=messenger-otus
       - LOGGER_LEVEL=info
     depends_on:
       - auth
