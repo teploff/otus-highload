@@ -22,6 +22,9 @@ github.com/alecthomas/template
 github.com/alecthomas/template/parse
 # github.com/armon/go-metrics v0.0.0-20180917152333-f0300d1749da
 github.com/armon/go-metrics
+# github.com/blacked/go-zabbix v0.0.0-20170118040903-3c6a95ec4fdc
+## explicit
+github.com/blacked/go-zabbix
 # github.com/cloudflare/golz4 v0.0.0-20150217214814-ef862a3cdc58
 github.com/cloudflare/golz4
 # github.com/fsnotify/fsnotify v1.4.9
