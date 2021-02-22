@@ -340,8 +340,9 @@ services:
       - CONSUL_AGENT_ADDR=messenger-otus-2:10003
       - CONSUL_SERVICE_ID=messenger-otus-service-2
       - CONSUL_SERVICE_NAME=messenger-otus
-      - ZABBIX_HOST=zabbix-server
+      - ZABBIX_SERVER_HOST=zabbix-server
       - ZABBIX_PORT=10051
+      - ZABBIX_HOST_NAME=Zabbix server
     restart: unless-stopped
     networks:
       - otus-highload-network

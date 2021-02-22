@@ -51,8 +51,9 @@ type ConsulConfig struct {
 }
 
 type ZabbixConfig struct {
-	Host string `mapstructure:"host"`
-	Port int    `mapstructure:"port"`
+	ServerHost string `mapstructure:"server_host"`
+	Port       int    `mapstructure:"port"`
+	HostName   string `mapstructure:"host_name"`
 }
 
 type ShardingConfig struct {

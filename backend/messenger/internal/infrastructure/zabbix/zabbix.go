@@ -10,15 +10,17 @@ import (
 )
 
 type Client struct {
-	sender *zbx.Sender
+	sender   *zbx.Sender
+	hostName string
 
 	logger *zap.Logger
 }
 
 func NewClient(cfg config.ZabbixConfig, logger *zap.Logger) *Client {
 	return &Client{
-		sender: zbx.NewSender(cfg.Host, cfg.Port),
-		logger: logger,
+		sender:   zbx.NewSender(cfg.ServerHost, cfg.Port),
+		hostName: cfg.HostName,
+		logger:   logger,
 	}
 }
 
@@ -32,12 +34,9 @@ func (c *Client) Publish(ctx context.Context) {
 		case <-ticker.C:
 			pkg := c.collectMetrics()
 
-			res, err := c.sender.Send(pkg)
-			if err != nil {
+			if _, err := c.sender.Send(pkg); err != nil {
 				c.logger.Error("send pkg to zabbix", zap.Error(err))
 			}
-
-			c.logger.Info(string(res))
 		}
 	}
 
@@ -46,8 +45,8 @@ func (c *Client) Publish(ctx context.Context) {
 func (c *Client) collectMetrics() *zbx.Packet {
 	metrics := make([]*zbx.Metric, 0, 1)
 
-	metrics = append(metrics, zbx.NewMetric("messenger", "messenger-cpu", "1.22", time.Now().Unix()))
-	metrics = append(metrics, zbx.NewMetric("messenger", "status", "OK", time.Now().Unix()))
+	metrics = append(metrics, zbx.NewMetric(c.hostName, "messenger-cpu", "1.22", time.Now().Unix()))
+	metrics = append(metrics, zbx.NewMetric(c.hostName, "status", "OK", time.Now().Unix()))
 
 	return zbx.NewPacket(metrics)
 }
