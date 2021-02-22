@@ -118,6 +118,10 @@ github.com/hashicorp/serf/coordinate
 github.com/json-iterator/go
 # github.com/leodido/go-urn v1.2.0
 github.com/leodido/go-urn
+# github.com/mackerelio/go-osstat v0.1.0
+## explicit
+github.com/mackerelio/go-osstat/cpu
+github.com/mackerelio/go-osstat/memory
 # github.com/magiconair/properties v1.8.1
 github.com/magiconair/properties
 # github.com/mailru/easyjson v0.0.0-20180823135443-60711f1a8329
