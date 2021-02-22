@@ -86,7 +86,7 @@ make init && make migrate && make app
 именно:
 - в качестве хранилища был выбран [postgreSQL](https://hub.docker.com/layers/postgres/library/postgres/12-alpine/images/sha256-95ee5993459f57dddd1e42d0c11adf8363172b3828f94ed7a5ecac74da0e8ec4?context=explore) 12 версии;
 - в качестве zabbix-сервера был выбран [zabbix-server-pgsql](https://hub.docker.com/r/zabbix/zabbix-server-pgsql);
-- в качестве zabbix-frontend'а был выбран [abbix-web-nginx-pgsql](https://hub.docker.com/r/zabbix/zabbix-web-nginx-pgsql).
+- в качестве zabbix-frontend'а был выбран [zabbix-web-nginx-pgsql](https://hub.docker.com/r/zabbix/zabbix-web-nginx-pgsql).
 
 Подробнее о том, как он собран в docker-compose'е проекта, можно посмотреть [здесь](https://github.com/teploff/otus-highload/blob/features/monitoring/deployment/docker-compose.yml#L242).
 
@@ -103,17 +103,22 @@ LogIn'а по ссылке: http://localhost:8085/. Нас попросят вв
     <img src="static/monitoring/zabbix-cfg-hosts.png">
 </p>
 
-Далее, находясь во вкладке **Hosts**, выбираем **Items**, как показано на рисунке:</br>
+Далее, находясь во вкладке **Hosts**, выбираем **Items**:</br>
 <p align="center">
     <img src="static/monitoring/zabbix-cfg-items.png">
 </p>
 
-Затем необходимо нажать на кнопку **Create item**, как показано на рисунке:</br>
+Затем необходимо нажать на кнопку **Create item** для создания метрики:</br>
 <p align="center">
     <img src="static/monitoring/zabbix-cfg-create-button.png">
 </p>
 
-После этого, мы попадаем на форму, на которой должны создать каждую из метрик. Для этого обязательно:
+После этого, мы попадаем на форму, на которой должны создать каждую из метрик. </br>
+<p align="center">
+   <img src="static/monitoring/zabbix-cfg-create-form.png">
+</p>
+
+Для этого обязательно:
 - выбираем в секции **Type** - **Zabbix trapper**;
 - даем наименование метрики в секции **Name**;
 - даем уникальный идентификатор метрики или ключ **Key**, по которому со стороны приложения будем ее отсылать;
@@ -127,7 +132,7 @@ LogIn'а по ссылке: http://localhost:8085/. Нас попросят вв
 
 <a name="work-zabbix-metrics"></a>
 ### Просмотр метрик
-Для того, чтобы увидеть значения по метрикам, необходимо перейти во вкладку **Monitoring** -> **Last data**. В моем
+Для того, чтобы увидеть значения метрик, необходимо перейти во вкладку **Monitoring** -> **Last data**. В моем
 случае представление будет следующим:</br>
 <p align="center">
     <img src="static/monitoring/zabbix-metrics-data.png">
@@ -139,7 +144,7 @@ LogIn'а по ссылке: http://localhost:8085/. Нас попросят вв
     <img src="static/monitoring/zabbix-metrics-mem-free.png">
 </p>
 
-и метрика по сипользованию CPU **cpu-user-usage**: </br>
+и метрика по использованию CPU **cpu-user-usage**: </br>
 <p align="center">
     <img src="static/monitoring/zabbix-metrics-cpu-user.png">
 </p>
