@@ -82,7 +82,8 @@ make init && make migrate && make app
 **Инфраструктура**
 
 Для того, чтобы слать метрики, необходим сервер zabbix-а с хранилищем для их персистентности и zabbix-frontend для 
-их конфигурирования и отображения в виде dashboard-ов. Все перечисленные компоненты подняты в докерах, а именно:
+их конфигурирования и отображения в виде dashboard-ов. Все перечисленные компоненты подняты в docker-контейнерах, а 
+именно:
 - в хранилище был выбран [postgreSQL](https://hub.docker.com/layers/postgres/library/postgres/12-alpine/images/sha256-95ee5993459f57dddd1e42d0c11adf8363172b3828f94ed7a5ecac74da0e8ec4?context=explore) 12 версии;
 - в качестве zabbix-сервера был выбран [zabbix-server-pgsql](https://hub.docker.com/r/zabbix/zabbix-server-pgsql);
 - в качестве zabbix-frontend'а был выбран [abbix-web-nginx-pgsql](https://hub.docker.com/r/zabbix/zabbix-web-nginx-pgsql).
