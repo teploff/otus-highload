@@ -13,6 +13,9 @@
    - [ Мониторинг с помощью Zabbix ](#work-zabbix)
         - [ Подготовка ](#work-zabbix-preparation)
         - [ Просмотр метрик ](#work-zabbix-metrics)
+   - [ Мониторинг с помощью Prometheus ](#work-prometheus)
+        - [ Подготовка ](#work-prometheus-preparation)
+        - [ Визуализация метрик с помощью Grafana ](#work-prometheus-grafana-visualize)
 4. [ Итоги ](#results)
 
 <img align="right" width="600" src="static/monitoring/preview.png">
@@ -151,6 +154,77 @@ LogIn'а по ссылке: http://localhost:8085/. Нас попросят вв
 
 Метрики собираются на стороне микросервиса диалогов с периодичностью пять секунд при помощи go-библотеки [go-osstat](https://github.com/mackerelio/go-osstat).
 Сама реализация представлена [тут](https://github.com/teploff/otus-highload/blob/features/monitoring/backend/messenger/internal/infrastructure/zabbix/zabbix.go).
+
+
+<a name="work-prometheus"></a>
+## Мониторинг с помощью Prometheus 
+
+<a name="work-prometheus-preparation"></a>
+### Подготовка
+Перед тем как начать писать метрики в prometheus, необходимо сделать следующее:
+- создать на стороне микросервиса диалогов GET HTTP-endpoint c наименованием **/metrics**, откуда сам prometheus в виде 
+pull-опроса будет собирать метрики;
+- в конфигурации самого prometheus, в секции **scrape_configs**, необходимо создать очередную job'у. В поле **targets**
+необходимо указать адрес экземпляра, с которого будет собираться метрика. В данном случае это адрес самого микросервиса
+диалогов.
+
+Для того чтобы не писать свою реализацию сбора RED-метрик, воспользуемся готовой go-библиотекой - [go-http-metrics](https://github.com/slok/go-http-metrics).
+В данном случае это простая middleware, которая без лишних телодвижений inject-ится в http-router, в данном случае в [gin](https://github.com/gin-gonic/gin).
+Подробнее о самой middleware приведено [тут](https://github.com/slok/go-http-metrics/blob/master/examples/gin/main.go).
+
+Для того, чтобы **красочнее** отобразить в дальнейшем количество неуспешных запросов в единицу времени (т.е. E из RED),
+был добавлен endpoint с наименованием **internal-server**, который всегда выдавал в ответ HTTP статус код 500.
+
+<a name="work-prometheus-grafana-visualize"></a>
+### Визуализация метрик с помощью Grafana
+Для того чтобы визуализировать собранные RED-метрики prometheus-ом, воспользуемся grafana-ой. Перейдем на страницу: 
+http://localhost:3000/. Нас попросят так же ввести **username** и **password**. Учетными данными по умолчанию при первом
+запуске grana'ы являются: **admin** и **admin**. Далее в секции **Dashboards** будет представлен один единственный
+dashboard с наименованием **GO SERVICE METRICS**. При выборе данного dashboard'а, должны увидеть следующее:</br>
+<p align="center">
+    <img src="static/monitoring/grafana-dashboard-preview.png">
+</p>
+
+Секции **misc**, **file description**, **goroutine stats**, **go memstats** и **process memory** являются производными 
+от библиотеки [go-prometheus](https://github.com/prometheus/client_golang/), которая собирает все представленными в этих
+секциях метрики по умолчанию, а именно:
+- в секции **misc** представлены метрики об GC и указателях </br>
+<p align="center">
+   <img src="static/monitoring/grafana-dashboard-misc-section.png">
+</p>
+
+- в секции **file description** представлены метрики файловых дескрипторах </br>
+<p align="center">
+   <img src="static/monitoring/grafana-dashboard-file-description-section.png">
+</p>
+
+- в секции **goroutine stats** приведена сводка по запущенным goroutine-ам и некоторым системным метрикам </br>
+<p align="center">
+   <img src="static/monitoring/grafana-dashboard-goroutine-stats-section.png">
+</p>
+
+- в секции **go memstats** приведена сводка по используемой памяти в микросервисе диалогов (аллокации, heap, stack) </br>
+<p align="center">
+   <img src="static/monitoring/grafana-dashboard-go-memstats-section.png">
+</p>
+
+- в секции **process memory** приведена сводка по resident и virtual памяти </br>
+<p align="center">
+   <img src="static/monitoring/grafana-dashboard-process-memory-section.png">
+</p>
+
+И наконец секция **RED metrics**. Было создано пять панелей для отображения.</br>
+<p align="center">
+   <img src="static/monitoring/grafana-dashboard-red-metrics-section.png">
+</p>
+
+- первая **Rate - the number of requests, per second** по своей сути отражает первую букву из аббревиатуры RED. Т.е. 
+количество запросов в единицу времени (секунду). 
+- вторая **Errors - the number of failed requests, per second** отражает вторую букву из аббревиатуры RED. Т.е. 
+количество неудачных запросов в единицу времени (секунду).
+- третья, четвертая и пятая панели - **Duration - The amount of time each request takes expressed as a time interval**
+отражают последнюю букву D. Т.е. количество затраченного времени на осуществление каждого из запросов за определенный
+интервал времени. В данном случае представлены 90, 95 и 99 квантили для того, чтобы выпукло продемонстрировать метрику.  
 
 <a name="results"></a>
 ## Итоги
