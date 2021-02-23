@@ -266,6 +266,32 @@ services:
     networks:
       - otus-highload-network
 
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+#    # for debugging
+#    ports:
+#      - '9090:9090'
+    networks:
+      - otus-highload-network
+
+  grafana:
+    build:
+      context: grafana
+      dockerfile: Dockerfile
+    image: grafana/grafana
+    container_name: grafana
+    environment:
+      - GF_INSTALL_PLUGINS=vertamedia-clickhouse-datasource
+    ports:
+      - '3000:3000'
+    networks:
+      - otus-highload-network
+    depends_on:
+      - prometheus
+
   auth:
     build:
       context: ../backend/auth
@@ -337,13 +363,16 @@ services:
       - JAEGER_AGENT_ADDR=jaeger-otus:6831
       - JAEGER_SERVICE_NAME=messenger
       - CONSUL_ADDR=consul-server:8500
-      - CONSUL_AGENT_ADDR=messenger-otus-2:10003
-      - CONSUL_SERVICE_ID=messenger-otus-service-2
+      - CONSUL_AGENT_ADDR=messenger-otus:10003
+      - CONSUL_SERVICE_ID=messenger-otus-service
       - CONSUL_SERVICE_NAME=messenger-otus
       - ZABBIX_SERVER_HOST=zabbix-server
       - ZABBIX_PORT=10051
       - ZABBIX_HOST_NAME=Zabbix server
     restart: unless-stopped
+    # for debugging
+    ports:
+      - '10003:10003'
     networks:
       - otus-highload-network
     depends_on:

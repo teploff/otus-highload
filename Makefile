@@ -2,7 +2,7 @@
 
 init:
 	docker-compose -f deployment/docker-compose.yml up -d --build ch-cluster ch-shard-0 ch-shard-1 auth-storage \
-		social-storage cache nats-streaming jaeger zabbix-web-nginx ;\
+		social-storage cache nats-streaming jaeger consul-server zabbix-web-nginx grafana ;\
 
 migrate:
 	docker-compose -f deployment/docker-compose.yml up --build auth-migrator social-migrator ch-cluster-migrator \
