@@ -9,6 +9,7 @@ import (
 	"messenger/internal/implementation"
 	"messenger/internal/infrastructure/clickhouse"
 	zaplogger "messenger/internal/infrastructure/logger"
+	"messenger/internal/infrastructure/zabbix"
 	grpctransport "messenger/internal/transport/grpc"
 	httptransport "messenger/internal/transport/http"
 	"net"
@@ -33,11 +34,12 @@ func WithLogger(l *zap.Logger) Option {
 
 // App is main application instance.
 type App struct {
-	cfg       *config.Config
-	chStorage *clickhouse.Storage
-	httpSrv   *http.Server
-	gRPCSrv   *grpc.Server
-	logger    *zap.Logger
+	cfg        *config.Config
+	chStorage  *clickhouse.Storage
+	httpSrv    *http.Server
+	gRPCSrv    *grpc.Server
+	cancelFunc context.CancelFunc
+	logger     *zap.Logger
 }
 
 // NewApp returns instance of app.
@@ -56,6 +58,11 @@ func NewApp(cfg *config.Config, opts ...Option) *App {
 
 // Run lunch application.
 func (a *App) Run(chConn *sql.DB) {
+	ctxApp, cancelFunc := context.WithCancel(context.Background())
+	a.cancelFunc = cancelFunc
+	zbx := zabbix.NewClient(a.cfg.Zabbix, a.logger)
+	go zbx.Publish(ctxApp)
+
 	a.chStorage = clickhouse.NewStorage(chConn, a.cfg.Clickhouse.PushTimeout, a.logger)
 	go a.chStorage.StartBatching()
 
@@ -95,6 +102,8 @@ func (a *App) Stop() {
 	if err := a.httpSrv.Shutdown(ctx); err != nil {
 		log.Fatal("http closing error, ", zap.Error(err))
 	}
+
+	a.cancelFunc()
 
 	a.gRPCSrv.GracefulStop()
 	a.chStorage.Stop()

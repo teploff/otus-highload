@@ -16,6 +16,7 @@ type Config struct {
 	Clickhouse ClickhouseConfig `mapstructure:"ch"`
 	Jaeger     JaegerConfig     `mapstructure:"jaeger"`
 	Consul     ConsulConfig     `mapstructure:"consul"`
+	Zabbix     ZabbixConfig     `mapstructure:"zabbix"`
 	Logger     LoggerConfig     `mapstructure:"logger"`
 	Sharding   ShardingConfig   `mapstructure:"sharding"`
 }
@@ -47,6 +48,12 @@ type ConsulConfig struct {
 	AgentAddr   string `mapstructure:"agent_addr"`
 	ServiceID   string `mapstructure:"service_id"`
 	ServiceName string `mapstructure:"service_name"`
+}
+
+type ZabbixConfig struct {
+	ServerHost string `mapstructure:"server_host"`
+	Port       int    `mapstructure:"port"`
+	HostName   string `mapstructure:"host_name"`
 }
 
 type ShardingConfig struct {

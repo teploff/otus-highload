@@ -21,5 +21,10 @@ consul:
   service_id: "messenger-service"
   service_name: "messenger"
 
+zabbix:
+  server_host: "localhost"
+  host_name: "Zabbix server"
+  port: 10051
+
 logger:
   level: "info"

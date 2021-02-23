@@ -168,8 +168,6 @@ func (w *wsService) EstablishConn(ctx context.Context, user *domain.User, conn n
 				return
 			}
 
-			w.logger.Info(string(msg))
-
 			if err = w.parseRequest(ctx, conn, user, msg); err != nil {
 				w.logger.Error("", zap.Error(err))
 			}

@@ -20,7 +20,12 @@ Authorization result represents of two JWT's: access & refresh.
 
 ### Up infrastructure
 ```shell script
-make db && make migrate && make up
+make init && make migrate && make app
+```
+
+### Up frontend
+```shell script
+make frontend
 ```
 
 ### Shutting down infrastructure
