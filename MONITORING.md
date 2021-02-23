@@ -198,7 +198,7 @@ dashboard с наименованием **GO SERVICE METRICS**. При выбо�
    <img src="static/monitoring/grafana-dashboard-file-description-section.png">
 </p>
 
-- в секции **goroutine stats** приведена сводка по запущенным goroutine-ам и некоторым системным метрикам </br>
+- в секции **goroutine stats** приведена сводка по запущенным goroutine-ам и потокам </br>
 <p align="center">
    <img src="static/monitoring/grafana-dashboard-goroutine-stats-section.png">
 </p>
