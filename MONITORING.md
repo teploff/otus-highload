@@ -22,11 +22,11 @@
 
 <a name="task"></a>
 ## Задание
-Мониторинг.
+Мониторинг микросервиса диалогов.
 
 <a name="task-goal"></a>
 ### Цель
-Организовать мониторинг сервиса диалогов.
+Организовать мониторинг микросервиса диалогов.
 
 <a name="task-skills"></a>
 ### Приобретенные навыки
@@ -39,17 +39,16 @@
 ### Постановка задачи
 В процессе достижения цели необходимо:
 - развернуть zabbix, prometheus и grafana;
-- начать писать в prometheus бизнес-метрики сервиса чатов по принципу RED;
-- начать писать в zabbix технические метрики сервера с сервисом чатов;
-- организовать дашборд в grafana.
+- начать писать в prometheus бизнес-метрики микросервиса диалогов по принципу RED;
+- начать писать в zabbix технические метрики сервера с микросервиса диалогов;
+- организовать dashboard в grafana.
 
 <a name="information"></a>
 ## Сведения
 <a name="information-tools"></a>
 ### Используемые инструменты
 Для выполнения задания понадобятся следующие инструменты:
-- [docker](https://docs.docker.com/get-docker/) (>= version 19.03.8) & [docker compose](https://docs.docker.com/compose/install/) (>= version 1.25.5);
-- [curl](https://curl.haxx.se/download.html) (>= version 7.68.0);
+- [docker](https://docs.docker.com/get-docker/) (>= version 19.03.8) & [docker compose](https://docs.docker.com/compose/install/) (>= version 1.25.5).
 
 <a name="information-computer"></a>
 ### Характеристики железа
@@ -91,7 +90,7 @@ make init && make migrate && make app
 - в качестве zabbix-сервера был выбран [zabbix-server-pgsql](https://hub.docker.com/r/zabbix/zabbix-server-pgsql);
 - в качестве zabbix-frontend'а был выбран [zabbix-web-nginx-pgsql](https://hub.docker.com/r/zabbix/zabbix-web-nginx-pgsql).
 
-Подробнее о том, как он собран в docker-compose'е проекта, можно посмотреть [здесь](https://github.com/teploff/otus-highload/blob/features/monitoring/deployment/docker-compose.yml#L242).
+Подробнее о том, как он собран в docker-compose'е проекта, можно посмотреть [здесь](https://github.com/teploff/otus-highload/blob/main/deployment/docker-compose.yml#L242).
 
 
 **Конфигурирование**
@@ -153,7 +152,7 @@ LogIn'а по ссылке: http://localhost:8085/. Нас попросят вв
 </p>
 
 Метрики собираются на стороне микросервиса диалогов с периодичностью пять секунд при помощи go-библотеки [go-osstat](https://github.com/mackerelio/go-osstat).
-Сама реализация представлена [тут](https://github.com/teploff/otus-highload/blob/features/monitoring/backend/messenger/internal/infrastructure/zabbix/zabbix.go).
+Сама реализация представлена [тут](https://github.com/teploff/otus-highload/blob/main/backend/messenger/internal/infrastructure/zabbix/zabbix.go).
 
 
 <a name="work-prometheus"></a>
