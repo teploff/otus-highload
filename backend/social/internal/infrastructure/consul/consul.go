@@ -44,7 +44,7 @@ func (c *Client) Register() error {
 		ID:      c.cfg.ServiceID,
 		Name:    c.cfg.ServiceName,
 		Port:    p,
-		Address: fmt.Sprintf("http://%s", host),
+		Address: host,
 		Check: &consulapi.AgentServiceCheck{
 			Interval: "5s",
 			Timeout:  "3s",
