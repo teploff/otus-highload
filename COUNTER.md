@@ -72,7 +72,7 @@ git clone https://github.com/teploff/otus-highload.git && cd otus-highload
 
 Поднимаем инфраструктуру и применяем миграции:
 ```shell
-make infrastructure && make migrate && make service
+make init && make migrate && make app
 ```
 
 <a name="work-execute-preparation"></a>
@@ -157,9 +157,9 @@ websocat ws://localhost:10000/messenger/ws\?token=${BOB_ACCESS_TOKEN}
 И зная ChatID, например, если он имеет значение **e8d3dc26-a218-4ca1-ae4b-da38b27ed9b3**, отправить сообщения следующего
 вида:
 ```shell script
-{"topic":"messenger", "action": "send-message", "payload":"{\"chat_id\":\"e8d3dc26-a218-4ca1-ae4b-da38b27ed9b3\", \"messages\":[{\"text\": \"Hello, Alice!\", \"status\": \"created\"}]}"}
-{"topic":"messenger", "action": "send-message", "payload":"{\"chat_id\":\"e8d3dc26-a218-4ca1-ae4b-da38b27ed9b3\", \"messages\":[{\"text\": \"What is up?\", \"status\": \"created\"}]}"}
-{"topic":"messenger", "action": "send-message", "payload":"{\"chat_id\":\"e8d3dc26-a218-4ca1-ae4b-da38b27ed9b3\", \"messages\":[{\"text\": \"I miss you!\", \"status\": \"created\"}]}"}
+{"topic":"messenger", "action": "send-message", "payload":"{\"chat_id\":\"838b8fda-9881-4e60-9319-9c903113e01e\", \"messages\":[{\"text\": \"Hello, Alice!\", \"status\": \"created\"}]}"}
+{"topic":"messenger", "action": "send-message", "payload":"{\"chat_id\":\"838b8fda-9881-4e60-9319-9c903113e01e\", \"messages\":[{\"text\": \"What is up?\", \"status\": \"created\"}]}"}
+{"topic":"messenger", "action": "send-message", "payload":"{\"chat_id\":\"838b8fda-9881-4e60-9319-9c903113e01e\", \"messages\":[{\"text\": \"I miss you!\", \"status\": \"created\"}]}"}
 ```
 
 Теперь перейдем в терминал Алисы и удостоверимся, что получили все три сообщения от Боба. В терминале должны увидеть 

@@ -6,7 +6,7 @@ services:
       context: mysql
       dockerfile: Dockerfile
     image: mysql:stage
-# for debugging
+## for debugging
 #    ports:
 #      - "3306:3306"
     container_name: auth-storage
@@ -26,7 +26,7 @@ services:
       context: mysql
       dockerfile: Dockerfile
     image: mysql:stage
-# for debugging
+## for debugging
 #    ports:
 #      - "3307:3306"
     container_name: social-storage
@@ -47,7 +47,7 @@ services:
       dockerfile: Dockerfile
     container_name: redis-cache
     image: redis:stage
-    # for debugging
+##    for debugging
 #    ports:
 #      - "6379:6379"
     volumes:
@@ -58,7 +58,7 @@ services:
   nats-streaming:
     image: nats-streaming
     container_name: nats-streaming
-    # for debugging
+##    for debugging
 #    ports:
 #      - "4222:4222"
 #      - "8222:8222"
@@ -109,7 +109,7 @@ services:
   ch-cluster:
     image: yandex/clickhouse-server:20.6.6.7
     container_name: ch-cluster
-    # for debugging
+##    for debugging
 #    ports:
 #      - "8123:8123"
 #      - "9000:9000"
@@ -212,8 +212,8 @@ services:
   jaeger:
     image: jaegertracing/all-in-one:latest
     container_name: jaeger-otus
-    # for debugging
-    ports:
+#    # for debugging
+#    ports:
 #      - '6831:6831/udp'
       - '16686:16686'
     networks:
@@ -228,6 +228,16 @@ services:
       - '8600:8600/udp'
     networks:
       - otus-highload-network
+
+##  for debugging
+#  consul-server:
+#    image: consul
+#    container_name: consul-server
+#    command: agent -server -ui -node=server-1 -bootstrap-expect=1 -advertise=192.168.1.63
+#    ports:
+#      - '8500:8500'
+#      - '8600:8600/udp'
+#    network_mode: "host"
 
   pg-zabbix:
     container_name: pg-zabbix
@@ -246,6 +256,9 @@ services:
       - DB_SERVER_HOST=pg-zabbix
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=password
+#    # for debugging
+#    ports:
+#      - '10051:10051'
     depends_on:
       - pg-zabbix
     networks:
@@ -370,9 +383,9 @@ services:
       - ZABBIX_PORT=10051
       - ZABBIX_HOST_NAME=Zabbix server
     restart: unless-stopped
-    # for debugging
-    ports:
-      - '10003:10003'
+#    # for debugging
+#    ports:
+#      - '10003:10003'
     networks:
       - otus-highload-network
     depends_on:
