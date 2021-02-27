@@ -16,7 +16,7 @@ jaeger:
 
 consul:
   addr: "localhost:8500"
-  service_name: "auth"
+  service_name: "messenger"
 
 logger:
   level: "info"
