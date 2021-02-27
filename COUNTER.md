@@ -152,8 +152,8 @@ make init && make migrate && make app
 
 <a name="work-execute-preparation"></a>
 #### Подготовка
-Для демонстрации работы микросервисного представления системы, на примере осуществления диалогов между пользователями,
-создадим двух пользователей в системе: **Боба** и **Алису**.
+Для демонстрации работы разработанной системы, на примере осуществления диалогов между пользователями, создадим двух 
+пользователей в системе: **Боба** и **Алису**.
 ```shell script
 curl -X POST -H "Content-Type: application/json" \
     -d '{"email": "bob@email.com", "password": "1234567890", "name": "Bob", "surname": "Tallor", "birthday": "1994-04-10T20:21:25+00:00", "sex": "male", "city": "New Yourk", "interests": "programming"}' \
@@ -224,7 +224,7 @@ websocat ws://localhost:10000/messenger/ws\?token=${ALICE_ACCESS_TOKEN}
 ##### Отправка сообщений
 Теперь, когда Алиса установила websocket-ное соединение с сервером, она готова принимать сообщения от Боба.
 
-Для этого необходимо вернуться в первое терминальное окно, принадлежащее Бобу. Установить также websocket-ное содениение
+Для этого необходимо вернуться в первое терминальное окно, принадлежащее Бобу. Установить также websocket-ное соединение
 командой:
 ```shell script
 websocat ws://localhost:10000/messenger/ws\?token=${BOB_ACCESS_TOKEN}
@@ -232,9 +232,9 @@ websocat ws://localhost:10000/messenger/ws\?token=${BOB_ACCESS_TOKEN}
 И зная ChatID, например, если он имеет значение **e8d3dc26-a218-4ca1-ae4b-da38b27ed9b3**, отправить сообщения следующего
 вида:
 ```shell script
-{"topic":"messenger", "action": "send-message", "payload":"{\"chat_id\":\"838b8fda-9881-4e60-9319-9c903113e01e\", \"messages\":[{\"text\": \"Hello, Alice!\", \"status\": \"created\"}]}"}
-{"topic":"messenger", "action": "send-message", "payload":"{\"chat_id\":\"838b8fda-9881-4e60-9319-9c903113e01e\", \"messages\":[{\"text\": \"What is up?\", \"status\": \"created\"}]}"}
-{"topic":"messenger", "action": "send-message", "payload":"{\"chat_id\":\"838b8fda-9881-4e60-9319-9c903113e01e\", \"messages\":[{\"text\": \"I miss you!\", \"status\": \"created\"}]}"}
+{"topic":"messenger", "action": "send-message", "payload":"{\"chat_id\":\"e8d3dc26-a218-4ca1-ae4b-da38b27ed9b3\", \"messages\":[{\"text\": \"Hello, Alice!\", \"status\": \"created\"}]}"}
+{"topic":"messenger", "action": "send-message", "payload":"{\"chat_id\":\"e8d3dc26-a218-4ca1-ae4b-da38b27ed9b3\", \"messages\":[{\"text\": \"What is up?\", \"status\": \"created\"}]}"}
+{"topic":"messenger", "action": "send-message", "payload":"{\"chat_id\":\"e8d3dc26-a218-4ca1-ae4b-da38b27ed9b3\", \"messages\":[{\"text\": \"I miss you!\", \"status\": \"created\"}]}"}
 ```
 
 Теперь перейдем в терминал Алисы и удостоверимся, что получили все три сообщения от Боба. В терминале должны увидеть 
@@ -250,10 +250,9 @@ websocat ws://localhost:10000/messenger/ws\?token=${BOB_ACCESS_TOKEN}
 
 <a name="work-execute-history-dump"></a>
 #### Историческая выгрузка сообщений
-Теперь проверим gRPC запросы от **gateway**-я к микросервису **messenger** для выгрузки сообщений по конкретному чату.
-
-Для этого находясь в терминальном окне Алисы и зная id чата (в данном контексте он имеет значение 
-**e8d3dc26-a218-4ca1-ae4b-da38b27ed9b3**) получим сообщения, которые ей отослал Боб:
+Для того чтобы выгрузить сообщения по конкретному чату, необходимо, находясь в терминальном окне Алисы и зная id чата 
+(в данном контексте он имеет значение **e8d3dc26-a218-4ca1-ae4b-da38b27ed9b3**), отправить запрос, с помощью которого
+получим сообщения, которые ей отослал Боб:
 ```shell script
 curl -X GET -H "Content-Type: application/json" -H "Authorization: ${ALICE_ACCESS_TOKEN}" \
 http://localhost:10000/messenger/messages?chat_id=e8d3dc26-a218-4ca1-ae4b-da38b27ed9b3
